@@ -240,7 +240,11 @@
                             <option value="ผศ.">ผศ.</option>
                             <option value="รศ.">รศ.</option>
                             <option value="ศ.">ศ.</option>
+                            <option value="สพ.">สพ.</option>
+                            <option value="สพ.ญ.">สพ.ญ.</option>
+                            <option value="อื่นๆ">อื่นๆ (โปรดระบุ)</option>
                         </select>
+                        <input type="text" id="reguser-prefix-other" class="hidden mt-3 w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none text-slate-800 transition text-sm" placeholder="โปรดระบุคำนำหน้า...">
                     </div>
                     <div class="sm:col-span-2">
                         <label class="block text-xs font-bold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
@@ -416,6 +420,10 @@
                                 <span>ยังไม่มีบัญชีใช่หรือไม่?</span>
                                 <a href="#" onclick="window.openRegisterUserModal(event)" class="text-teal-600 font-black hover:underline ml-1">สมัครสมาชิก</a>
                             </div>
+                            
+                            <div class="mt-4 text-right">
+                                <a href="#" onclick="event.preventDefault(); window.showView('consent');" class="text-xs text-slate-400 hover:text-teal-600 underline transition">นโยบายความเป็นส่วนตัว (Privacy Policy)</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -558,7 +566,11 @@
                                     <option value="ผศ.">ผศ.</option>
                                     <option value="รศ.">รศ.</option>
                                     <option value="ศ.">ศ.</option>
+                                    <option value="สพ.">สพ.</option>
+                                    <option value="สพ.ญ.">สพ.ญ.</option>
+                                    <option value="อื่นๆ">อื่นๆ (โปรดระบุ)</option>
                                 </select>
+                                <input type="text" id="reg-prefix-other" class="hidden mt-3 w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition bg-slate-50 focus:bg-white" placeholder="โปรดระบุคำนำหน้า...">
                             </div>
                             <div class="md:col-span-9">
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">2. ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
@@ -569,6 +581,10 @@
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">3. Email <span class="text-red-500">*</span></label>
                                 <input type="email" id="reg-email" disabled class="w-full px-4 py-3 border border-slate-200 bg-slate-100 text-slate-500 rounded-xl outline-none cursor-not-allowed">
                             </div>
+                            <div class="md:col-span-6">
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">4. เลขที่ใบประกอบวิชาชีพ (ถ้ามี)</label>
+                                <input type="text" id="reg-license" class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition bg-slate-50 focus:bg-white" placeholder="ระบุเลขที่ใบประกอบวิชาชีพ (Optional)">
+                            </div>
                         </div>
                     </div>
 
@@ -578,7 +594,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">4. หน่วยงาน / Organization <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">5. หน่วยงาน / Organization <span class="text-red-500">*</span></label>
                                 <select id="reg-org" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition bg-slate-50 focus:bg-white text-slate-800">
                                     <option value="" disabled selected>เลือกประเภทหน่วยงาน...</option>
                                     <option value="องค์การมหาชน/พรบ.">องค์การมหาชน/พรบ.</option>
@@ -594,7 +610,7 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">5. อาชีพ / Job <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">6. อาชีพ / Job <span class="text-red-500">*</span></label>
                                 <select id="reg-career" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition bg-slate-50 focus:bg-white text-slate-800">
                                     <option value="" disabled selected>เลือกอาชีพ...</option>
                                     <option value="นักเรียน/นักศึกษา | Student">นักเรียน/นักศึกษา | Student</option>
@@ -608,7 +624,7 @@
                             </div>
 
                             <div class="md:col-span-2">
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">6. ระดับการศึกษา / Education <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">7. ระดับการศึกษา / Education <span class="text-red-500">*</span></label>
                                 <select id="reg-education" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition bg-slate-50 focus:bg-white text-slate-800">
                                     <option value="" disabled selected>เลือกระดับการศึกษา...</option>
                                     <option value="ปริญญาเอก/Doctoral Degree">ปริญญาเอก/Doctoral Degree</option>
@@ -626,23 +642,33 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
                             <!-- ทราบข่าวจากช่องทางใด -->
                             <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                                <label class="block font-semibold text-slate-800 mb-3">7. ท่านทราบข้อมูลงาน <span id="survey-event-name-1" class="text-teal-600 font-bold underline"></span> จากช่องทางใด?
+                                <label class="block font-semibold text-slate-800 mb-3">8. ท่านทราบข้อมูลงาน <span id="survey-event-name-1" class="text-teal-600 font-bold underline"></span> จากช่องทางใด?
                                     <span class="text-red-500">*</span> <span class="text-xs text-slate-400 font-normal ml-1">(เลือกได้มากกว่า 1)</span></label>
                                 <div class="space-y-2 text-sm text-slate-700">
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="source" value="Social Media(Facebook/Line/X/IG/Tiktok)" class="w-4 h-4 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
-                                        Social Media(Facebook/Line/X/IG/Tiktok)</label>
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="source" value="หนังสือพิมพ์/newpaper" class="w-4 h-4 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
-                                        หนังสือพิมพ์/newpaper</label>
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="source" value="เพื่อนร่วมงาน/เพื่อน/คนรู้จัก (Colleague/friend/acquaintance)" class="w-4 h-4 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
-                                        เพื่อนร่วมงาน/เพื่อน/คนรู้จัก (Colleague/friend/acquaintance)</label>
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="source" value="เว็บไซต์/Website" class="w-4 h-4 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
-                                        เว็บไซต์/Website</label>
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="source" value="อีเมล/email" class="w-4 h-4 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
-                                        อีเมล/email</label>
-                                    <label class="flex items-start gap-3 mt-2 cursor-pointer">
-                                        <input type="checkbox" name="source" value="อื่นๆ" id="source-other-check" class="w-4 h-4 text-teal-600 focus:ring-teal-500 rounded border-slate-300 mt-1">
+                                    <label class="flex items-start gap-3 cursor-pointer p-2 hover:bg-slate-100 rounded-lg transition">
+                                        <input type="checkbox" name="source" value="Social Media(Facebook/Line/X/IG/Tiktok)" class="shrink-0 mt-0.5 w-5 h-5 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
+                                        <span class="leading-relaxed">Social Media(Facebook/Line/X/IG/Tiktok)</span>
+                                    </label>
+                                    <label class="flex items-start gap-3 cursor-pointer p-2 hover:bg-slate-100 rounded-lg transition">
+                                        <input type="checkbox" name="source" value="หนังสือพิมพ์/newpaper" class="shrink-0 mt-0.5 w-5 h-5 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
+                                        <span class="leading-relaxed">หนังสือพิมพ์/newpaper</span>
+                                    </label>
+                                    <label class="flex items-start gap-3 cursor-pointer p-2 hover:bg-slate-100 rounded-lg transition">
+                                        <input type="checkbox" name="source" value="เพื่อนร่วมงาน/เพื่อน/คนรู้จัก (Colleague/friend/acquaintance)" class="shrink-0 mt-0.5 w-5 h-5 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
+                                        <span class="leading-relaxed">เพื่อนร่วมงาน/เพื่อน/คนรู้จัก (Colleague/friend/acquaintance)</span>
+                                    </label>
+                                    <label class="flex items-start gap-3 cursor-pointer p-2 hover:bg-slate-100 rounded-lg transition">
+                                        <input type="checkbox" name="source" value="เว็บไซต์/Website" class="shrink-0 mt-0.5 w-5 h-5 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
+                                        <span class="leading-relaxed">เว็บไซต์/Website</span>
+                                    </label>
+                                    <label class="flex items-start gap-3 cursor-pointer p-2 hover:bg-slate-100 rounded-lg transition">
+                                        <input type="checkbox" name="source" value="อีเมล/email" class="shrink-0 mt-0.5 w-5 h-5 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
+                                        <span class="leading-relaxed">อีเมล/email</span>
+                                    </label>
+                                    <label class="flex items-start gap-3 cursor-pointer p-2 hover:bg-slate-100 rounded-lg transition">
+                                        <input type="checkbox" name="source" value="อื่นๆ" id="source-other-check" class="shrink-0 mt-0.5 w-5 h-5 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
                                         <div class="flex-grow">
-                                            <span>อื่นๆ | Other โปรดระบุ</span>
+                                            <span class="leading-relaxed">อื่นๆ | Other โปรดระบุ</span>
                                             <input type="text" id="reg-source-other" class="hidden mt-2 w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-teal-500 outline-none transition text-sm" placeholder="ระบุแหล่งที่มา...">
                                         </div>
                                     </label>
@@ -650,21 +676,29 @@
                             </div>
                             <!-- ปัจจัยที่ทำให้ตัดสินใจ -->
                             <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
-                                <label class="block font-semibold text-slate-800 mb-3">8. ปัจจัยใดที่ทำให้ท่านสนใจร่วมงาน <span id="survey-event-name-2" class="text-teal-600 font-bold underline"></span>?
+                                <label class="block font-semibold text-slate-800 mb-3">9. ปัจจัยใดที่ทำให้ท่านสนใจร่วมงาน <span id="survey-event-name-2" class="text-teal-600 font-bold underline"></span>?
                                     <span class="text-red-500">*</span> <span class="text-xs text-slate-400 font-normal ml-1">(เลือกได้มากกว่า 1)</span></label>
                                 <div class="space-y-2 text-sm text-slate-700">
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="factor" value="หัวข้อเป็นประโยชน์ในการทำงาน/The topic is related to my business" class="w-4 h-4 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
-                                        หัวข้อเป็นประโยชน์ในการทำงาน/The topic is related to my business</label>
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="factor" value="หัวข้อเป็นประโยชน์ในการศึกษา/The topic is related to my study" class="w-4 h-4 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
-                                        หัวข้อเป็นประโยชน์ในการศึกษา/The topic is related to my study</label>
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="factor" value="ต้องการรับทราบข่าวสารของ KVDC" class="w-4 h-4 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
-                                        ต้องการรับทราบข่าวสารของ KVDC</label>
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="factor" value="วิทยากรน่าสนใจ/Outstanding Speaker(s)" class="w-4 h-4 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
-                                        วิทยากรน่าสนใจ/Outstanding Speaker(s)</label>
-                                    <label class="flex items-start gap-3 mt-2 cursor-pointer">
-                                        <input type="checkbox" name="factor" value="อื่นๆ" id="factor-other-check" class="w-4 h-4 text-teal-600 focus:ring-teal-500 rounded border-slate-300 mt-1">
+                                    <label class="flex items-start gap-3 cursor-pointer p-2 hover:bg-slate-100 rounded-lg transition">
+                                        <input type="checkbox" name="factor" value="หัวข้อเป็นประโยชน์ในการทำงาน/The topic is related to my business" class="shrink-0 mt-0.5 w-5 h-5 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
+                                        <span class="leading-relaxed">หัวข้อเป็นประโยชน์ในการทำงาน/The topic is related to my business</span>
+                                    </label>
+                                    <label class="flex items-start gap-3 cursor-pointer p-2 hover:bg-slate-100 rounded-lg transition">
+                                        <input type="checkbox" name="factor" value="หัวข้อเป็นประโยชน์ในการศึกษา/The topic is related to my study" class="shrink-0 mt-0.5 w-5 h-5 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
+                                        <span class="leading-relaxed">หัวข้อเป็นประโยชน์ในการศึกษา/The topic is related to my study</span>
+                                    </label>
+                                    <label class="flex items-start gap-3 cursor-pointer p-2 hover:bg-slate-100 rounded-lg transition">
+                                        <input type="checkbox" name="factor" value="ต้องการรับทราบข่าวสารของ KVDC" class="shrink-0 mt-0.5 w-5 h-5 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
+                                        <span class="leading-relaxed">ต้องการรับทราบข่าวสารของ KVDC</span>
+                                    </label>
+                                    <label class="flex items-start gap-3 cursor-pointer p-2 hover:bg-slate-100 rounded-lg transition">
+                                        <input type="checkbox" name="factor" value="วิทยากรน่าสนใจ/Outstanding Speaker(s)" class="shrink-0 mt-0.5 w-5 h-5 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
+                                        <span class="leading-relaxed">วิทยากรน่าสนใจ/Outstanding Speaker(s)</span>
+                                    </label>
+                                    <label class="flex items-start gap-3 cursor-pointer p-2 hover:bg-slate-100 rounded-lg transition">
+                                        <input type="checkbox" name="factor" value="อื่นๆ" id="factor-other-check" class="shrink-0 mt-0.5 w-5 h-5 text-teal-600 focus:ring-teal-500 rounded border-slate-300">
                                         <div class="flex-grow">
-                                            <span>อื่นๆ | Other โปรดระบุ</span>
+                                            <span class="leading-relaxed">อื่นๆ | Other โปรดระบุ</span>
                                             <input type="text" id="reg-factor-other" class="hidden mt-2 w-full px-3 py-2 border border-slate-300 rounded focus:ring-2 focus:ring-teal-500 outline-none transition text-sm" placeholder="เหตุผลของคุณ...">
                                         </div>
                                     </label>
@@ -1150,9 +1184,13 @@
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">ชื่อ-นามสกุล</label>
                                 <input type="text" id="view-reg-fullname" disabled class="w-full px-4 py-3 border border-slate-200 bg-slate-50 text-slate-600 rounded-xl outline-none">
                             </div>
-                            <div class="md:col-span-12">
+                            <div class="md:col-span-6">
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Email</label>
                                 <input type="email" id="view-reg-email" disabled class="w-full px-4 py-3 border border-slate-200 bg-slate-50 text-slate-600 rounded-xl outline-none">
+                            </div>
+                            <div class="md:col-span-6">
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">เลขที่ใบประกอบวิชาชีพ</label>
+                                <input type="text" id="view-reg-license" disabled class="w-full px-4 py-3 border border-slate-200 bg-slate-50 text-slate-600 rounded-xl outline-none">
                             </div>
                         </div>
                     </div>
@@ -1293,6 +1331,7 @@
                 }
             }
         }
+        window.showView = showView; // [แก้ไข] กำหนดให้ showView เป็น Global function เพื่อให้ HTML เรียกใช้ผ่าน onclick ได้
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -1632,6 +1671,11 @@
         window.openRegisterUserModal = function(e) {
             if (e) e.preventDefault();
             document.getElementById('form-register-user').reset();
+            
+            // รีเซ็ตช่องกรอกอื่นๆ (ถ้ามี)
+            document.getElementById('reguser-prefix-other').classList.add('hidden');
+            document.getElementById('reguser-prefix-other').required = false;
+
             document.getElementById('modal-register-user').classList.remove('hidden');
         };
 
@@ -1639,7 +1683,9 @@
         if (registerUserForm) {
             registerUserForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const prefix = document.getElementById('reguser-prefix').value;
+                let prefix = document.getElementById('reguser-prefix').value;
+                if (prefix === 'อื่นๆ') prefix = document.getElementById('reguser-prefix-other').value.trim();
+                
                 const fullname = document.getElementById('reguser-fullname').value.trim();
                 const email = document.getElementById('reguser-email').value.trim();
                 const phone = document.getElementById('reguser-phone').value.trim();
@@ -2217,11 +2263,22 @@
                                 </div>
                                 <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">${eventData.name || 'กิจกรรม'}</h3>
                                 <p class="text-gray-500 text-sm mb-4 line-clamp-2">${eventData.desc || 'ไม่มีรายละเอียด'}</p>
-                                <div class="text-xs text-slate-500 mb-5 space-y-2.5">
-                                    <p class="flex"><i class="fa-solid fa-calendar-check w-5 shrink-0 text-teal-500 pt-0.5"></i> <span class="leading-tight">${eventData.regPeriod || '-'}</span></p>
-                                    <p class="flex"><i class="fa-solid fa-clock w-5 shrink-0 text-teal-500 pt-0.5"></i> <span class="leading-tight">${eventData.eventPeriod || '-'}</span></p>
-                                    <p class="flex"><i class="fa-solid fa-location-dot w-5 shrink-0 text-teal-500 pt-0.5"></i> <span class="leading-tight">${eventData.location || '-'}</span></p>
+                                
+                                <div class="text-xs text-slate-600 mb-5 space-y-3">
+                                    <div>
+                                        <p class="font-bold text-slate-700 mb-0.5"><i class="fa-solid fa-calendar-check w-5 text-teal-500"></i> ระยะเวลาเปิดลงทะเบียน</p>
+                                        <p class="ml-6 leading-relaxed">${eventData.regPeriod || '-'}</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-700 mb-0.5"><i class="fa-solid fa-clock w-5 text-teal-500"></i> วันและเวลากิจกรรม</p>
+                                        <p class="ml-6 leading-relaxed">${eventData.eventPeriod || '-'}</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-700 mb-0.5"><i class="fa-solid fa-location-dot w-5 text-teal-500"></i> สถานที่จัดงาน</p>
+                                        <p class="ml-6 leading-relaxed">${eventData.location || '-'}</p>
+                                    </div>
                                 </div>
+                                
                                 ${limitDisplay}
                                 <div class="mt-auto pt-4">
                                     ${scheduleBtnHtml}
@@ -2282,7 +2339,21 @@
                     const userSnap = await getDocs(qUser);
                     if (!userSnap.empty) {
                         const uData = userSnap.docs[0].data();
-                        if (uData.prefix) document.getElementById('reg-prefix').value = uData.prefix;
+                        if (uData.prefix) {
+                            const prefixSelect = document.getElementById('reg-prefix');
+                            const prefixOther = document.getElementById('reg-prefix-other');
+                            if (prefixSelect) {
+                                const prefixOptions = Array.from(prefixSelect.options).map(o => o.value);
+                                if (prefixOptions.includes(uData.prefix)) {
+                                    prefixSelect.value = uData.prefix;
+                                } else {
+                                    prefixSelect.value = 'อื่นๆ';
+                                    prefixOther.value = uData.prefix;
+                                    prefixOther.classList.remove('hidden');
+                                    prefixOther.required = true;
+                                }
+                            }
+                        }
                         const fName = uData.fullnameTH || uData.fullname || '';
                         if (fName) document.getElementById('reg-fullname').value = fName;
                     }
@@ -2294,10 +2365,13 @@
                 document.getElementById('survey-event-name-1').textContent = evNameStr;
                 document.getElementById('survey-event-name-2').textContent = evNameStr;
 
+                document.getElementById('reg-prefix-other').classList.add('hidden');
                 document.getElementById('reg-org-other').classList.add('hidden');
                 document.getElementById('reg-career-other').classList.add('hidden');
                 document.getElementById('reg-source-other').classList.add('hidden');
                 document.getElementById('reg-factor-other').classList.add('hidden');
+                
+                document.getElementById('reg-prefix-other').required = false;
                 document.getElementById('reg-org-other').required = false;
                 document.getElementById('reg-career-other').required = false;
                 document.getElementById('reg-source-other').required = false;
@@ -2322,8 +2396,23 @@
 
                     const userRegData = regSnap.docs[0].data();
 
-                    if (userRegData.prefix && document.getElementById('reg-prefix')) document.getElementById('reg-prefix').value = userRegData.prefix;
+                    if (userRegData.prefix) {
+                        const prefixSelect = document.getElementById('reg-prefix');
+                        const prefixOther = document.getElementById('reg-prefix-other');
+                        if (prefixSelect) {
+                            const prefixOptions = Array.from(prefixSelect.options).map(o => o.value);
+                            if (prefixOptions.includes(userRegData.prefix)) {
+                                prefixSelect.value = userRegData.prefix;
+                            } else {
+                                prefixSelect.value = 'อื่นๆ';
+                                prefixOther.value = userRegData.prefix;
+                                prefixOther.classList.remove('hidden');
+                                prefixOther.required = true;
+                            }
+                        }
+                    }
                     if (userRegData.fullname && document.getElementById('reg-fullname')) document.getElementById('reg-fullname').value = userRegData.fullname;
+                    if (userRegData.license) document.getElementById('reg-license').value = userRegData.license;
                     if (userRegData.education && document.getElementById('reg-education')) document.getElementById('reg-education').value = userRegData.education;
 
                     if (userRegData.organization) {
@@ -2432,6 +2521,8 @@
         };
         toggleOtherInput('reg-org', 'reg-org-other');
         toggleOtherInput('reg-career', 'reg-career-other');
+        toggleOtherInput('reg-prefix', 'reg-prefix-other');
+        toggleOtherInput('reguser-prefix', 'reguser-prefix-other');
 
         const toggleCheckboxOther = (checkboxId, otherId) => {
             const checkbox = document.getElementById(checkboxId);
@@ -2458,8 +2549,11 @@
                 e.preventDefault();
                 const btnId = 'btn-reg-submit';
 
-                const prefix = document.getElementById('reg-prefix').value;
+                let prefix = document.getElementById('reg-prefix').value;
+                if (prefix === 'อื่นๆ') prefix = document.getElementById('reg-prefix-other').value.trim();
+                
                 const fullname = document.getElementById('reg-fullname').value.trim();
+                const license = document.getElementById('reg-license').value.trim();
 
                 let org = document.getElementById('reg-org').value;
                 if (org === 'อื่นๆ') org = document.getElementById('reg-org-other').value.trim();
@@ -2494,6 +2588,7 @@
                         optionId: currentRoute.optionId || 0,
                         prefix: prefix,
                         fullname: fullname,
+                        license: license || null,
                         organization: org,
                         career: career,
                         education: education,
@@ -2883,6 +2978,7 @@
             document.getElementById('view-reg-prefix').value = d.prefix || '';
             document.getElementById('view-reg-fullname').value = d.fullname || '';
             document.getElementById('view-reg-email').value = d.email || d.uid || '';
+            document.getElementById('view-reg-license').value = d.license || '';
             document.getElementById('view-reg-org').value = d.organization || '';
             document.getElementById('view-reg-career').value = d.career || '';
             document.getElementById('view-reg-education').value = d.education || '';
@@ -2899,7 +2995,7 @@
                 return;
             }
             
-            const headers = ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'หน่วยงาน', 'อาชีพ', 'ระดับการศึกษา', 'ช่องทางรับข่าวสาร', 'ปัจจัยความสนใจ'];
+            const headers = ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'เลขที่ใบประกอบวิชาชีพ', 'หน่วยงาน', 'อาชีพ', 'ระดับการศึกษา', 'ช่องทางรับข่าวสาร', 'ปัจจัยความสนใจ'];
             let csvContent = "\uFEFF";
             csvContent += headers.join(",") + "\n";
             
@@ -2915,6 +3011,7 @@
                     cleanStr(row.prefix),
                     cleanStr(row.fullname),
                     cleanStr(row.email || '-'),
+                    cleanStr(row.license || '-'),
                     cleanStr(row.organization),
                     cleanStr(row.career),
                     cleanStr(row.education),
