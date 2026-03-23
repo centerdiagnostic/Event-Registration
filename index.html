@@ -1257,6 +1257,7 @@
     <!-- Firebase Modular SDK & Application Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app-check.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, updatePassword }
             from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
         import { getFirestore, collection, doc, getDocs, getDoc, query, where, addDoc, setDoc, serverTimestamp, deleteDoc, updateDoc }
@@ -1272,6 +1273,12 @@
         };
 
         const app = initializeApp(firebaseConfig);
+
+        const appCheck = initializeAppCheck(app, {
+            provider: new ReCaptchaEnterpriseProvider('6Lf6NJQsAAAAAM-ZCQFyOKyGy-HXh0pih1cUdKb8'),
+            isTokenAutoRefreshEnabled: true
+        });
+
         const auth = getAuth(app);
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
