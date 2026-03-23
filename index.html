@@ -1184,11 +1184,11 @@
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">ชื่อ-นามสกุล</label>
                                 <input type="text" id="view-reg-fullname" disabled class="w-full px-4 py-3 border border-slate-200 bg-slate-50 text-slate-600 rounded-xl outline-none">
                             </div>
-                            <div class="md:col-span-6">
+                            <div class="md:col-span-12">
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Email</label>
                                 <input type="email" id="view-reg-email" disabled class="w-full px-4 py-3 border border-slate-200 bg-slate-50 text-slate-600 rounded-xl outline-none">
                             </div>
-                            <div class="md:col-span-6">
+                            <div class="md:col-span-12">
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">เลขที่ใบประกอบวิชาชีพ</label>
                                 <input type="text" id="view-reg-license" disabled class="w-full px-4 py-3 border border-slate-200 bg-slate-50 text-slate-600 rounded-xl outline-none">
                             </div>
@@ -1276,14 +1276,6 @@
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
 
-        const staffDirectory = {
-            "centerdiagnostic@kvdc-vetku.com": { name: "กฤษฎิ์หิรัญ วรมหัทฐานนท์", position: "ผู้ดูแลระบบ" },
-            "aunzero1@hotmail.com": { name: "ตัวอย่าง พนักงานคนที่ 1", position: "Admin" },
-            "staff2@example.com": { name: "ตัวอย่าง พนักงานคนที่ 2", position: "เจ้าหน้าที่" },
-            "staff3@example.com": { name: "ตัวอย่าง พนักงานคนที่ 3", position: "เจ้าหน้าที่" },
-            "staff4@example.com": { name: "ตัวอย่าง พนักงานคนที่ 4", position: "เจ้าหน้าที่" }
-        };
-
         let currentUser = null;
         let isLoginMode = true;
         let currentRoute = { path: '', eventId: null, optionId: null, eventDocId: null };
@@ -1331,7 +1323,7 @@
                 }
             }
         }
-        window.showView = showView; // [แก้ไข] กำหนดให้ showView เป็น Global function เพื่อให้ HTML เรียกใช้ผ่าน onclick ได้
+        window.showView = showView;
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -1438,10 +1430,7 @@
             let displayPosition = "ผู้ใช้งานทั่วไป";
             let photoBase64 = null;
 
-            if (staffDirectory[currentUser.email]) {
-                displayName = staffDirectory[currentUser.email].name;
-                displayPosition = staffDirectory[currentUser.email].position;
-            } else if (loginRole === 'kvdc' || loginRole === 'admin') {
+            if (loginRole === 'kvdc' || loginRole === 'admin') {
                 displayPosition = "ผู้ดูแลระบบ (Admin)";
             }
 
@@ -1625,11 +1614,6 @@
                 setButtonLoading(btnId, true, 'บันทึก');
 
                 try {
-                    const newDocId = fullnameTH.replace(/\//g, '-');
-                    
-                    const qUser = query(collection(db, "users"), where("uid", "==", currentUser.uid));
-                    const userSnap = await getDocs(qUser);
-                    
                     const updateData = {
                         uid: currentUser.uid,
                         fullnameTH: fullnameTH,
@@ -1641,17 +1625,7 @@
                         updatedAt: serverTimestamp()
                     };
 
-                    if (!userSnap.empty) {
-                        const oldDoc = userSnap.docs[0];
-                        if (oldDoc.id !== newDocId) {
-                            await setDoc(doc(db, "users", newDocId), updateData, { merge: true });
-                            await deleteDoc(doc(db, "users", oldDoc.id));
-                        } else {
-                            await updateDoc(doc(db, "users", oldDoc.id), updateData);
-                        }
-                    } else {
-                        await setDoc(doc(db, "users", newDocId), updateData);
-                    }
+                    await setDoc(doc(db, "users", currentUser.uid), updateData, { merge: true });
                     
                     showToast('อัปเดตโปรไฟล์สำเร็จ', 'success');
                     document.getElementById('modal-profile-edit').classList.add('hidden');
@@ -1672,7 +1646,6 @@
             if (e) e.preventDefault();
             document.getElementById('form-register-user').reset();
             
-            // รีเซ็ตช่องกรอกอื่นๆ (ถ้ามี)
             document.getElementById('reguser-prefix-other').classList.add('hidden');
             document.getElementById('reguser-prefix-other').required = false;
 
@@ -1704,8 +1677,7 @@
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                     const user = userCredential.user;
 
-                    const safeDocId = fullname.replace(/\//g, '-');
-                    await setDoc(doc(db, "users", safeDocId), {
+                    await setDoc(doc(db, "users", user.uid), {
                         uid: user.uid, 
                         prefix: prefix,
                         fullname: fullname,
@@ -1848,9 +1820,8 @@
                     
                     if (userSnap.empty) {
                         const displayName = user.displayName || user.email.split('@')[0] || user.uid;
-                        const safeDocId = displayName.trim().replace(/\//g, '-');
                         
-                        await setDoc(doc(db, "users", safeDocId), {
+                        await setDoc(doc(db, "users", user.uid), {
                             uid: user.uid,
                             fullname: displayName,
                             fullnameTH: displayName,
@@ -2044,13 +2015,11 @@
                 }
 
                 showView('loading');
-                
-                const isInitialAdmin = !!staffDirectory[currentUser.email];
 
                 try {
                     const adminDocSnap = await getDoc(doc(db, "admins", currentUser.email));
                     
-                    if (!adminDocSnap.exists() && !isInitialAdmin) {
+                    if (!adminDocSnap.exists()) {
                         showToast('คุณไม่มีสิทธิ์เข้าถึงหน้าผู้ดูแลระบบ (Access Denied)', 'error');
                         window.location.hash = '#/home';
                         return;
@@ -2059,13 +2028,8 @@
                     await loadAdminData();
                 } catch (error) {
                     console.error("Auth Check Error:", error);
-                    if (isInitialAdmin) {
-                        console.warn("Bypassing error for initial admin setup.");
-                        await loadAdminData();
-                    } else {
-                        showToast('เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์ หรือคุณไม่มีสิทธิ์เข้าถึง', 'error');
-                        window.location.hash = '#/home';
-                    }
+                    showToast('เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์ หรือคุณไม่มีสิทธิ์เข้าถึง', 'error');
+                    window.location.hash = '#/home';
                 }
 
             } else if (currentRoute.path === 'success') {
@@ -2102,20 +2066,14 @@
                 } else {
                     try {
                         const adminDocSnap = await getDoc(doc(db, "admins", user.email));
-                        const isInitialAdmin = !!staffDirectory[user.email];
 
-                        if (adminDocSnap.exists() || isInitialAdmin) {
+                        if (adminDocSnap.exists()) {
                             btnAdmin.classList.remove('hidden');
                             loginRole = 'admin';
                             sessionStorage.setItem('loginRole', 'admin');
 
-                            let adminData = {};
-                            if (adminDocSnap.exists()) {
-                                adminData = adminDocSnap.data();
-                                currentAdminRole = adminData.role || 'admin';
-                            } else {
-                                currentAdminRole = 'superadmin';
-                            }
+                            let adminData = adminDocSnap.data();
+                            currentAdminRole = adminData.role || 'admin';
                             sessionStorage.setItem('adminRole', currentAdminRole);
 
                             const teamMenuBtn = document.getElementById('nav-tab-team');
@@ -2329,10 +2287,6 @@
                 });
 
                 document.getElementById('reg-email').value = currentUser.email;
-
-                if (staffDirectory[currentUser.email]) {
-                    document.getElementById('reg-fullname').value = staffDirectory[currentUser.email].name;
-                }
 
                 try {
                     const qUser = query(collection(db, "users"), where("uid", "==", currentUser.uid));
@@ -2597,8 +2551,7 @@
                         createdAt: serverTimestamp()
                     };
 
-                    const regDocId = `${fullname}_${currentRoute.eventId}`.replace(/\//g, '-');
-                    await setDoc(doc(db, "events", currentRoute.eventDocId, "participants", regDocId), regData);
+                    await setDoc(doc(db, "events", currentRoute.eventDocId, "participants", currentUser.uid), regData);
                     window.location.hash = '#/success';
                 } catch (error) {
                     showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
