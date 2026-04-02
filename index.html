@@ -2996,25 +2996,25 @@
                 try {
                     // ดึงค่า Consent ทั้ง 3 ข้อจาก Checkbox
                     const pdpaConsent = {
-                        agree_privacy: document.getElementById('pdpa-agree-1').checked,
-                        agree_marketing: document.getElementById('pdpa-agree-2').checked,
-                        agree_sponsor: document.getElementById('pdpa-agree-3').checked
+                        agree_privacy: document.getElementById('pdpa-agree-1')?.checked || false,
+                        agree_marketing: document.getElementById('pdpa-agree-2')?.checked || false,
+                        agree_sponsor: document.getElementById('pdpa-agree-3')?.checked || false
                     };
 
                     const regData = {
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        eventId: currentRoute.eventId,
+                        uid: currentUser?.uid || '',
+                        email: currentUser?.email || '',
+                        eventId: currentRoute.eventId || 0,
                         optionId: currentRoute.optionId || 0,
-                        prefix: prefix,
-                        fullname: fullname,
-                        license: license || null,
-                        organization: org,
-                        career: career,
-                        education: education,
-                        sources: sources,
-                        factors: factors,
-                        pdpa: pdpaConsent // บันทึกข้อมูล Consent ลงไปด้วย
+                        prefix: prefix || '',
+                        fullname: fullname || '',
+                        license: license || '',
+                        organization: org || '',
+                        career: career || '',
+                        education: education || '',
+                        sources: sources || [],
+                        factors: factors || [],
+                        pdpa: pdpaConsent
                     };
 
                     if (isEditing) {
