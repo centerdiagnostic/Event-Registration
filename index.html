@@ -3627,10 +3627,24 @@
         };
 
         window.viewRegistrants = async function(targetEventId) {
+            if (!targetEventId && typeof adminSelectedEvent !== 'undefined' && adminSelectedEvent) {
+                targetEventId = adminSelectedEvent.id;
+            }
+
+            if (targetEventId) {
+                const foundEvent = adminCurrentEvents.find(e => e.id.toString() === targetEventId.toString());
+                if (foundEvent) adminSelectedEvent = foundEvent;
+            }
+
             if(!targetEventId || !adminSelectedEvent) {
                 document.getElementById('registrants-table-body').innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500">กรุณาเลือกกิจกรรมจากเมนูด้านบนเพื่อดูข้อมูล</td></tr>`;
                 return;
             }
+
+            const modalDetails = document.getElementById('modal-event-details');
+            if (modalDetails) modalDetails.classList.add('hidden');
+
+            window.switchAdminTab('registrants');
 
             const selectElem = document.getElementById('admin-registrant-select');
             if(selectElem.value !== targetEventId.toString()) {
