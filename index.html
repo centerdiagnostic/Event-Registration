@@ -1229,15 +1229,17 @@
                                 <table class="min-w-full divide-y divide-slate-200">
                                     <thead class="bg-slate-50/80 border-b border-slate-200">
                                         <tr>
+                                            <tr>
                                             <th scope="col" class="px-6 py-5 text-left text-[11px] font-black text-slate-500 uppercase tracking-widest">วันเวลาบันทึก</th>
                                             <th scope="col" class="px-6 py-5 text-left text-[11px] font-black text-slate-500 uppercase tracking-widest">ข้อมูลผู้สมัคร</th>
                                             <th scope="col" class="px-6 py-5 text-left text-[11px] font-black text-slate-500 uppercase tracking-widest">การติดต่อ</th>
                                             <th scope="col" class="px-6 py-5 text-left text-[11px] font-black text-slate-500 uppercase tracking-widest">สังกัด / อาชีพ</th>
+                                            <th scope="col" class="px-6 py-5 text-center text-[11px] font-black text-slate-500 uppercase tracking-widest">คะแนนสอบ</th>
                                         </tr>
                                     </thead>
                                     <tbody id="registrants-table-body" class="bg-white divide-y divide-slate-100 text-sm">
                                         <tr>
-                                            <td colspan="4" class="px-6 py-20 text-center">
+                                            <td colspan="5" class="px-6 py-20 text-center">
                                                 <div class="flex flex-col items-center justify-center">
                                                     <i class="fa-solid fa-hand-pointer text-4xl text-slate-200 mb-3 animate-bounce"></i>
                                                     <p class="text-slate-500 font-bold">เลือกกิจกรรมด้านบนเพื่อดูข้อมูล</p>
@@ -1609,15 +1611,15 @@
 
         <!-- Modal: รายละเอียดกิจกรรม & Action Buttons -->
         <div id="modal-event-details" class="fixed inset-0 z-[60] hidden bg-slate-900/40 flex justify-center items-center p-4 backdrop-blur-md transition-opacity">
-            <div class="glass-modal rounded-3xl w-full max-w-lg overflow-hidden relative animate-fade-in-up">
-                <div class="p-6 md:p-8 border-b border-slate-100 relative bg-white/50">
+            <div class="glass-modal rounded-3xl w-full max-w-lg overflow-hidden relative flex flex-col max-h-[90vh] animate-fade-in-up">
+                <div class="p-6 md:p-8 border-b border-slate-100 relative bg-white/50 shrink-0">
                     <button onclick="document.getElementById('modal-event-details').classList.add('hidden')" class="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition"><i class="fa-solid fa-xmark"></i></button>
                     <div class="pr-10">
                         <span id="detail-event-id" class="text-[10px] font-black tracking-widest bg-blue-100 text-blue-700 px-2 py-0.5 rounded uppercase mb-3 inline-block">ID: -</span>
                         <h3 id="detail-event-name" class="text-2xl font-black text-slate-900 leading-tight mb-2">หัวข้อกิจกรรม</h3>
                     </div>
                 </div>
-                <div class="p-6 md:px-8 space-y-5 text-sm bg-white">
+                <div class="p-6 md:px-8 space-y-5 text-sm bg-white overflow-y-auto flex-1 custom-scrollbar">
                     <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                         <p class="text-slate-500 font-bold mb-1 text-[11px] uppercase tracking-wider">รายละเอียด</p>
                         <p id="detail-event-desc" class="text-slate-700 font-medium leading-relaxed"></p>
@@ -1645,7 +1647,7 @@
                         <span id="detail-event-enrolled" class="font-black text-emerald-600 text-xl bg-white px-3 py-1 rounded-lg shadow-sm"></span>
                     </div>
                 </div>
-                <div class="p-6 md:p-8 bg-slate-50 border-t border-slate-100 grid grid-cols-2 gap-3">
+                <div class="p-6 md:p-8 bg-slate-50 border-t border-slate-100 grid grid-cols-2 gap-3 shrink-0">
                     <button onclick="window.viewRegistrants()" class="col-span-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-md shadow-blue-500/20 flex justify-center items-center gap-2">
                         <i class="fa-solid fa-users"></i> ดูรายชื่อผู้สมัคร
                     </button>
@@ -1777,6 +1779,21 @@
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-2">ปัจจัยที่สนใจ</label>
                                 <div id="view-reg-factors" class="flex flex-wrap gap-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-emerald-500"></div>
+                        <h4 class="font-bold text-slate-400 uppercase tracking-widest text-[10px] mb-4 border-b border-slate-100 pb-2">Consent & Quiz</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-2">นโยบายความเป็นส่วนตัว (PDPA)</label>
+                                <div id="view-reg-pdpa" class="space-y-2 text-xs"></div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-2">คะแนนแบบทดสอบ</label>
+                                <div id="view-reg-score-display" class="font-bold text-slate-800"></div>
                             </div>
                         </div>
                     </div>
@@ -3609,26 +3626,9 @@
             }
         };
 
-        window.viewRegistrants = async function(eventIdStr = null) {
-            let targetEventId = null;
-            
-            if(eventIdStr) {
-                targetEventId = parseInt(eventIdStr);
-                const ev = adminCurrentEvents.find(e => e.id === targetEventId);
-                if(ev) adminSelectedEvent = ev;
-            } else if (adminSelectedEvent) {
-                targetEventId = adminSelectedEvent.id;
-            }
-
-            const detailsModal = document.getElementById('modal-event-details');
-            if(detailsModal && !detailsModal.classList.contains('hidden')) {
-                detailsModal.classList.add('hidden');
-            }
-
-            window.switchAdminTab('registrants');
-
+        window.viewRegistrants = async function(targetEventId) {
             if(!targetEventId || !adminSelectedEvent) {
-                document.getElementById('registrants-table-body').innerHTML = `<tr><td colspan="4" class="px-6 py-12 text-center text-gray-500">กรุณาเลือกกิจกรรมจากเมนูด้านบนเพื่อดูข้อมูล</td></tr>`;
+                document.getElementById('registrants-table-body').innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500">กรุณาเลือกกิจกรรมจากเมนูด้านบนเพื่อดูข้อมูล</td></tr>`;
                 return;
             }
 
@@ -3648,7 +3648,7 @@
                 tbody.innerHTML = '';
 
                 if (regSnap.empty) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-20 text-center"><div class="flex flex-col items-center justify-center"><i class="fa-solid fa-box-open text-4xl text-slate-200 mb-3"></i><p class="text-slate-500 font-bold">ยังไม่มีข้อมูลผู้ลงทะเบียนสำหรับกิจกรรมนี้</p></div></td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-20 text-center"><div class="flex flex-col items-center justify-center"><i class="fa-solid fa-box-open text-4xl text-slate-200 mb-3"></i><p class="text-slate-500 font-bold">ยังไม่มีข้อมูลผู้ลงทะเบียนสำหรับกิจกรรมนี้</p></div></td></tr>`;
                 } else {
                     regSnap.forEach(doc => currentRegistrantsData.push(doc.data()));
 
@@ -3659,6 +3659,15 @@
                         
                         const dateStr = d.createdAt ? formatDateTimeTH(d.createdAt.toDate()) : '-';
                         
+                        let scoreHtml = '<span class="text-slate-300">-</span>';
+                        if (d.isTested !== undefined) {
+                            if (d.isTested) {
+                                scoreHtml = `<span class="bg-purple-100 text-purple-700 px-2.5 py-1 rounded-md text-xs font-bold">${d.testScore}/${d.testMaxScore}</span>`;
+                            } else {
+                                scoreHtml = `<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded-md text-[10px] font-medium">ยังไม่สอบ</span>`;
+                            }
+                        }
+
                         tr.innerHTML = `
                             <td class="px-6 py-4 whitespace-nowrap text-[11px] text-slate-400 font-medium">${dateStr}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -3668,6 +3677,9 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                                 <div class="font-bold text-slate-700">${d.organization || '-'}</div>
                                 <div class="text-[11px] uppercase tracking-wide">${d.career || '-'}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                ${scoreHtml}
                             </td>
                         `;
                         tbody.appendChild(tr);
@@ -3698,6 +3710,24 @@
             document.getElementById('view-reg-sources').innerHTML = (d.sources || []).map(s => `<span class="inline-block bg-white text-slate-600 px-3 py-1 border border-slate-200 rounded-lg text-xs font-bold shadow-sm">${s}</span>`).join('');
             document.getElementById('view-reg-factors').innerHTML = (d.factors || []).map(f => `<span class="inline-block bg-white text-slate-600 px-3 py-1 border border-slate-200 rounded-lg text-xs font-bold shadow-sm">${f}</span>`).join('');
             
+            // Populate PDPA
+            let pdpaHtml = '';
+            if (d.pdpa) {
+                pdpaHtml += `<div class="flex items-center gap-2"><i class="fa-solid ${d.pdpa.agree_privacy ? 'fa-check text-emerald-500' : 'fa-xmark text-red-500'}"></i> <span class="text-slate-600">นโยบายความเป็นส่วนตัว</span></div>`;
+                pdpaHtml += `<div class="flex items-center gap-2"><i class="fa-solid ${d.pdpa.agree_marketing ? 'fa-check text-emerald-500' : 'fa-xmark text-red-500'}"></i> <span class="text-slate-600">ยินยอมให้ติดต่อประชาสัมพันธ์</span></div>`;
+                pdpaHtml += `<div class="flex items-center gap-2"><i class="fa-solid ${d.pdpa.agree_sponsor ? 'fa-check text-emerald-500' : 'fa-xmark text-red-500'}"></i> <span class="text-slate-600">ส่งต่อข้อมูลให้ผู้สนับสนุน</span></div>`;
+            } else {
+                pdpaHtml = '<span class="text-slate-400">ไม่มีข้อมูล PDPA</span>';
+            }
+            document.getElementById('view-reg-pdpa').innerHTML = pdpaHtml;
+
+            // Populate Score
+            let scoreText = '<span class="text-slate-400 text-sm font-medium">ไม่มีการทดสอบ</span>';
+            if (d.isTested !== undefined) {
+                scoreText = d.isTested ? `<span class="text-purple-600 bg-purple-50 px-4 py-2 rounded-xl border border-purple-100">${d.testScore} / ${d.testMaxScore} คะแนน</span>` : '<span class="text-slate-500 text-sm font-medium bg-slate-100 px-3 py-1.5 rounded-lg">ยังไม่ทำแบบทดสอบ</span>';
+            }
+            document.getElementById('view-reg-score-display').innerHTML = scoreText;
+
             document.getElementById('modal-registrant-view').classList.remove('hidden');
         };
 
