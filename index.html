@@ -406,11 +406,26 @@
                 <button onclick="document.getElementById('modal-take-quiz').classList.add('hidden')" class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-slate-600 shadow-sm transition border border-slate-200"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar bg-slate-50" id="quiz-questions-container">
-                <!-- Questions will be injected here -->
-            </div>
+                </div>
             <div class="p-6 border-t border-slate-100 bg-white shrink-0 flex justify-end">
                 <button id="btn-submit-quiz" onclick="window.submitQuiz()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 px-8 rounded-xl transition shadow-md flex items-center gap-2">
                     <i class="fa-solid fa-paper-plane"></i> ส่งคำตอบ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-take-survey" class="fixed inset-0 z-[100] hidden bg-slate-900/80 flex justify-center items-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-3xl w-full max-w-3xl overflow-hidden relative flex flex-col max-h-[90vh] animate-fade-in-up">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-pink-50 shrink-0">
+                <h3 class="text-xl font-bold text-pink-900 flex items-center"><i class="fa-solid fa-star mr-3"></i> แบบประเมิน</h3>
+                <button onclick="document.getElementById('modal-take-survey').classList.add('hidden')" class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-slate-600 shadow-sm transition border border-slate-200"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar bg-slate-50" id="survey-questions-container">
+                </div>
+            <div class="p-6 border-t border-slate-100 bg-white shrink-0 flex justify-end">
+                <button id="btn-submit-survey" onclick="window.submitSurvey()" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-3.5 px-8 rounded-xl transition shadow-md flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> ส่งแบบประเมิน
                 </button>
             </div>
         </div>
@@ -3021,6 +3036,23 @@
                             }
                         }
 
+                        let surveyBtnHtml = '';
+                        if (userRegData && eventData.surveyId && eventData.isSurveyOpen) {
+                            if (userRegData.isSurveyed) {
+                                surveyBtnHtml = `
+                                    <div class="bg-pink-50 text-pink-800 px-4 py-3 rounded-xl border border-pink-200 mb-3 text-sm font-bold flex items-center justify-center shadow-sm">
+                                        <span><i class="fa-solid fa-check-circle text-pink-600 mr-1.5"></i>ทำแบบประเมินแล้ว</span>
+                                    </div>
+                                `;
+                            } else {
+                                surveyBtnHtml = `
+                                    <button type="button" onclick="window.startSurvey('${eventData.surveyId}', '${docId}')" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md mb-3 text-sm flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-star"></i> เริ่มทำแบบประเมิน
+                                    </button>
+                                `;
+                            }
+                        }
+
                         const card = document.createElement('div');
                         card.className = "bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:border-teal-100 transition-all duration-500 overflow-hidden flex flex-col h-full group transform hover:-translate-y-1";
                         card.innerHTML = `
@@ -3068,6 +3100,7 @@
                                 <div class="mt-auto pt-6">
                                     ${scheduleBtnHtml}
                                     ${quizBtnHtml}
+                                    ${surveyBtnHtml}
                                     <a href="#/register/${eventData.id || 0}/0" class="block text-center w-full ${userRegData ? 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300' : 'btn-primary text-white'} font-bold py-3.5 px-4 rounded-xl transition flex justify-center items-center gap-2">
                                         ${userRegData ? '<i class="fa-solid fa-file-invoice"></i> ข้อมูลลงทะเบียนของคุณ' : 'ลงทะเบียนทันที <i class="fa-solid fa-arrow-right"></i>'}
                                     </a>
@@ -3898,7 +3931,7 @@
             }
             
             // เพิ่ม Header สำหรับ PDPA และ คะแนนแบบทดสอบ
-            const headers = ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'เลขที่ใบประกอบวิชาชีพ', 'หน่วยงาน', 'อาชีพ', 'ระดับการศึกษา', 'ช่องทางรับข่าวสาร', 'ปัจจัยความสนใจ', 'คะแนนแบบทดสอบ', 'ยอมรับนโยบายความเป็นส่วนตัว', 'ยินยอมประชาสัมพันธ์', 'ยินยอมเปิดเผยต่อ Sponsor'];
+            const headers = ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'เลขที่ใบประกอบวิชาชีพ', 'หน่วยงาน', 'อาชีพ', 'ระดับการศึกษา', 'ช่องทางรับข่าวสาร', 'ปัจจัยความสนใจ', 'คะแนนแบบทดสอบ', 'ทำแบบประเมิน', 'ยอมรับนโยบายความเป็นส่วนตัว', 'ยินยอมประชาสัมพันธ์', 'ยินยอมเปิดเผยต่อ Sponsor'];
             let csvContent = "\uFEFF";
             csvContent += headers.join(",") + "\n";
             
@@ -3912,6 +3945,8 @@
                 if (row.isTested !== undefined) {
                     scoreText = row.isTested ? `${row.testScore} คะแนน` : 'ยังไม่ทำแบบทดสอบ';
                 }
+
+                const isSurveyedTxt = row.isSurveyed ? 'ทำแล้ว' : 'ยังไม่ทำ';
 
                 // จัดการข้อมูล PDPA (ถ้าไม่มีให้เป็น 'N/A')
                 const pdpa1 = row.pdpa ? (row.pdpa.agree_privacy ? 'ยอมรับ' : 'ไม่ยอมรับ') : 'N/A';
@@ -3932,6 +3967,7 @@
                     cleanStr(sources),
                     cleanStr(factors),
                     cleanStr(scoreText),
+                    cleanStr(isSurveyedTxt),
                     cleanStr(pdpa1),
                     cleanStr(pdpa2),
                     cleanStr(pdpa3)
@@ -4679,6 +4715,71 @@
                 showToast('บันทึกคะแนนไม่สำเร็จ', 'error');
             } finally {
                 setButtonLoading('btn-submit-quiz', false, '<i class="fa-solid fa-paper-plane"></i> ส่งคำตอบ');
+            }
+        };
+
+        window.startSurvey = async function(surveyId, eventDocId) {
+            showView('loading');
+            try {
+                const docSnap = await getDoc(doc(db, "surveys", surveyId));
+                if(docSnap.exists()) {
+                    window.currentUserSurveySession = { eventDocId: eventDocId, surveyId: surveyId, data: docSnap.data(), answers: [] };
+                    window.renderUserSurvey();
+                    document.getElementById('modal-take-survey').classList.remove('hidden');
+                    showView('home'); 
+                } else {
+                    showToast('ไม่พบข้อมูลแบบประเมิน', 'error');
+                    showView('home');
+                }
+            } catch(e) { showToast('ดึงข้อมูลแบบประเมินไม่สำเร็จ', 'error'); showView('home'); }
+        };
+
+        window.renderUserSurvey = function() {
+            const container = document.getElementById('survey-questions-container');
+            const survey = window.currentUserSurveySession.data;
+            container.innerHTML = `<h2 class="text-2xl font-black text-slate-800 mb-6 text-center">${survey.title}</h2>`;
+            
+            survey.questions.forEach((q, qIndex) => {
+                let optionsHtml = '';
+                q.options.forEach((opt, oIndex) => {
+                    optionsHtml += `
+                        <label class="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-pink-400 hover:shadow-sm transition group">
+                            <input type="radio" name="user_survey_q_${qIndex}" value="${oIndex}" onchange="window.currentUserSurveySession.answers[${qIndex}] = ${oIndex}" class="mt-0.5 w-4 h-4 text-pink-600 focus:ring-pink-500 border-slate-300 cursor-pointer">
+                            <span class="text-slate-700 font-medium group-hover:text-pink-900 leading-relaxed">${opt}</span>
+                        </label>
+                    `;
+                });
+                container.innerHTML += `<div class="mb-8"><p class="font-bold text-slate-800 mb-3 text-lg leading-relaxed"><span class="text-pink-600 mr-2">${qIndex + 1}.</span> ${q.question}</p><div class="space-y-3 pl-1 sm:pl-6">${optionsHtml}</div></div>`;
+            });
+        };
+
+        window.submitSurvey = async function() {
+            const session = window.currentUserSurveySession;
+            if(!session) return;
+            for(let i=0; i<session.data.questions.length; i++) {
+                if(session.answers[i] === undefined) return showToast(`กรุณาตอบแบบประเมินข้อที่ ${i+1}`, 'error');
+            }
+
+            setButtonLoading('btn-submit-survey', true, '<i class="fa-solid fa-paper-plane"></i> กำลังส่ง...');
+
+            try {
+                await updateDoc(doc(db, "events", session.eventDocId, "participants", currentUser.uid), {
+                    isSurveyed: true, 
+                    surveyAnswers: session.answers, 
+                    surveySubmittedAt: serverTimestamp()
+                });
+                showToast(`ส่งแบบประเมินสำเร็จ! ขอบคุณสำหรับความคิดเห็น`, 'success');
+                document.getElementById('modal-take-survey').classList.add('hidden');
+                
+                if (currentRoute.path === 'register' || currentRoute.path === 'reg-form') {
+                    await loadEventRegistration();
+                } else {
+                    await loadHomeEvents();
+                }
+            } catch(e) {
+                showToast('บันทึกแบบประเมินไม่สำเร็จ', 'error');
+            } finally {
+                setButtonLoading('btn-submit-survey', false, '<i class="fa-solid fa-paper-plane"></i> ส่งแบบประเมิน');
             }
         };
 
