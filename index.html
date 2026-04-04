@@ -2832,11 +2832,11 @@
 
                             const teamMenuBtn = document.getElementById('nav-tab-team');
                             if (teamMenuBtn && teamMenuBtn.parentElement) {
-                                if (currentAdminRole === 'admin') {
-                                    teamMenuBtn.parentElement.classList.add('hidden');
-                                } else {
-                                    teamMenuBtn.parentElement.classList.remove('hidden');
-                                }
+                                if (currentAdminRole !== 'superadmin') {
+                                teamMenuBtn.parentElement.classList.add('hidden');
+                            } else {
+                                teamMenuBtn.parentElement.classList.remove('hidden');
+                            }
                             }
 
                             if (adminData.isFirstLogin === true) {
@@ -3537,7 +3537,7 @@
         };
 
         window.switchAdminTab = function(tabName) {
-            if (tabName === 'team' && currentAdminRole === 'admin') {
+            if (tabName === 'team' && currentAdminRole !== 'superadmin') {
                 showToast('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้', 'error');
                 window.switchAdminTab('events');
                 return;
