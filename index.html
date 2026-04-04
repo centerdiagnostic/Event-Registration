@@ -1397,44 +1397,6 @@
                         </div>
                     </div>
 
-                    <div id="admin-content-surveys" class="space-y-8 hidden max-w-7xl mx-auto animate-fade-in-up">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-slate-200">
-                            <div>
-                                <h2 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">การจัดการแบบประเมิน</h2>
-                                <p class="text-slate-500 mt-2 font-medium">สร้างแบบประเมินความพึงพอใจและผูกเข้ากับกิจกรรม</p>
-                            </div>
-                            <button onclick="window.openSurveyFormModal()" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-6 rounded-xl transition flex items-center gap-2 whitespace-nowrap shadow-md">
-                                <i class="fa-solid fa-plus"></i> สร้างแบบประเมิน
-                            </button>
-                        </div>
-
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative">
-                            <div class="p-6 border-b border-slate-100 flex items-center bg-slate-50/50 gap-3">
-                                <div class="w-8 h-8 rounded-lg bg-pink-100 text-pink-600 flex items-center justify-center"><i class="fa-solid fa-star"></i></div>
-                                <h3 class="text-lg font-bold text-slate-800">คลังแบบประเมิน (Survey Bank)</h3>
-                            </div>
-                            <div class="overflow-x-auto custom-scrollbar">
-                                <table class="min-w-full divide-y divide-slate-200">
-                                    <thead class="bg-white">
-                                        <tr>
-                                            <th scope="col" class="px-6 py-5 text-left text-xs font-black text-slate-400 uppercase tracking-widest">ข้อมูลแบบประเมิน</th>
-                                            <th scope="col" class="px-6 py-5 text-center text-xs font-black text-slate-400 uppercase tracking-widest">จำนวนข้อ</th>
-                                            <th scope="col" class="px-6 py-5 text-center text-xs font-black text-slate-400 uppercase tracking-widest">จัดการ</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="admin-surveys-table-body" class="bg-white divide-y divide-slate-100">
-                                    </tbody>
-                                </table>
-                                <div id="admin-surveys-empty" class="hidden flex-col items-center justify-center py-20 text-slate-400">
-                                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100 shadow-inner">
-                                        <i class="fa-solid fa-folder-open text-3xl text-slate-300"></i>
-                                    </div>
-                                    <span class="font-bold text-slate-500">ไม่มีข้อมูลแบบประเมินในระบบ</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div id="admin-content-quizzes" class="space-y-8 hidden max-w-7xl mx-auto animate-fade-in-up">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-slate-200">
                             <div>
@@ -1840,41 +1802,14 @@
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">ชื่อ-นามสกุล</label>
                                 <div class="font-bold text-slate-800 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-fullname-display"></div>
-                                <input type="hidden" id="view-reg-prefix"><input type="hidden" id="view-reg-fullname">
-                                <script>
-                                    // Small script to combine prefix and name for display since we can't change the main JS logic
-                                    const prefix = document.getElementById('view-reg-prefix');
-                                    const fname = document.getElementById('view-reg-fullname');
-                                    const display = document.getElementById('view-reg-fullname-display');
-                                    // Set an observer to update the display when the hidden inputs change
-                                    const observer = new MutationObserver(() => {
-                                        display.textContent = (prefix.value || '') + (fname.value || '-');
-                                    });
-                                    observer.observe(prefix, { attributes: true });
-                                    observer.observe(fname, { attributes: true });
-                                </script>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">อีเมล</label>
                                 <div class="font-medium text-slate-700 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100"><i class="fa-regular fa-envelope mr-1 text-slate-400"></i> <span id="view-reg-email-display"></span></div>
-                                <input type="hidden" id="view-reg-email">
-                                <script>
-                                    const emailInput = document.getElementById('view-reg-email');
-                                    const emailDisplay = document.getElementById('view-reg-email-display');
-                                    const obsEmail = new MutationObserver(() => { emailDisplay.textContent = emailInput.value || '-'; });
-                                    obsEmail.observe(emailInput, { attributes: true });
-                                </script>
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">เลขใบประกอบวิชาชีพ</label>
                                 <div class="font-medium text-slate-700 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-license-display"></div>
-                                <input type="hidden" id="view-reg-license">
-                                <script>
-                                    const licInput = document.getElementById('view-reg-license');
-                                    const licDisplay = document.getElementById('view-reg-license-display');
-                                    const obsLic = new MutationObserver(() => { licDisplay.textContent = licInput.value || '-'; });
-                                    obsLic.observe(licInput, { attributes: true });
-                                </script>
                             </div>
                         </div>
                     </div>
@@ -1886,35 +1821,14 @@
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">หน่วยงาน</label>
                                 <div class="font-bold text-slate-800 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-org-display"></div>
-                                <input type="hidden" id="view-reg-org">
-                                <script>
-                                    const orgInput = document.getElementById('view-reg-org');
-                                    const orgDisplay = document.getElementById('view-reg-org-display');
-                                    const obsOrg = new MutationObserver(() => { orgDisplay.textContent = orgInput.value || '-'; });
-                                    obsOrg.observe(orgInput, { attributes: true });
-                                </script>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">อาชีพ</label>
                                 <div class="font-medium text-slate-700 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-career-display"></div>
-                                <input type="hidden" id="view-reg-career">
-                                <script>
-                                    const carInput = document.getElementById('view-reg-career');
-                                    const carDisplay = document.getElementById('view-reg-career-display');
-                                    const obsCar = new MutationObserver(() => { carDisplay.textContent = carInput.value || '-'; });
-                                    obsCar.observe(carInput, { attributes: true });
-                                </script>
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">ระดับการศึกษา</label>
                                 <div class="font-medium text-slate-700 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-education-display"></div>
-                                <input type="hidden" id="view-reg-education">
-                                <script>
-                                    const eduInput = document.getElementById('view-reg-education');
-                                    const eduDisplay = document.getElementById('view-reg-education-display');
-                                    const obsEdu = new MutationObserver(() => { eduDisplay.textContent = eduInput.value || '-'; });
-                                    obsEdu.observe(eduInput, { attributes: true });
-                                </script>
                             </div>
                         </div>
                     </div>
@@ -3892,13 +3806,12 @@
             if(!d) return;
             
             document.getElementById('view-reg-event-name').textContent = adminSelectedEvent ? adminSelectedEvent.name : '';
-            document.getElementById('view-reg-prefix').value = d.prefix || '';
-            document.getElementById('view-reg-fullname').value = d.fullname || '';
-            document.getElementById('view-reg-email').value = d.email || d.uid || '';
-            document.getElementById('view-reg-license').value = d.license || '';
-            document.getElementById('view-reg-org').value = d.organization || '';
-            document.getElementById('view-reg-career').value = d.career || '';
-            document.getElementById('view-reg-education').value = d.education || '';
+            document.getElementById('view-reg-fullname-display').textContent = (d.prefix || '') + (d.fullname || '-');
+            document.getElementById('view-reg-email-display').textContent = d.email || d.uid || '-';
+            document.getElementById('view-reg-license-display').textContent = d.license || '-';
+            document.getElementById('view-reg-org-display').textContent = d.organization || '-';
+            document.getElementById('view-reg-career-display').textContent = d.career || '-';
+            document.getElementById('view-reg-education-display').textContent = d.education || '-';
             
             document.getElementById('view-reg-sources').innerHTML = (d.sources || []).map(s => `<span class="inline-block bg-white text-slate-600 px-3 py-1 border border-slate-200 rounded-lg text-xs font-bold shadow-sm">${s}</span>`).join('');
             document.getElementById('view-reg-factors').innerHTML = (d.factors || []).map(f => `<span class="inline-block bg-white text-slate-600 px-3 py-1 border border-slate-200 rounded-lg text-xs font-bold shadow-sm">${f}</span>`).join('');
