@@ -1990,7 +1990,6 @@
         const app = initializeApp(firebaseConfig);
 
         // Initialize Firebase App Check with reCAPTCHA Enterprise (Safe Mode)
-        /* ปิดชั่วคราวสำหรับการรัน Automated Test (TestSprite)
         let appCheck;
         try {
             appCheck = initializeAppCheck(app, {
@@ -2001,7 +2000,6 @@
         } catch (error) {
         console.error("Firebase App Check initialization failed:", error);
         }
-        */
 
         const auth = getAuth(app);
         const db = getFirestore(app);
