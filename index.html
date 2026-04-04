@@ -4256,25 +4256,53 @@
             });
         };
 
-        window.addSurveyQuestion = function() {
-            window.adminCurrentSurveyDraft.questions.push({ question: '', options: ['มากที่สุด', 'มาก', 'ปานกลาง', 'น้อย', 'น้อยที่สุด'] });
-            window.renderSurveyBuilder();
+        // Core Engine สำหรับจัดการ State ของ Quiz และ Survey ร่วมกัน (Refactored)
+        const updateBuilderState = (type, action, payload) => {
+            const state = type === 'quiz' ? window.adminCurrentQuizDraft : window.adminCurrentSurveyDraft;
+            const render = type === 'quiz' ? window.renderQuizBuilder : window.renderSurveyBuilder;
+            const { qIndex, oIndex, text, aIndex } = payload || {};
+
+            switch(action) {
+                case 'ADD_Q':
+                    state.questions.push(type === 'quiz' 
+                        ? { question: '', options: ['ตัวเลือก 1', 'ตัวเลือก 2'], answerIndex: 0 } 
+                        : { question: '', options: ['มากที่สุด', 'มาก', 'ปานกลาง', 'น้อย', 'น้อยที่สุด'] });
+                    break;
+                case 'REMOVE_Q':
+                    state.questions.splice(qIndex, 1);
+                    break;
+                case 'ADD_OPT':
+                    state.questions[qIndex].options.push(type === 'quiz' 
+                        ? `ตัวเลือก ${state.questions[qIndex].options.length + 1}` 
+                        : `ตัวเลือกระดับ ${state.questions[qIndex].options.length + 1}`);
+                    break;
+                case 'REMOVE_OPT':
+                    if(state.questions[qIndex].options.length <= 2) return showToast('ต้องมีอย่างน้อย 2 ตัวเลือก', 'error');
+                    state.questions[qIndex].options.splice(oIndex, 1);
+                    if(type === 'quiz' && state.questions[qIndex].answerIndex >= state.questions[qIndex].options.length) {
+                        state.questions[qIndex].answerIndex = 0;
+                    }
+                    break;
+                case 'UPDATE_Q_TEXT':
+                    state.questions[qIndex].question = text;
+                    return; // Return ทันที ไม่ต้อง Render ใหม่เพื่อรักษา Focus ช่อง Input
+                case 'UPDATE_OPT_TEXT':
+                    state.questions[qIndex].options[oIndex] = text;
+                    return; // Return ทันที
+                case 'UPDATE_ANSWER':
+                    if(type === 'quiz') state.questions[qIndex].answerIndex = parseInt(aIndex);
+                    return;
+            }
+            render();
         };
-        window.removeSurveyQuestion = function(index) {
-            window.adminCurrentSurveyDraft.questions.splice(index, 1);
-            window.renderSurveyBuilder();
-        };
-        window.addSurveyOption = function(qIndex) {
-            window.adminCurrentSurveyDraft.questions[qIndex].options.push(`ตัวเลือกระดับ ${window.adminCurrentSurveyDraft.questions[qIndex].options.length + 1}`);
-            window.renderSurveyBuilder();
-        };
-        window.removeSurveyOption = function(qIndex, oIndex) {
-            if(window.adminCurrentSurveyDraft.questions[qIndex].options.length <= 2) return showToast('ต้องมีอย่างน้อย 2 ตัวเลือก', 'error');
-            window.adminCurrentSurveyDraft.questions[qIndex].options.splice(oIndex, 1);
-            window.renderSurveyBuilder();
-        };
-        window.updateSurveyQuestionText = function(qIndex, text) { window.adminCurrentSurveyDraft.questions[qIndex].question = text; };
-        window.updateSurveyOption = function(qIndex, oIndex, text) { window.adminCurrentSurveyDraft.questions[qIndex].options[oIndex] = text; };
+
+        // Survey State Wrappers
+        window.addSurveyQuestion = () => updateBuilderState('survey', 'ADD_Q');
+        window.removeSurveyQuestion = (i) => updateBuilderState('survey', 'REMOVE_Q', {qIndex: i});
+        window.addSurveyOption = (i) => updateBuilderState('survey', 'ADD_OPT', {qIndex: i});
+        window.removeSurveyOption = (qi, oi) => updateBuilderState('survey', 'REMOVE_OPT', {qIndex: qi, oIndex: oi});
+        window.updateSurveyQuestionText = (i, t) => updateBuilderState('survey', 'UPDATE_Q_TEXT', {qIndex: i, text: t});
+        window.updateSurveyOption = (qi, oi, t) => updateBuilderState('survey', 'UPDATE_OPT_TEXT', {qIndex: qi, oIndex: oi, text: t});
 
         window.saveSurvey = async function() {
             const title = document.getElementById('admin-survey-title-input').value.trim();
@@ -4419,29 +4447,14 @@
             });
         };
 
-        window.addQuizQuestion = function() {
-            window.adminCurrentQuizDraft.questions.push({ question: '', options: ['ตัวเลือก 1', 'ตัวเลือก 2'], answerIndex: 0 });
-            window.renderQuizBuilder();
-        };
-        window.removeQuizQuestion = function(index) {
-            window.adminCurrentQuizDraft.questions.splice(index, 1);
-            window.renderQuizBuilder();
-        };
-        window.addQuizOption = function(qIndex) {
-            window.adminCurrentQuizDraft.questions[qIndex].options.push(`ตัวเลือก ${window.adminCurrentQuizDraft.questions[qIndex].options.length + 1}`);
-            window.renderQuizBuilder();
-        };
-        window.removeQuizOption = function(qIndex, oIndex) {
-            if(window.adminCurrentQuizDraft.questions[qIndex].options.length <= 2) return showToast('ต้องมีอย่างน้อย 2 ตัวเลือก', 'error');
-            window.adminCurrentQuizDraft.questions[qIndex].options.splice(oIndex, 1);
-            if(window.adminCurrentQuizDraft.questions[qIndex].answerIndex >= window.adminCurrentQuizDraft.questions[qIndex].options.length) {
-                window.adminCurrentQuizDraft.questions[qIndex].answerIndex = 0;
-            }
-            window.renderQuizBuilder();
-        };
-        window.updateQuizQuestionText = function(qIndex, text) { window.adminCurrentQuizDraft.questions[qIndex].question = text; };
-        window.updateQuizOption = function(qIndex, oIndex, text) { window.adminCurrentQuizDraft.questions[qIndex].options[oIndex] = text; };
-        window.updateQuizAnswer = function(qIndex, aIndex) { window.adminCurrentQuizDraft.questions[qIndex].answerIndex = parseInt(aIndex); };
+        // Quiz State Wrappers
+        window.addQuizQuestion = () => updateBuilderState('quiz', 'ADD_Q');
+        window.removeQuizQuestion = (i) => updateBuilderState('quiz', 'REMOVE_Q', {qIndex: i});
+        window.addQuizOption = (i) => updateBuilderState('quiz', 'ADD_OPT', {qIndex: i});
+        window.removeQuizOption = (qi, oi) => updateBuilderState('quiz', 'REMOVE_OPT', {qIndex: qi, oIndex: oi});
+        window.updateQuizQuestionText = (i, t) => updateBuilderState('quiz', 'UPDATE_Q_TEXT', {qIndex: i, text: t});
+        window.updateQuizOption = (qi, oi, t) => updateBuilderState('quiz', 'UPDATE_OPT_TEXT', {qIndex: qi, oIndex: oi, text: t});
+        window.updateQuizAnswer = (qi, ai) => updateBuilderState('quiz', 'UPDATE_ANSWER', {qIndex: qi, aIndex: ai});
 
         window.saveQuiz = async function() {
             const title = document.getElementById('admin-quiz-title-input').value.trim();
