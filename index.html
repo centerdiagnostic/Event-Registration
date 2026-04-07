@@ -3327,12 +3327,19 @@
                 try {
                     // ดึงค่า Consent ทั้ง 3 ข้อจาก Checkbox
                     const pdpaConsent = {
-                        agree_privacy: document.getElementById('pdpa-agree-1')?.checked || false,
-                        agree_marketing: document.getElementById('pdpa-agree-2')?.checked || false,
-                        agree_sponsor: document.getElementById('pdpa-agree-3')?.checked || false
-                    };
+                    agree_privacy: document.getElementById('pdpa-agree-1')?.checked || false,
+                    agree_marketing: document.getElementById('pdpa-agree-2')?.checked || false,
+                    agree_sponsor: document.getElementById('pdpa-agree-3')?.checked || false
+                };
 
-                    const regData = {
+                if (!pdpaConsent.agree_privacy) {
+                    showToast('กรุณายอมรับเงื่อนไขนโยบายความเป็นส่วนตัว (PDPA) ข้อ 1', 'error');
+                    setButtonLoading(btnId, false, defaultBtnText);
+                    window.location.hash = `#/register/${currentRoute.eventId}/${currentRoute.optionId || 0}`;
+                    return;
+                }
+
+                const regData = {
                         uid: currentUser?.uid || '',
                         email: currentUser?.email || '',
                         eventId: currentRoute.eventId || 0,
