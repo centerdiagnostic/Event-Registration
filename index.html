@@ -1248,9 +1248,14 @@
                                 <h2 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">ฐานข้อมูลผู้สมัคร</h2>
                                 <p class="text-slate-500 mt-2 font-medium">ดูและส่งออกข้อมูลผู้ที่ลงทะเบียน</p>
                             </div>
-                            <button onclick="window.exportToCsv()" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 font-bold py-3 px-6 rounded-xl transition shadow-sm flex items-center gap-2 whitespace-nowrap">
-                                <i class="fa-solid fa-file-csv"></i> ส่งออกเป็น CSV
-                            </button>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <button onclick="window.exportToCsv()" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 font-bold py-3 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2 whitespace-nowrap text-sm">
+                                    <i class="fa-solid fa-file-csv"></i> ข้อมูลลงทะเบียน
+                                </button>
+                                <button onclick="window.exportSurveyToCsv()" class="bg-pink-50 text-pink-600 hover:bg-pink-100 border border-pink-200 font-bold py-3 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2 whitespace-nowrap text-sm">
+                                    <i class="fa-solid fa-star"></i> ผลประเมิน
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Dropdown เลือกกิจกรรม -->
@@ -1789,6 +1794,9 @@
                     </button>
                     <button onclick="window.adminShowQr()" class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-bold py-3 rounded-xl transition shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
                         <i class="fa-solid fa-qrcode text-slate-400 mr-1"></i> โชว์ QR
+                    </button>
+                    <button onclick="window.duplicateEvent()" class="bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-bold py-3 rounded-xl transition">
+                        <i class="fa-solid fa-copy mr-1"></i> คัดลอกเปิดใหม่
                     </button>
                     <button onclick="window.openEditEventModal()" class="bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 font-bold py-3 rounded-xl transition">
                         <i class="fa-solid fa-pen mr-1"></i> แก้ไข
@@ -2943,9 +2951,23 @@
                     grid.innerHTML = '';
                     window.homeCurrentEvents = [];
 
+                    const now = new Date();
                     eventsWithReg.forEach(({ docId, eventData, userRegData }) => {
+                        // ซ่อนกิจกรรมที่จบไปแล้ว (เลย eventEnd) จากหน้าหลัก
+                        if (eventData.eventEnd) {
+                            const endDate = new Date(eventData.eventEnd);
+                            if (endDate < now) return; 
+                        }
+
                         window.homeCurrentEvents.push({ docId: docId, ...eventData });
                         
+                        // เช็คว่าหมดเวลารับสมัครหรือยัง
+                        let isRegClosed = false;
+                        if (eventData.regEnd) {
+                            const regEndDate = new Date(eventData.regEnd + 'T23:59:59');
+                            if (regEndDate < now) isRegClosed = true;
+                        }
+
                         let bgStyle = '';
                         let bgClass = 'border-b border-slate-100';
                         let overlay = '';
@@ -3071,9 +3093,12 @@
                                     ${scheduleBtnHtml}
                                     ${quizBtnHtml}
                                     ${surveyBtnHtml}
-                                    <a href="#/register/${eventData.id || 0}/0" class="block text-center w-full ${userRegData ? 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300' : 'btn-primary text-white'} font-bold py-3.5 px-4 rounded-xl transition flex justify-center items-center gap-2">
-                                        ${userRegData ? '<i class="fa-solid fa-file-invoice"></i> ข้อมูลลงทะเบียนของคุณ' : 'ลงทะเบียนทันที <i class="fa-solid fa-arrow-right"></i>'}
-                                    </a>
+                                    ${userRegData 
+                                        ? `<a href="#/register/${eventData.id || 0}/0" class="block text-center w-full bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-bold py-3.5 px-4 rounded-xl transition flex justify-center items-center gap-2"><i class="fa-solid fa-file-invoice"></i> ข้อมูลลงทะเบียนของคุณ</a>` 
+                                        : (isRegClosed 
+                                            ? `<button disabled class="w-full bg-slate-200 text-slate-500 font-bold py-3.5 px-4 rounded-xl cursor-not-allowed flex justify-center items-center gap-2"><i class="fa-solid fa-lock"></i> ปิดรับสมัครแล้ว</button>` 
+                                            : `<a href="#/register/${eventData.id || 0}/0" class="block text-center w-full btn-primary text-white font-bold py-3.5 px-4 rounded-xl transition flex justify-center items-center gap-2">ลงทะเบียนทันที <i class="fa-solid fa-arrow-right"></i></a>`)
+                                    }
                                 </div>
                             </div>
                         `;
@@ -3112,8 +3137,18 @@
                 document.getElementById('reg-form').reset();
                 document.getElementById('already-registered-alert').classList.add('hidden');
                 document.getElementById('user-quiz-section').classList.add('hidden');
-                document.getElementById('btn-reg-submit').disabled = false;
-                document.getElementById('btn-reg-submit').classList.remove('hidden');
+                
+                const now = new Date();
+                let isRegClosed = false;
+                if (eventData.regEnd) {
+                    const regEndDate = new Date(eventData.regEnd + 'T23:59:59');
+                    if (regEndDate < now) isRegClosed = true;
+                }
+
+                const btnSubmit = document.getElementById('btn-reg-submit');
+                btnSubmit.disabled = false;
+                btnSubmit.classList.remove('hidden', 'bg-slate-200', 'text-slate-500', 'cursor-not-allowed');
+                btnSubmit.classList.add('btn-primary', 'text-white');
 
                 Array.from(document.getElementById('reg-form').elements).forEach(el => {
                     if (el.id !== 'reg-email') el.disabled = false;
@@ -3264,7 +3299,18 @@
                     }
 
                 } else {
-                    document.getElementById('btn-reg-submit').innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการลงทะเบียน';
+                    if (isRegClosed) {
+                        btnSubmit.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> ปิดรับสมัครแล้ว';
+                        btnSubmit.disabled = true;
+                        btnSubmit.classList.remove('btn-primary', 'text-white');
+                        btnSubmit.classList.add('bg-slate-200', 'text-slate-500', 'cursor-not-allowed');
+                        
+                        Array.from(document.getElementById('reg-form').elements).forEach(el => {
+                            if (el.id !== 'btn-reg-submit') el.disabled = true;
+                        });
+                    } else {
+                        btnSubmit.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการลงทะเบียน';
+                    }
                 }
 
                 // เอาส่วนที่แสดง Quiz ออกจากหน้าประวัติการลงทะเบียน ตามความต้องการ
@@ -3668,6 +3714,61 @@
             window.showQrCode(url, adminSelectedEvent.name);
         };
 
+        window.duplicateEvent = function() {
+            if(!adminSelectedEvent) return;
+            const ev = adminSelectedEvent;
+            
+            document.getElementById('admin-event-doc-id').value = ''; 
+            document.getElementById('admin-event-title').value = ev.name + ' (Copy)';
+            document.getElementById('admin-event-desc').value = ev.desc;
+            document.getElementById('admin-event-visibility').value = ev.visibility || 'public';
+            document.getElementById('admin-event-reg-start').value = ''; 
+            document.getElementById('admin-event-reg-end').value = '';
+            document.getElementById('admin-event-start').value = '';
+            document.getElementById('admin-event-end').value = '';
+            document.getElementById('admin-event-location').value = ev.location;
+            document.getElementById('admin-event-fee').value = ev.fee;
+            document.getElementById('admin-event-limit').value = ev.limit || '';
+
+            document.getElementById('admin-event-image').value = '';
+            const previewContainer = document.getElementById('admin-event-image-preview-container');
+            const preview = document.getElementById('admin-event-image-preview');
+            const hiddenBase64 = document.getElementById('admin-event-image-base64');
+            if (ev.coverImage) {
+                hiddenBase64.value = ev.coverImage;
+                preview.style.backgroundImage = `url(${ev.coverImage})`;
+                previewContainer.classList.remove('hidden');
+            } else {
+                hiddenBase64.value = '';
+                preview.style.backgroundImage = 'none';
+                previewContainer.classList.add('hidden');
+            }
+            
+            document.getElementById('admin-event-schedule-link').value = ev.scheduleLink || '';
+            const scheduleBase64 = document.getElementById('admin-event-schedule-base64');
+            const scheduleFile = document.getElementById('admin-event-schedule-file');
+            const scheduleNameDisplay = document.getElementById('schedule-file-name');
+            scheduleFile.value = '';
+            if (ev.scheduleFile) {
+                scheduleBase64.value = ev.scheduleFile;
+                scheduleNameDisplay.textContent = 'มีไฟล์แนบเดิมในระบบ (หากต้องการเปลี่ยนให้อัปโหลดใหม่)';
+                scheduleNameDisplay.classList.remove('hidden');
+            } else {
+                scheduleBase64.value = '';
+                scheduleNameDisplay.classList.add('hidden');
+            }
+
+            document.getElementById('admin-event-quiz').value = ev.quizId || '';
+            document.getElementById('admin-event-quiz-open').checked = ev.isQuizOpen || false;
+            document.getElementById('admin-event-survey').value = ev.surveyId || '';
+            document.getElementById('admin-event-survey-open').checked = ev.isSurveyOpen || false;
+
+            document.getElementById('modal-form-title').textContent = 'สร้างกิจกรรมใหม่ (คัดลอกจากของเดิม)';
+            document.getElementById('modal-event-details').classList.add('hidden');
+            document.getElementById('modal-event-form').classList.remove('hidden');
+            showToast('คัดลอกรายละเอียดแล้ว กรุณาตั้งค่าวันที่ใหม่ก่อนกดบันทึก', 'success');
+        };
+
         window.openEditEventModal = function() {
             if(!adminSelectedEvent) return;
             const ev = adminSelectedEvent;
@@ -3874,6 +3975,74 @@
             document.getElementById('view-reg-score-display').innerHTML = scoreText;
 
             document.getElementById('modal-registrant-view').classList.remove('hidden');
+        };
+
+        window.exportSurveyToCsv = async function() {
+            if(!currentRegistrantsData || currentRegistrantsData.length === 0) {
+                showToast('ไม่มีข้อมูลสำหรับ Export', 'error');
+                return;
+            }
+            if(!adminSelectedEvent || !adminSelectedEvent.surveyId) {
+                showToast('กิจกรรมนี้ไม่มีแบบประเมิน', 'error');
+                return;
+            }
+            
+            showView('loading');
+            try {
+                const surveyDoc = await getDoc(doc(db, "surveys", adminSelectedEvent.surveyId));
+                if (!surveyDoc.exists()) {
+                    showToast('ไม่พบโครงสร้างแบบประเมิน', 'error');
+                    showView('admin');
+                    return;
+                }
+                const surveyData = surveyDoc.data();
+                
+                let headers = ['วันเวลาประเมิน', 'ชื่อ-นามสกุล', 'อีเมล', 'หน่วยงาน'];
+                surveyData.questions.forEach((q, i) => {
+                    headers.push(`ข้อ ${i+1}: ${q.question}`);
+                });
+                
+                let csvContent = "\uFEFF";
+                csvContent += headers.map(h => `"${(h||'').toString().replace(/"/g, '""')}"`).join(",") + "\n";
+                
+                currentRegistrantsData.forEach(row => {
+                    if(!row.isSurveyed || !row.surveyAnswers) return;
+                    
+                    const dateStr = row.surveySubmittedAt ? formatDateTimeTH(row.surveySubmittedAt.toDate()) : '-';
+                    const rowData = [
+                        dateStr,
+                        row.fullname || '-',
+                        row.email || '-',
+                        row.organization || '-'
+                    ];
+                    
+                    surveyData.questions.forEach((q, i) => {
+                        const ans = row.surveyAnswers[i];
+                        if (ans === undefined || ans === null) {
+                            rowData.push('-');
+                        } else if (q.type === 'text') {
+                            rowData.push(ans);
+                        } else {
+                            rowData.push(q.options[ans] || ans);
+                        }
+                    });
+                    
+                    csvContent += rowData.map(v => `"${(v||'').toString().replace(/"/g, '""')}"`).join(",") + "\n";
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", `SurveyResults_${adminSelectedEvent.id}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (e) {
+                console.error(e);
+                showToast('เกิดข้อผิดพลาดในการดึงข้อมูลแบบประเมิน', 'error');
+            }
+            showView('admin');
         };
 
         window.exportToCsv = function() {
@@ -4096,7 +4265,9 @@
                                             <p class="font-bold text-slate-800 line-clamp-1 max-w-sm group-hover:text-teal-700 transition-colors text-sm">${eventObj.name || '-'}</p>
                                             ${eventObj.visibility === 'internal' ? '<span class="text-[9px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200"><i class="fa-solid fa-lock"></i> ภายใน</span>' : ''}
                                         </div>
-                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: ${eventObj.id || '-'}</p>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: ${eventObj.id || '-'}</p>
+                                            ${eventObj.eventEnd && new Date(eventObj.eventEnd) < new Date() ? '<span class="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-md shadow-md font-bold tracking-wide animate-pulse">จบแล้ว</span>' : '<span class="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-md shadow-md font-bold tracking-wide">กำลังจัด</span>'}   </div>
                                     </div>
                                 </div>
                             </td>
@@ -4287,45 +4458,70 @@
             const container = document.getElementById('survey-questions-builder');
             container.innerHTML = '';
             window.adminCurrentSurveyDraft.questions.forEach((q, qIndex) => {
-                let optionsHtml = '';
-                q.options.forEach((opt, oIndex) => {
-                    optionsHtml += `
-                        <div class="flex items-center gap-2 mb-2">
-                            <i class="fa-regular fa-circle text-pink-300"></i>
-                            <input type="text" value="${opt}" onchange="window.updateSurveyOption(${qIndex}, ${oIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="ตัวเลือกที่ ${oIndex + 1}">
-                            <button type="button" onclick="window.removeSurveyOption(${qIndex}, ${oIndex})" class="text-red-400 hover:text-red-600 px-2 transition"><i class="fa-solid fa-xmark"></i></button>
-                        </div>
+                if(!q.type) q.type = 'choice'; 
+                let contentHtml = '';
+
+                if (q.type === 'text') {
+                    contentHtml = `<div class="p-3 bg-white rounded-xl border border-slate-200 text-sm text-slate-400 italic">ผู้ใช้จะพิมพ์คำตอบแบบข้อความในส่วนนี้</div>`;
+                } else {
+                    let optionsHtml = '';
+                    q.options.forEach((opt, oIndex) => {
+                        optionsHtml += `
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-regular fa-circle text-pink-300"></i>
+                                <input type="text" value="${opt}" onchange="window.updateSurveyOption(${qIndex}, ${oIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="ตัวเลือกที่ ${oIndex + 1}">
+                                <button type="button" onclick="window.removeSurveyOption(${qIndex}, ${oIndex})" class="text-red-400 hover:text-red-600 px-2 transition"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        `;
+                    });
+                    contentHtml = `
+                        ${optionsHtml}
+                        <button type="button" onclick="window.addSurveyOption(${qIndex})" class="text-xs text-pink-600 font-bold mt-2 flex items-center gap-1 hover:text-pink-800 transition"><i class="fa-solid fa-plus"></i> เพิ่มตัวเลือก (เช่น มากที่สุด, มาก, ปานกลาง)</button>
                     `;
-                });
+                }
 
                 container.innerHTML += `
                     <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 relative animate-fade-in-up">
                         <div class="absolute top-4 right-4 flex gap-2">
                             <button type="button" onclick="window.removeSurveyQuestion(${qIndex})" class="text-red-400 hover:text-red-600 bg-white w-8 h-8 rounded-lg shadow-sm border border-slate-100 flex items-center justify-center transition"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        <label class="block text-xs font-bold text-slate-700 mb-2">หัวข้อประเมินที่ ${qIndex + 1}</label>
-                        <input type="text" value="${q.question}" onchange="window.updateSurveyQuestionText(${qIndex}, this.value)" class="input-premium w-full px-4 py-3 rounded-xl mb-4 font-bold text-slate-800" placeholder="ระบุหัวข้อประเมิน...">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pr-20">
+                            <label class="block text-xs font-bold text-slate-700">หัวข้อประเมินที่ ${qIndex + 1}</label>
+                            <select onchange="window.changeQuestionType('survey', ${qIndex}, this.value)" class="input-premium px-3 py-1.5 rounded-lg text-sm w-full sm:w-auto outline-none font-medium">
+                                <option value="choice" ${q.type === 'choice' ? 'selected' : ''}>หลายตัวเลือก (Choices)</option>
+                                <option value="text" ${q.type === 'text' ? 'selected' : ''}>เขียนตอบ (ข้อเสนอแนะ)</option>
+                            </select>
+                        </div>
+                        <input type="text" value="${q.question}" onchange="window.updateSurveyQuestionText(${qIndex}, this.value)" class="input-premium w-full px-4 py-3 rounded-xl mb-4 font-bold text-slate-800" placeholder="ระบุหัวข้อประเมิน หรือคำถามข้อเสนอแนะ...">
                         <div class="pl-2">
-                            ${optionsHtml}
-                            <button type="button" onclick="window.addSurveyOption(${qIndex})" class="text-xs text-pink-600 font-bold mt-2 flex items-center gap-1 hover:text-pink-800 transition"><i class="fa-solid fa-plus"></i> เพิ่มตัวเลือก (เช่น มากที่สุด, มาก, ปานกลาง)</button>
+                            ${contentHtml}
                         </div>
                     </div>
                 `;
             });
         };
 
+        window.changeQuestionType = (type, qIndex, newType) => updateBuilderState(type, 'CHANGE_TYPE', {qIndex: qIndex, value: newType});
+        window.updateTextAnswer = (type, qIndex, text) => updateBuilderState(type, 'UPDATE_TEXT_ANSWER', {qIndex: qIndex, text: text});
+
         // Core Engine สำหรับจัดการ State ของ Quiz และ Survey ร่วมกัน (Refactored)
         const updateBuilderState = (type, action, payload) => {
             const state = type === 'quiz' ? window.adminCurrentQuizDraft : window.adminCurrentSurveyDraft;
             const render = type === 'quiz' ? window.renderQuizBuilder : window.renderSurveyBuilder;
-            const { qIndex, oIndex, text, aIndex } = payload || {};
+            const { qIndex, oIndex, text, aIndex, value } = payload || {};
 
             switch(action) {
                 case 'ADD_Q':
                     state.questions.push(type === 'quiz' 
-                        ? { question: '', options: ['ตัวเลือก 1', 'ตัวเลือก 2'], answerIndex: 0 } 
-                        : { question: '', options: ['มากที่สุด', 'มาก', 'ปานกลาง', 'น้อย', 'น้อยที่สุด'] });
+                        ? { type: 'choice', question: '', options: ['ตัวเลือก 1', 'ตัวเลือก 2'], answerIndex: 0, textAnswer: '' } 
+                        : { type: 'choice', question: '', options: ['มากที่สุด', 'มาก', 'ปานกลาง', 'น้อย', 'น้อยที่สุด'] });
                     break;
+                case 'CHANGE_TYPE':
+                    state.questions[qIndex].type = value;
+                    break;
+                case 'UPDATE_TEXT_ANSWER':
+                    state.questions[qIndex].textAnswer = text;
+                    return; 
                 case 'REMOVE_Q':
                     state.questions.splice(qIndex, 1);
                     break;
@@ -4477,28 +4673,47 @@
             const container = document.getElementById('quiz-questions-builder');
             container.innerHTML = '';
             window.adminCurrentQuizDraft.questions.forEach((q, qIndex) => {
-                let optionsHtml = '';
-                q.options.forEach((opt, oIndex) => {
-                    optionsHtml += `
-                        <div class="flex items-center gap-2 mb-2">
-                            <input type="radio" name="correct_answer_${qIndex}" value="${oIndex}" ${q.answerIndex === oIndex ? 'checked' : ''} onchange="window.updateQuizAnswer(${qIndex}, ${oIndex})" class="w-4 h-4 text-purple-600 focus:ring-purple-500 cursor-pointer" title="คลิกเพื่อเลือกเป็นคำตอบที่ถูก">
-                            <input type="text" value="${opt}" onchange="window.updateQuizOption(${qIndex}, ${oIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="ตัวเลือกที่ ${oIndex + 1}">
-                            <button type="button" onclick="window.removeQuizOption(${qIndex}, ${oIndex})" class="text-red-400 hover:text-red-600 px-2 transition"><i class="fa-solid fa-xmark"></i></button>
-                        </div>
+                if(!q.type) q.type = 'choice'; 
+
+                let contentHtml = '';
+                if (q.type === 'text') {
+                    contentHtml = `
+                        <label class="block text-[10px] font-bold text-purple-600 mb-2 uppercase tracking-widest"><i class="fa-solid fa-pen"></i> ระบุคำตอบที่ถูกต้อง (ระบบจะตรวจตรงกับคำนี้)</label>
+                        <input type="text" value="${q.textAnswer || ''}" onchange="window.updateTextAnswer('quiz', ${qIndex}, this.value)" class="input-premium w-full px-3 py-2 text-sm rounded-lg" placeholder="คำตอบที่ถูกต้องที่ผู้ใช้ต้องพิมพ์...">
                     `;
-                });
+                } else {
+                    let optionsHtml = '';
+                    q.options.forEach((opt, oIndex) => {
+                        optionsHtml += `
+                            <div class="flex items-center gap-2 mb-2">
+                                <input type="radio" name="correct_answer_${qIndex}" value="${oIndex}" ${q.answerIndex === oIndex ? 'checked' : ''} onchange="window.updateQuizAnswer(${qIndex}, ${oIndex})" class="w-4 h-4 text-purple-600 focus:ring-purple-500 cursor-pointer" title="คลิกเพื่อเลือกเป็นคำตอบที่ถูก">
+                                <input type="text" value="${opt}" onchange="window.updateQuizOption(${qIndex}, ${oIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="ตัวเลือกที่ ${oIndex + 1}">
+                                <button type="button" onclick="window.removeQuizOption(${qIndex}, ${oIndex})" class="text-red-400 hover:text-red-600 px-2 transition"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        `;
+                    });
+                    contentHtml = `
+                        <label class="block text-[10px] font-bold text-purple-600 mb-2 uppercase tracking-widest"><i class="fa-solid fa-circle-check"></i> ติ๊กวงกลมด้านหน้าเพื่อเลือกข้อที่ถูกต้อง</label>
+                        ${optionsHtml}
+                        <button type="button" onclick="window.addQuizOption(${qIndex})" class="text-xs text-purple-600 font-bold mt-2 flex items-center gap-1 hover:text-purple-800 transition"><i class="fa-solid fa-plus"></i> เพิ่มตัวเลือก</button>
+                    `;
+                }
 
                 container.innerHTML += `
                     <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 relative animate-fade-in-up">
                         <div class="absolute top-4 right-4 flex gap-2">
                             <button type="button" onclick="window.removeQuizQuestion(${qIndex})" class="text-red-400 hover:text-red-600 bg-white w-8 h-8 rounded-lg shadow-sm border border-slate-100 flex items-center justify-center transition"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        <label class="block text-xs font-bold text-slate-700 mb-2">คำถามข้อที่ ${qIndex + 1}</label>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pr-20">
+                            <label class="block text-xs font-bold text-slate-700">คำถามข้อที่ ${qIndex + 1}</label>
+                            <select onchange="window.changeQuestionType('quiz', ${qIndex}, this.value)" class="input-premium px-3 py-1.5 rounded-lg text-sm w-full sm:w-auto outline-none font-medium">
+                                <option value="choice" ${q.type === 'choice' ? 'selected' : ''}>หลายตัวเลือก (Choices)</option>
+                                <option value="text" ${q.type === 'text' ? 'selected' : ''}>เขียนตอบสั้นๆ (Text)</option>
+                            </select>
+                        </div>
                         <input type="text" value="${q.question}" onchange="window.updateQuizQuestionText(${qIndex}, this.value)" class="input-premium w-full px-4 py-3 rounded-xl mb-4 font-bold text-slate-800" placeholder="ระบุคำถาม...">
                         <div class="pl-2">
-                            <label class="block text-[10px] font-bold text-purple-600 mb-2 uppercase tracking-widest"><i class="fa-solid fa-circle-check"></i> ติ๊กวงกลมด้านหน้าเพื่อเลือกข้อที่ถูกต้อง</label>
-                            ${optionsHtml}
-                            <button type="button" onclick="window.addQuizOption(${qIndex})" class="text-xs text-purple-600 font-bold mt-2 flex items-center gap-1 hover:text-purple-800 transition"><i class="fa-solid fa-plus"></i> เพิ่มตัวเลือก</button>
+                            ${contentHtml}
                         </div>
                     </div>
                 `;
@@ -4638,14 +4853,18 @@
             
             quiz.questions.forEach((q, qIndex) => {
                 let optionsHtml = '';
-                q.options.forEach((opt, oIndex) => {
-                    optionsHtml += `
-                        <label class="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-purple-400 hover:shadow-sm transition group">
-                            <input type="radio" name="user_q_${qIndex}" value="${oIndex}" onchange="window.currentUserQuizSession.answers[${qIndex}] = ${oIndex}" class="mt-0.5 w-4 h-4 text-purple-600 focus:ring-purple-500 border-slate-300 cursor-pointer">
-                            <span class="text-slate-700 font-medium group-hover:text-purple-900 leading-relaxed">${opt}</span>
-                        </label>
-                    `;
-                });
+                if (q.type === 'text') {
+                    optionsHtml = `<input type="text" onchange="window.currentUserQuizSession.answers[${qIndex}] = this.value" class="input-premium w-full px-4 py-3 rounded-xl font-medium" placeholder="พิมพ์คำตอบของคุณ...">`;
+                } else {
+                    q.options.forEach((opt, oIndex) => {
+                        optionsHtml += `
+                            <label class="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-purple-400 hover:shadow-sm transition group">
+                                <input type="radio" name="user_q_${qIndex}" value="${oIndex}" onchange="window.currentUserQuizSession.answers[${qIndex}] = ${oIndex}" class="mt-0.5 w-4 h-4 text-purple-600 focus:ring-purple-500 border-slate-300 cursor-pointer">
+                                <span class="text-slate-700 font-medium group-hover:text-purple-900 leading-relaxed">${opt}</span>
+                            </label>
+                        `;
+                    });
+                }
                 container.innerHTML += `<div class="mb-8"><p class="font-bold text-slate-800 mb-3 text-lg leading-relaxed"><span class="text-purple-600 mr-2">ข้อ ${qIndex + 1}.</span> ${q.question}</p><div class="space-y-3 pl-1 sm:pl-6">${optionsHtml}</div></div>`;
             });
         };
@@ -4654,13 +4873,22 @@
             const session = window.currentUserQuizSession;
             if(!session) return;
             for(let i=0; i<session.data.questions.length; i++) {
-                if(session.answers[i] === undefined) return showToast(`กรุณาตอบคำถามข้อที่ ${i+1}`, 'error');
+                const ans = session.answers[i];
+                if(ans === undefined || (typeof ans === 'string' && ans.trim() === '')) {
+                    return showToast(`กรุณาตอบคำถามข้อที่ ${i+1}`, 'error');
+                }
             }
 
             setButtonLoading('btn-submit-quiz', true, '<i class="fa-solid fa-paper-plane"></i> กำลังส่ง...');
             let score = 0;
             session.data.questions.forEach((q, idx) => { 
-                if(parseInt(session.answers[idx]) === parseInt(q.answerIndex)) score++; 
+                if (q.type === 'text') {
+                    const userAns = (session.answers[idx] || '').toString().trim().toLowerCase();
+                    const correctAns = (q.textAnswer || '').toString().trim().toLowerCase();
+                    if (userAns === correctAns) score++;
+                } else {
+                    if(parseInt(session.answers[idx]) === parseInt(q.answerIndex)) score++; 
+                }
             });
 
             try {
@@ -4706,14 +4934,18 @@
             
             survey.questions.forEach((q, qIndex) => {
                 let optionsHtml = '';
-                q.options.forEach((opt, oIndex) => {
-                    optionsHtml += `
-                        <label class="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-pink-400 hover:shadow-sm transition group">
-                            <input type="radio" name="user_survey_q_${qIndex}" value="${oIndex}" onchange="window.currentUserSurveySession.answers[${qIndex}] = ${oIndex}" class="mt-0.5 w-4 h-4 text-pink-600 focus:ring-pink-500 border-slate-300 cursor-pointer">
-                            <span class="text-slate-700 font-medium group-hover:text-pink-900 leading-relaxed">${opt}</span>
-                        </label>
-                    `;
-                });
+                if (q.type === 'text') {
+                    optionsHtml = `<textarea rows="3" onchange="window.currentUserSurveySession.answers[${qIndex}] = this.value" class="input-premium w-full px-4 py-3 rounded-xl font-medium resize-none" placeholder="พิมพ์ข้อเสนอแนะของคุณ..."></textarea>`;
+                } else {
+                    q.options.forEach((opt, oIndex) => {
+                        optionsHtml += `
+                            <label class="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-pink-400 hover:shadow-sm transition group">
+                                <input type="radio" name="user_survey_q_${qIndex}" value="${oIndex}" onchange="window.currentUserSurveySession.answers[${qIndex}] = ${oIndex}" class="mt-0.5 w-4 h-4 text-pink-600 focus:ring-pink-500 border-slate-300 cursor-pointer">
+                                <span class="text-slate-700 font-medium group-hover:text-pink-900 leading-relaxed">${opt}</span>
+                            </label>
+                        `;
+                    });
+                }
                 container.innerHTML += `<div class="mb-8"><p class="font-bold text-slate-800 mb-3 text-lg leading-relaxed"><span class="text-pink-600 mr-2">${qIndex + 1}.</span> ${q.question}</p><div class="space-y-3 pl-1 sm:pl-6">${optionsHtml}</div></div>`;
             });
         };
@@ -4722,7 +4954,10 @@
             const session = window.currentUserSurveySession;
             if(!session) return;
             for(let i=0; i<session.data.questions.length; i++) {
-                if(session.answers[i] === undefined) return showToast(`กรุณาตอบแบบประเมินข้อที่ ${i+1}`, 'error');
+                const ans = session.answers[i];
+                if(ans === undefined || (typeof ans === 'string' && ans.trim() === '')) {
+                    return showToast(`กรุณาตอบแบบประเมินข้อที่ ${i+1}`, 'error');
+                }
             }
 
             setButtonLoading('btn-submit-survey', true, '<i class="fa-solid fa-paper-plane"></i> กำลังส่ง...');
