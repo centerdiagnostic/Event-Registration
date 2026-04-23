@@ -3010,27 +3010,14 @@
                             visibilityBadge = `<div class="text-xs sm:text-sm font-black px-4 py-2.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 mt-2 mb-1 flex items-center justify-center shadow-sm"><i class="fa-solid fa-lock mr-2 text-rose-500"></i> เฉพาะบุคลากรภายใน</div>`;
                         }
 
-                        let quizBtnHtml = '';
-                        if (userRegData && eventData.quizId && eventData.isQuizOpen) {
-                            if (userRegData.isTested) {
-                                quizBtnHtml = `
-                                    <div class="bg-purple-50 text-purple-800 px-4 py-3 rounded-xl border border-purple-200 mb-3 text-sm font-bold flex items-center justify-between shadow-sm">
-                                        <span><i class="fa-solid fa-check-circle text-purple-600 mr-1.5"></i>ทำข้อสอบแล้ว</span>
-                                        <span class="bg-white px-2.5 py-1 rounded-lg shadow-sm">คะแนน: ${userRegData.testScore}/${userRegData.testMaxScore}</span>
-                                    </div>
-                                `;
-                            } else {
-                                quizBtnHtml = `
-                                    <button type="button" onclick="window.startQuiz('${eventData.quizId}', '${docId}')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md mb-3 text-sm flex items-center justify-center gap-2">
-                                        <i class="fa-solid fa-pen-to-square"></i> เริ่มทำแบบทดสอบ
-                                    </button>
-                                `;
-                            }
-                        }
-
                         let surveyBtnHtml = '';
+                        let isSurveyCompleted = false;
+                        let requireSurveyFirst = false;
+
                         if (userRegData && eventData.surveyId && eventData.isSurveyOpen) {
+                            requireSurveyFirst = true;
                             if (userRegData.isSurveyed) {
+                                isSurveyCompleted = true;
                                 surveyBtnHtml = `
                                     <div class="bg-pink-50 text-pink-800 px-4 py-3 rounded-xl border border-pink-200 mb-3 text-sm font-bold flex items-center justify-center shadow-sm">
                                         <span><i class="fa-solid fa-check-circle text-pink-600 mr-1.5"></i>ทำแบบประเมินแล้ว</span>
@@ -3042,6 +3029,32 @@
                                         <i class="fa-solid fa-star"></i> เริ่มทำแบบประเมิน
                                     </button>
                                 `;
+                            }
+                        }
+
+                        let quizBtnHtml = '';
+                        if (userRegData && eventData.quizId && eventData.isQuizOpen) {
+                            if (requireSurveyFirst && !isSurveyCompleted) {
+                                quizBtnHtml = `
+                                    <button type="button" disabled class="w-full bg-slate-200 text-slate-500 font-bold py-3 px-4 rounded-xl transition mb-3 text-sm flex items-center justify-center gap-2 cursor-not-allowed border border-slate-300">
+                                        <i class="fa-solid fa-lock"></i> ทำแบบประเมินเพื่อปลดล็อคข้อสอบ
+                                    </button>
+                                `;
+                            } else {
+                                if (userRegData.isTested) {
+                                    quizBtnHtml = `
+                                        <div class="bg-purple-50 text-purple-800 px-4 py-3 rounded-xl border border-purple-200 mb-3 text-sm font-bold flex items-center justify-between shadow-sm">
+                                            <span><i class="fa-solid fa-check-circle text-purple-600 mr-1.5"></i>ทำข้อสอบแล้ว</span>
+                                            <span class="bg-white px-2.5 py-1 rounded-lg shadow-sm">คะแนน: ${userRegData.testScore}/${userRegData.testMaxScore}</span>
+                                        </div>
+                                    `;
+                                } else {
+                                    quizBtnHtml = `
+                                        <button type="button" onclick="window.startQuiz('${eventData.quizId}', '${docId}')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md mb-3 text-sm flex items-center justify-center gap-2">
+                                            <i class="fa-solid fa-pen-to-square"></i> เริ่มทำแบบทดสอบ
+                                        </button>
+                                    `;
+                                }
                             }
                         }
 
@@ -3997,50 +4010,122 @@
                 }
                 const surveyData = surveyDoc.data();
                 
-                let headers = ['วันเวลาประเมิน', 'ชื่อ-นามสกุล', 'อีเมล', 'หน่วยงาน'];
-                surveyData.questions.forEach((q, i) => {
-                    headers.push(`ข้อ ${i+1}: ${q.question}`);
-                });
-                
                 let csvContent = "\uFEFF";
-                csvContent += headers.map(h => `"${(h||'').toString().replace(/"/g, '""')}"`).join(",") + "\n";
+                const headers = ['ข้อที่', 'คำถาม', 'หัวข้อย่อย', 'คำตอบ / ตัวเลือก', 'จำนวน (คน)', 'ร้อยละ (%)'];
+                csvContent += headers.map(h => `"${h}"`).join(",") + "\n";
                 
-                currentRegistrantsData.forEach(row => {
-                    if(!row.isSurveyed || !row.surveyAnswers) return;
-                    
-                    const dateStr = row.surveySubmittedAt ? formatDateTimeTH(row.surveySubmittedAt.toDate()) : '-';
-                    const rowData = [
-                        dateStr,
-                        row.fullname || '-',
-                        row.email || '-',
-                        row.organization || '-'
-                    ];
-                    
-                    surveyData.questions.forEach((q, i) => {
-                        const ans = row.surveyAnswers[i];
-                        if (ans === undefined || ans === null) {
-                            rowData.push('-');
-                        } else if (q.type === 'text') {
-                            rowData.push(ans);
+                const surveyedUsers = currentRegistrantsData.filter(row => row.isSurveyed && row.surveyAnswers);
+                const totalRespondents = surveyedUsers.length;
+
+                if (totalRespondents === 0) {
+                    showToast('ยังไม่มีผู้ตอบแบบประเมิน', 'error');
+                    showView('admin');
+                    return;
+                }
+
+                surveyData.questions.forEach((q, qIndex) => {
+                    const qNum = qIndex + 1;
+                    const qText = (q.question || '').toString().replace(/"/g, '""');
+
+                    if (q.type === 'text') {
+                        let textAnswers = [];
+                        surveyedUsers.forEach(user => {
+                            const ans = user.surveyAnswers[qIndex];
+                            if (ans && String(ans).trim() !== '') {
+                                textAnswers.push(String(ans).trim());
+                            }
+                        });
+
+                        if (textAnswers.length === 0) {
+                            csvContent += `"${qNum}","${qText}","-","ไม่มีผู้ตอบ","-","-"\n`;
                         } else {
-                            rowData.push(q.options[ans] || ans);
+                            textAnswers.forEach((txt, idx) => {
+                                const safeTxt = txt.replace(/"/g, '""');
+                                csvContent += `"${qNum}","${qText}","ความคิดเห็นที่ ${idx + 1}","${safeTxt}","1","-"\n`;
+                            });
                         }
-                    });
-                    
-                    csvContent += rowData.map(v => `"${(v||'').toString().replace(/"/g, '""')}"`).join(",") + "\n";
+                    } else if (q.type === 'grid') {
+                        const rows = q.rows || ['คำถามย่อย 1'];
+                        const options = q.options || [];
+
+                        rows.forEach((rText, rIndex) => {
+                            const safeRText = rText.replace(/"/g, '""');
+                            let optionCounts = new Array(options.length).fill(0);
+                            let answeredCount = 0;
+
+                            surveyedUsers.forEach(user => {
+                                const ansObj = user.surveyAnswers[qIndex];
+                                if (ansObj && ansObj[rIndex] !== undefined) {
+                                    const optIdx = parseInt(ansObj[rIndex]);
+                                    if (optIdx >= 0 && optIdx < options.length) {
+                                        optionCounts[optIdx]++;
+                                        answeredCount++;
+                                    }
+                                }
+                            });
+
+                            options.forEach((opt, optIdx) => {
+                                const count = optionCounts[optIdx];
+                                const percent = answeredCount > 0 ? ((count / answeredCount) * 100).toFixed(2) : 0;
+                                const safeOpt = opt.replace(/"/g, '""');
+                                csvContent += `"${qNum}","${qText}","${safeRText}","${safeOpt}","${count}","${percent}%"\n`;
+                            });
+                        });
+                    } else if (q.type === 'scale') {
+                        let scaleCounts = {1:0, 2:0, 3:0, 4:0, 5:0};
+                        let answeredCount = 0;
+                        surveyedUsers.forEach(user => {
+                            const ans = parseInt(user.surveyAnswers[qIndex]);
+                            if (ans >= 1 && ans <= 5) {
+                                scaleCounts[ans]++;
+                                answeredCount++;
+                            }
+                        });
+                        
+                        for(let i=1; i<=5; i++) {
+                            const count = scaleCounts[i];
+                            const percent = answeredCount > 0 ? ((count / answeredCount) * 100).toFixed(2) : 0;
+                            let label = i;
+                            if(i===1) label = `1 (${q.options[0] || 'น้อย'})`;
+                            if(i===5) label = `5 (${q.options[1] || 'มาก'})`;
+                            const safeLabel = String(label).replace(/"/g, '""');
+                            csvContent += `"${qNum}","${qText}","-","${safeLabel}","${count}","${percent}%"\n`;
+                        }
+                    } else {
+                        const options = q.options || [];
+                        let optionCounts = new Array(options.length).fill(0);
+                        let answeredCount = 0;
+
+                        surveyedUsers.forEach(user => {
+                            const ans = parseInt(user.surveyAnswers[qIndex]);
+                            if (!isNaN(ans) && ans >= 0 && ans < options.length) {
+                                optionCounts[ans]++;
+                                answeredCount++;
+                            }
+                        });
+
+                        options.forEach((opt, optIdx) => {
+                            const count = optionCounts[optIdx];
+                            const percent = answeredCount > 0 ? ((count / answeredCount) * 100).toFixed(2) : 0;
+                            const safeOpt = opt.replace(/"/g, '""');
+                            csvContent += `"${qNum}","${qText}","-","${safeOpt}","${count}","${percent}%"\n`;
+                        });
+                    }
                 });
+                
+                csvContent += `\n"จำนวนผู้ตอบแบบประเมินทั้งหมด","${totalRespondents}","คน"\n`;
                 
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.setAttribute("href", url);
-                link.setAttribute("download", `SurveyResults_${adminSelectedEvent.id}.csv`);
+                link.setAttribute("download", `SurveySummary_${adminSelectedEvent.id}.csv`);
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
             } catch (e) {
                 console.error(e);
-                showToast('เกิดข้อผิดพลาดในการดึงข้อมูลแบบประเมิน', 'error');
+                showToast('เกิดข้อผิดพลาดในการสรุปข้อมูลแบบประเมิน', 'error');
             }
             showView('admin');
         };
@@ -4463,6 +4548,57 @@
 
                 if (q.type === 'text') {
                     contentHtml = `<div class="p-3 bg-white rounded-xl border border-slate-200 text-sm text-slate-400 italic">ผู้ใช้จะพิมพ์คำตอบแบบข้อความในส่วนนี้</div>`;
+                } else if (q.type === 'scale') {
+                    contentHtml = `
+                        <div class="flex items-center gap-4 mb-2">
+                            <div class="flex-1">
+                                <label class="text-xs text-slate-500 font-bold">ป้ายกำกับคะแนน 1 (น้อยที่สุด)</label>
+                                <input type="text" value="${q.options[0] || 'น้อยที่สุด'}" onchange="window.updateSurveyOption(${qIndex}, 0, this.value)" class="input-premium w-full px-3 py-2 text-sm rounded-lg mt-1" placeholder="น้อยที่สุด">
+                            </div>
+                            <div class="flex-1">
+                                <label class="text-xs text-slate-500 font-bold">ป้ายกำกับคะแนน 5 (มากที่สุด)</label>
+                                <input type="text" value="${q.options[1] || 'มากที่สุด'}" onchange="window.updateSurveyOption(${qIndex}, 1, this.value)" class="input-premium w-full px-3 py-2 text-sm rounded-lg mt-1" placeholder="มากที่สุด">
+                            </div>
+                        </div>
+                        <p class="text-xs text-pink-500 italic mt-2">* ระบบจะสร้างปุ่มเลือกคะแนน 1 ถึง 5 ให้อัตโนมัติ</p>
+                    `;
+                } else if (q.type === 'grid') {
+                    let rowsHtml = '';
+                    (q.rows || []).forEach((row, rIndex) => {
+                        rowsHtml += `
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-bars text-slate-300"></i>
+                                <input type="text" value="${row}" onchange="window.updateSurveyRowText(${qIndex}, ${rIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="หัวข้อย่อยที่ ${rIndex + 1}">
+                                <button type="button" onclick="window.removeSurveyRow(${qIndex}, ${rIndex})" class="text-red-400 hover:text-red-600 px-2 transition"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        `;
+                    });
+
+                    let colsHtml = '';
+                    q.options.forEach((opt, oIndex) => {
+                        colsHtml += `
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fa-regular fa-circle text-pink-300"></i>
+                                <input type="text" value="${opt}" onchange="window.updateSurveyOption(${qIndex}, ${oIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="คอลัมน์ระดับที่ ${oIndex + 1}">
+                                <button type="button" onclick="window.removeSurveyOption(${qIndex}, ${oIndex})" class="text-red-400 hover:text-red-600 px-2 transition"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        `;
+                    });
+
+                    contentHtml = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-slate-100 pt-4 mt-2">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase">แถว (หัวข้อย่อย)</label>
+                                ${rowsHtml}
+                                <button type="button" onclick="window.addSurveyRow(${qIndex})" class="text-xs text-indigo-600 font-bold mt-2 flex items-center gap-1 hover:text-indigo-800"><i class="fa-solid fa-plus"></i> เพิ่มแถว</button>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase">คอลัมน์ (ระดับการประเมิน)</label>
+                                ${colsHtml}
+                                <button type="button" onclick="window.addSurveyOption(${qIndex})" class="text-xs text-pink-600 font-bold mt-2 flex items-center gap-1 hover:text-pink-800"><i class="fa-solid fa-plus"></i> เพิ่มคอลัมน์</button>
+                            </div>
+                        </div>
+                    `;
                 } else {
                     let optionsHtml = '';
                     q.options.forEach((opt, oIndex) => {
@@ -4487,8 +4623,10 @@
                         </div>
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pr-20">
                             <label class="block text-xs font-bold text-slate-700">หัวข้อประเมินที่ ${qIndex + 1}</label>
-                            <select onchange="window.changeQuestionType('survey', ${qIndex}, this.value)" class="input-premium px-3 py-1.5 rounded-lg text-sm w-full sm:w-auto outline-none font-medium">
+                            <select onchange="window.changeQuestionType('survey', ${qIndex}, this.value)" class="input-premium px-3 py-1.5 rounded-lg text-sm w-full sm:w-auto outline-none font-medium text-pink-700">
                                 <option value="choice" ${q.type === 'choice' ? 'selected' : ''}>หลายตัวเลือก (Choices)</option>
+                                <option value="scale" ${q.type === 'scale' ? 'selected' : ''}>คะแนนเชิงเส้น 1-5 (Linear Scale)</option>
+                                <option value="grid" ${q.type === 'grid' ? 'selected' : ''}>ตารางกริดหลายตัวเลือก (Grid)</option>
                                 <option value="text" ${q.type === 'text' ? 'selected' : ''}>เขียนตอบ (ข้อเสนอแนะ)</option>
                             </select>
                         </div>
@@ -4508,16 +4646,21 @@
         const updateBuilderState = (type, action, payload) => {
             const state = type === 'quiz' ? window.adminCurrentQuizDraft : window.adminCurrentSurveyDraft;
             const render = type === 'quiz' ? window.renderQuizBuilder : window.renderSurveyBuilder;
-            const { qIndex, oIndex, text, aIndex, value } = payload || {};
+            const { qIndex, oIndex, text, aIndex, value, rIndex } = payload || {};
 
             switch(action) {
                 case 'ADD_Q':
                     state.questions.push(type === 'quiz' 
                         ? { type: 'choice', question: '', options: ['ตัวเลือก 1', 'ตัวเลือก 2'], answerIndex: 0, textAnswer: '' } 
-                        : { type: 'choice', question: '', options: ['มากที่สุด', 'มาก', 'ปานกลาง', 'น้อย', 'น้อยที่สุด'] });
+                        : { type: 'choice', question: '', options: ['มากที่สุด', 'มาก', 'ปานกลาง', 'น้อย', 'น้อยที่สุด'], rows: ['หัวข้อย่อย 1'] });
                     break;
                 case 'CHANGE_TYPE':
                     state.questions[qIndex].type = value;
+                    if(value === 'scale' && state.questions[qIndex].options.length > 2) {
+                        state.questions[qIndex].options = ['น้อยที่สุด', 'มากที่สุด'];
+                    } else if (value === 'grid' && !state.questions[qIndex].rows) {
+                        state.questions[qIndex].rows = ['หัวข้อย่อย 1'];
+                    }
                     break;
                 case 'UPDATE_TEXT_ANSWER':
                     state.questions[qIndex].textAnswer = text;
@@ -4528,21 +4671,32 @@
                 case 'ADD_OPT':
                     state.questions[qIndex].options.push(type === 'quiz' 
                         ? `ตัวเลือก ${state.questions[qIndex].options.length + 1}` 
-                        : `ตัวเลือกระดับ ${state.questions[qIndex].options.length + 1}`);
+                        : `คอลัมน์ ${state.questions[qIndex].options.length + 1}`);
                     break;
                 case 'REMOVE_OPT':
-                    if(state.questions[qIndex].options.length <= 2) return showToast('ต้องมีอย่างน้อย 2 ตัวเลือก', 'error');
+                    if(state.questions[qIndex].options.length <= 2 && state.questions[qIndex].type !== 'scale') return showToast('ต้องมีอย่างน้อย 2 ตัวเลือก', 'error');
                     state.questions[qIndex].options.splice(oIndex, 1);
                     if(type === 'quiz' && state.questions[qIndex].answerIndex >= state.questions[qIndex].options.length) {
                         state.questions[qIndex].answerIndex = 0;
                     }
                     break;
+                case 'ADD_ROW':
+                    if(!state.questions[qIndex].rows) state.questions[qIndex].rows = [];
+                    state.questions[qIndex].rows.push(`หัวข้อย่อย ${state.questions[qIndex].rows.length + 1}`);
+                    break;
+                case 'REMOVE_ROW':
+                    if(state.questions[qIndex].rows.length <= 1) return showToast('ต้องมีอย่างน้อย 1 หัวข้อย่อย', 'error');
+                    state.questions[qIndex].rows.splice(rIndex, 1);
+                    break;
+                case 'UPDATE_ROW_TEXT':
+                    state.questions[qIndex].rows[rIndex] = text;
+                    return;
                 case 'UPDATE_Q_TEXT':
                     state.questions[qIndex].question = text;
-                    return; // Return ทันที ไม่ต้อง Render ใหม่เพื่อรักษา Focus ช่อง Input
+                    return;
                 case 'UPDATE_OPT_TEXT':
                     state.questions[qIndex].options[oIndex] = text;
-                    return; // Return ทันที
+                    return;
                 case 'UPDATE_ANSWER':
                     if(type === 'quiz') state.questions[qIndex].answerIndex = parseInt(aIndex);
                     return;
@@ -4557,7 +4711,9 @@
         window.removeSurveyOption = (qi, oi) => updateBuilderState('survey', 'REMOVE_OPT', {qIndex: qi, oIndex: oi});
         window.updateSurveyQuestionText = (i, t) => updateBuilderState('survey', 'UPDATE_Q_TEXT', {qIndex: i, text: t});
         window.updateSurveyOption = (qi, oi, t) => updateBuilderState('survey', 'UPDATE_OPT_TEXT', {qIndex: qi, oIndex: oi, text: t});
-
+        window.addSurveyRow = (i) => updateBuilderState('survey', 'ADD_ROW', {qIndex: i});
+        window.removeSurveyRow = (qi, ri) => updateBuilderState('survey', 'REMOVE_ROW', {qIndex: qi, rIndex: ri});
+        window.updateSurveyRowText = (qi, ri, t) => updateBuilderState('survey', 'UPDATE_ROW_TEXT', {qIndex: qi, rIndex: ri, text: t});
         window.saveSurvey = async function() {
             const title = document.getElementById('admin-survey-title-input').value.trim();
             const docId = document.getElementById('admin-survey-doc-id').value;
@@ -4936,6 +5092,36 @@
                 let optionsHtml = '';
                 if (q.type === 'text') {
                     optionsHtml = `<textarea rows="3" onchange="window.currentUserSurveySession.answers[${qIndex}] = this.value" class="input-premium w-full px-4 py-3 rounded-xl font-medium resize-none" placeholder="พิมพ์ข้อเสนอแนะของคุณ..."></textarea>`;
+                } else if (q.type === 'scale') {
+                    let scaleHtml = '<div class="flex justify-between items-end mt-4 max-w-md mx-auto relative px-2">';
+                    scaleHtml += `<span class="text-xs text-slate-500 font-bold mb-1 absolute left-0 -translate-x-4">${q.options[0] || 'น้อย'}</span>`;
+                    scaleHtml += '<div class="flex flex-1 justify-between px-8">';
+                    for(let i=1; i<=5; i++) {
+                        scaleHtml += `
+                        <label class="flex flex-col items-center gap-2 cursor-pointer group z-10">
+                            <span class="text-sm font-bold text-slate-400 group-hover:text-pink-600 transition-colors">${i}</span>
+                            <input type="radio" name="user_survey_q_${qIndex}" value="${i}" onchange="window.currentUserSurveySession.answers[${qIndex}] = ${i}" class="w-5 h-5 text-pink-600 focus:ring-pink-500 border-slate-300 cursor-pointer shadow-sm">
+                        </label>`;
+                    }
+                    scaleHtml += '</div>';
+                    scaleHtml += `<span class="text-xs text-slate-500 font-bold mb-1 absolute right-0 translate-x-4">${q.options[1] || 'มาก'}</span>`;
+                    scaleHtml += '<div class="absolute top-[28px] left-10 right-10 h-0.5 bg-slate-100 -z-0"></div>';
+                    scaleHtml += '</div>';
+                    optionsHtml = scaleHtml;
+                } else if (q.type === 'grid') {
+                    window.currentUserSurveySession.answers[qIndex] = window.currentUserSurveySession.answers[qIndex] || {};
+                    let gridHtml = '<div class="overflow-x-auto bg-white rounded-xl border border-slate-200 shadow-sm"><table class="w-full text-sm text-left"><thead class="bg-slate-50 text-slate-600 border-b border-slate-200"><tr><th class="p-4"></th>';
+                    q.options.forEach(col => gridHtml += `<th class="p-4 text-center font-bold min-w-[100px]">${col}</th>`);
+                    gridHtml += '</tr></thead><tbody class="divide-y divide-slate-100">';
+                    (q.rows || ['คำถามย่อย 1']).forEach((r, rIndex) => {
+                        gridHtml += `<tr class="hover:bg-pink-50/30 transition-colors"><td class="p-4 font-medium text-slate-700">${r}</td>`;
+                        q.options.forEach((col, cIndex) => {
+                            gridHtml += `<td class="p-4 text-center"><input type="radio" name="user_survey_q_${qIndex}_r_${rIndex}" value="${cIndex}" onchange="window.currentUserSurveySession.answers[${qIndex}][${rIndex}] = ${cIndex}" class="w-5 h-5 text-pink-600 focus:ring-pink-500 border-slate-300 cursor-pointer"></td>`;
+                        });
+                        gridHtml += '</tr>';
+                    });
+                    gridHtml += '</tbody></table></div>';
+                    optionsHtml = gridHtml;
                 } else {
                     q.options.forEach((opt, oIndex) => {
                         optionsHtml += `
@@ -4946,7 +5132,7 @@
                         `;
                     });
                 }
-                container.innerHTML += `<div class="mb-8"><p class="font-bold text-slate-800 mb-3 text-lg leading-relaxed"><span class="text-pink-600 mr-2">${qIndex + 1}.</span> ${q.question}</p><div class="space-y-3 pl-1 sm:pl-6">${optionsHtml}</div></div>`;
+                container.innerHTML += `<div class="mb-8"><p class="font-bold text-slate-800 mb-3 text-lg leading-relaxed"><span class="text-pink-600 mr-2">${qIndex + 1}.</span> ${q.question}</p><div class="space-y-3 pl-1 sm:pl-4">${optionsHtml}</div></div>`;
             });
         };
 
@@ -4954,9 +5140,17 @@
             const session = window.currentUserSurveySession;
             if(!session) return;
             for(let i=0; i<session.data.questions.length; i++) {
+                const q = session.data.questions[i];
                 const ans = session.answers[i];
-                if(ans === undefined || (typeof ans === 'string' && ans.trim() === '')) {
-                    return showToast(`กรุณาตอบแบบประเมินข้อที่ ${i+1}`, 'error');
+                
+                if (q.type === 'grid') {
+                    if (!ans || Object.keys(ans).length < (q.rows || ['']).length) {
+                         return showToast(`กรุณาตอบแบบประเมินข้อที่ ${i+1} ให้ครบทุกแถว`, 'error');
+                    }
+                } else {
+                    if(ans === undefined || (typeof ans === 'string' && ans.trim() === '')) {
+                        return showToast(`กรุณาตอบแบบประเมินข้อที่ ${i+1}`, 'error');
+                    }
                 }
             }
 
