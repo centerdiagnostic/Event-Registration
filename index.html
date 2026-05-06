@@ -751,7 +751,7 @@
                     </label>
 
                     <div class="pt-8 flex flex-col-reverse sm:flex-row justify-between items-center gap-4 mt-4">
-                        <button type="button" onclick="window.location.hash='#/home'"
+                        <button type="button" id="btn-consent-back"
                             class="w-full sm:w-auto text-slate-500 hover:text-slate-800 font-bold py-3.5 px-6 transition hover:bg-slate-200/50 rounded-xl text-sm">
                             <i class="fa-solid fa-arrow-left mr-2"></i> กลับหน้าหลัก
                         </button>
@@ -1467,11 +1467,14 @@
                     </div>
 
                     <div id="admin-content-users" class="space-y-8 hidden max-w-7xl mx-auto animate-fade-in-up">
-                        <div class="flex flex-col justify-between items-start gap-4 pb-6 border-b border-slate-200">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-6 border-b border-slate-200">
                             <div>
                                 <h2 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">ฐานข้อมูลสมาชิกทั้งหมด</h2>
                                 <p class="text-slate-500 mt-2 font-medium">รายชื่อผู้ที่สมัครบัญชีเข้าใช้งานในระบบ (App Members)</p>
                             </div>
+                            <button onclick="window.exportUsersToCsv()" class="bg-teal-50 text-teal-600 hover:bg-teal-100 border border-teal-200 font-bold py-3 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2 whitespace-nowrap text-sm">
+                                <i class="fa-solid fa-file-csv"></i> ดาวน์โหลดข้อมูลสมาชิก
+                            </button>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1510,6 +1513,7 @@
                                             <th scope="col" class="px-6 py-4 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest">ข้อมูลสมาชิก</th>
                                             <th scope="col" class="px-6 py-4 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest">การติดต่อ</th>
                                             <th scope="col" class="px-6 py-4 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest">วันที่สมัคร</th>
+                                            <th scope="col" class="px-6 py-4 text-center text-[11px] font-black text-slate-400 uppercase tracking-widest">PDPA</th>
                                         </tr>
                                     </thead>
                                     <tbody id="admin-users-table-body" class="bg-white divide-y divide-slate-100 text-sm">
@@ -2695,12 +2699,26 @@
             });
         }
 
-        function checkRedirectAfterLogin() {
-            const redirectUrl = sessionStorage.getItem('redirectUrl');
-            if (redirectUrl) {
-                sessionStorage.removeItem('redirectUrl');
-                window.location.hash = redirectUrl;
-            } else {
+        async function checkRedirectAfterLogin() {
+            try {
+                if (currentUser) {
+                    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                    if (userDoc.exists() && userDoc.data().pdpa) {
+                        // มีข้อมูล PDPA แล้ว ไปหน้าเป้าหมายได้เลย
+                        const redirectUrl = sessionStorage.getItem('redirectUrl');
+                        if (redirectUrl) {
+                            sessionStorage.removeItem('redirectUrl');
+                            window.location.hash = redirectUrl;
+                        } else {
+                            window.location.hash = '#/home';
+                        }
+                    } else {
+                        // ยังไม่เคยทำ PDPA บังคับไปหน้าตั้งค่า PDPA ก่อน
+                        window.location.hash = '#/pdpa-setup';
+                    }
+                }
+            } catch (error) {
+                console.error("Error checking PDPA:", error);
                 window.location.hash = '#/home';
             }
         }
@@ -2794,16 +2812,47 @@
                 currentRoute.optionId = parseInt(parts[2], 10);
             }
 
-            if (currentRoute.path === 'register') {
+            if (currentRoute.path === 'pdpa-setup') {
+                if (!currentUser) {
+                    showView('auth');
+                    return;
+                }
+                document.getElementById('btn-consent-next').innerHTML = '<i class="fa-solid fa-save mr-2"></i> บันทึกและเข้าสู่ระบบ';
+                document.getElementById('btn-consent-back').classList.add('hidden'); // บังคับทำ ซ่อนปุ่มกลับ
+                
+                document.getElementById('pdpa-agree-1').checked = false;
+                document.getElementById('pdpa-agree-2').checked = false;
+                document.getElementById('pdpa-agree-3').checked = false;
+                document.getElementById('btn-consent-next').disabled = true;
+                showView('consent');
+            } else if (currentRoute.path === 'register') {
                 if (!currentUser) {
                     sessionStorage.setItem('redirectUrl', window.location.hash);
                     showView('auth');
                     return;
                 }
-                document.getElementById('pdpa-agree-1').checked = false;
-                document.getElementById('pdpa-agree-2').checked = false;
-                document.getElementById('pdpa-agree-3').checked = false;
-                document.getElementById('btn-consent-next').disabled = true;
+                
+                document.getElementById('btn-consent-next').innerHTML = 'ถัดไป (กรอกข้อมูล) <i class="fa-solid fa-arrow-right ml-2 opacity-80"></i>';
+                document.getElementById('btn-consent-back').classList.remove('hidden');
+                
+                // ดึงข้อมูลเก่ามาติ๊กให้
+                try {
+                    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                    if (userDoc.exists() && userDoc.data().pdpa) {
+                        const pdpaData = userDoc.data().pdpa;
+                        document.getElementById('pdpa-agree-1').checked = pdpaData.agree_privacy || false;
+                        document.getElementById('pdpa-agree-2').checked = pdpaData.agree_marketing || false;
+                        document.getElementById('pdpa-agree-3').checked = pdpaData.agree_sponsor || false;
+                        document.getElementById('btn-consent-next').disabled = !pdpaData.agree_privacy;
+                    } else {
+                        document.getElementById('pdpa-agree-1').checked = false;
+                        document.getElementById('pdpa-agree-2').checked = false;
+                        document.getElementById('pdpa-agree-3').checked = false;
+                        document.getElementById('btn-consent-next').disabled = true;
+                    }
+                } catch (e) {
+                    console.error("Error fetching pdpa pre-fill", e);
+                }
                 showView('consent'); 
             } else if (currentRoute.path === 'reg-form') {
                 if (!currentUser) {
@@ -3421,6 +3470,7 @@
 
         const checkboxes = document.querySelectorAll('.consent-checkbox');
         const btnConsentNext = document.getElementById('btn-consent-next');
+        const btnConsentBack = document.getElementById('btn-consent-back');
         const pdpaAgree1 = document.getElementById('pdpa-agree-1');
 
         if (checkboxes.length > 0 && btnConsentNext && pdpaAgree1) {
@@ -3430,8 +3480,40 @@
                 });
             });
 
-            btnConsentNext.addEventListener('click', () => {
-                window.location.hash = `#/reg-form/${currentRoute.eventId}/${currentRoute.optionId || 0}`;
+            btnConsentBack.addEventListener('click', () => {
+                window.location.hash = '#/home';
+            });
+
+            btnConsentNext.addEventListener('click', async () => {
+                const pdpaConsent = {
+                    agree_privacy: document.getElementById('pdpa-agree-1')?.checked || false,
+                    agree_marketing: document.getElementById('pdpa-agree-2')?.checked || false,
+                    agree_sponsor: document.getElementById('pdpa-agree-3')?.checked || false
+                };
+
+                // ถ้าเป็นหน้าบังคับทำตอนสมัคร ให้เซฟลง users แล้วไปหน้า Home
+                if (currentRoute.path === 'pdpa-setup') {
+                    setButtonLoading('btn-consent-next', true, 'กำลังบันทึก...');
+                    try {
+                        await setDoc(doc(db, "users", currentUser.uid), { pdpa: pdpaConsent, updatedAt: serverTimestamp() }, { merge: true });
+                        showToast('บันทึกข้อมูลสำเร็จ', 'success');
+                        const redirectUrl = sessionStorage.getItem('redirectUrl');
+                        if (redirectUrl) {
+                            sessionStorage.removeItem('redirectUrl');
+                            window.location.hash = redirectUrl;
+                        } else {
+                            window.location.hash = '#/home';
+                        }
+                    } catch (e) {
+                        showToast('เกิดข้อผิดพลาดในการบันทึก', 'error');
+                        console.error(e);
+                    } finally {
+                        setButtonLoading('btn-consent-next', false, '<i class="fa-solid fa-save mr-2"></i> บันทึกและเข้าสู่ระบบ');
+                    }
+                } else {
+                    // ถ้ามาจากการลงทะเบียนกิจกรรม ให้ข้ามไปหน้าฟอร์ม (เดี๋ยวจะเซฟลง users ตอนกด Submit form)
+                    window.location.hash = `#/reg-form/${currentRoute.eventId}/${currentRoute.optionId || 0}`;
+                }
             });
         }
 
@@ -3552,6 +3634,13 @@
                         regData.isTested = false;
                         regData.testScore = 0;
                         await setDoc(doc(db, "events", currentRoute.eventDocId, "participants", currentUser.uid), regData);
+                    }
+
+                    // อัปเดต PDPA กลับไปที่ Global Profile ของผู้ใช้งานด้วยเสมอ
+                    try {
+                        await setDoc(doc(db, "users", currentUser.uid), { pdpa: pdpaConsent, updatedAt: serverTimestamp() }, { merge: true });
+                    } catch(pdpaErr) {
+                        console.warn("Could not update global PDPA", pdpaErr);
                     }
                     
                     window.showView('success');
@@ -5371,6 +5460,17 @@
             currentData.forEach(data => {
                 const dateStr = data.createdAt ? formatDateTimeTH(data.createdAt.toDate()) : '-';
                 
+                let pdpaHtml = '<span class="text-[10px] text-slate-400 font-bold bg-slate-100 px-2 py-1 rounded">ยังไม่ทำรายการ</span>';
+                if (data.pdpa) {
+                    pdpaHtml = `
+                        <div class="flex items-center justify-center gap-2 text-xs">
+                            <i class="fa-solid ${data.pdpa.agree_privacy ? 'fa-check text-emerald-500' : 'fa-xmark text-red-500'}" title="นโยบายความเป็นส่วนตัว"></i>
+                            <i class="fa-solid ${data.pdpa.agree_marketing ? 'fa-check text-emerald-500' : 'fa-xmark text-red-500'}" title="ประชาสัมพันธ์"></i>
+                            <i class="fa-solid ${data.pdpa.agree_sponsor ? 'fa-check text-emerald-500' : 'fa-xmark text-red-500'}" title="ผู้สนับสนุน"></i>
+                        </div>
+                    `;
+                }
+
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition";
                 tr.innerHTML = `
@@ -5390,6 +5490,7 @@
                         <div class="text-xs text-slate-400">${data.phone || '-'}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-[11px] text-slate-400 font-medium">${dateStr}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">${pdpaHtml}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -5401,7 +5502,48 @@
             if(btnPrev) btnPrev.disabled = window.currentUsersPage === 1;
             if(btnNext) btnNext.disabled = window.currentUsersPage === totalPages;
         };
-
+        window.exportUsersToCsv = function() {
+            if(!window.allUsersData || window.allUsersData.length === 0) {
+                showToast('ไม่มีข้อมูลสำหรับ Export', 'error');
+                return;
+            }
+            
+            const headers = ['วันที่สมัคร', 'คำนำหน้า', 'ชื่อ-นามสกุล (TH)', 'ชื่อ-นามสกุล (EN)', 'อีเมล', 'เบอร์โทรศัพท์', 'นโยบายความเป็นส่วนตัว', 'ยินยอมประชาสัมพันธ์', 'ยินยอมเปิดเผยต่อ Sponsor'];
+            let csvContent = "\uFEFF";
+            csvContent += headers.join(",") + "\n";
+            
+            window.allUsersData.forEach(row => {
+                const dateStr = row.createdAt ? formatDateTimeTH(row.createdAt.toDate()) : '-';
+                
+                const pdpa1 = row.pdpa ? (row.pdpa.agree_privacy ? 'ยอมรับ' : 'ไม่ยอมรับ') : 'ยังไม่ทำรายการ';
+                const pdpa2 = row.pdpa ? (row.pdpa.agree_marketing ? 'ยินยอม' : 'ไม่ยินยอม') : 'ยังไม่ทำรายการ';
+                const pdpa3 = row.pdpa ? (row.pdpa.agree_sponsor ? 'ยินยอม' : 'ไม่ยินยอม') : 'ยังไม่ทำรายการ';
+                
+                const cleanStr = (str) => `"${(str||'').toString().replace(/"/g, '""')}"`;
+                
+                const rowData = [
+                    cleanStr(dateStr),
+                    cleanStr(row.prefix),
+                    cleanStr(row.fullnameTH || row.fullname),
+                    cleanStr(row.fullnameEN),
+                    cleanStr(row.email),
+                    cleanStr(row.phone),
+                    cleanStr(pdpa1),
+                    cleanStr(pdpa2),
+                    cleanStr(pdpa3)
+                ];
+                csvContent += rowData.join(",") + "\n";
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `All_Members_Database.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
         window.prevUserPage = function() {
             if (window.currentUsersPage > 1) {
                 window.currentUsersPage--;
