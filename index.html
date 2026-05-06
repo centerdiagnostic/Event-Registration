@@ -1134,6 +1134,12 @@
                             </button>
                         </li>
                         <li>
+                            <button onclick="window.switchAdminTab('users')" id="nav-tab-users" class="admin-nav-btn w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all relative overflow-hidden group">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-white/10 transition-colors"><i class="fa-solid fa-address-book"></i></div>
+                                <span class="sidebar-text whitespace-nowrap transition-all duration-300 opacity-100">ฐานข้อมูลสมาชิก</span>
+                            </button>
+                        </li>
+                        <li>
                             <button onclick="window.switchAdminTab('team')" id="nav-tab-team" class="admin-nav-btn w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all relative overflow-hidden group">
                                 <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-white/10 transition-colors"><i class="fa-solid fa-user-shield"></i></div>
                                 <span class="sidebar-text whitespace-nowrap transition-all duration-300 opacity-100">จัดการทีมงาน</span>
@@ -1433,7 +1439,6 @@
                             </button>
                         </div>
 
-                        <!-- Quiz List Table -->
                         <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative">
                             <div class="p-6 border-b border-slate-100 flex items-center bg-slate-50/50 gap-3">
                                 <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center"><i class="fa-solid fa-list-check"></i></div>
@@ -1449,14 +1454,78 @@
                                         </tr>
                                     </thead>
                                     <tbody id="admin-quizzes-table-body" class="bg-white divide-y divide-slate-100">
-                                        <!-- Quizzes will be inserted here -->
-                                    </tbody>
+                                        </tbody>
                                 </table>
                                 <div id="admin-quizzes-empty" class="hidden flex-col items-center justify-center py-20 text-slate-400">
                                     <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100 shadow-inner">
                                         <i class="fa-solid fa-folder-open text-3xl text-slate-300"></i>
                                     </div>
                                     <span class="font-bold text-slate-500">ไม่มีข้อมูลแบบทดสอบในระบบ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="admin-content-users" class="space-y-8 hidden max-w-7xl mx-auto animate-fade-in-up">
+                        <div class="flex flex-col justify-between items-start gap-4 pb-6 border-b border-slate-200">
+                            <div>
+                                <h2 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">ฐานข้อมูลสมาชิกทั้งหมด</h2>
+                                <p class="text-slate-500 mt-2 font-medium">รายชื่อผู้ที่สมัครบัญชีเข้าใช้งานในระบบ (App Members)</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl shadow-inner"><i class="fa-solid fa-users"></i></div>
+                                <div>
+                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">สมาชิกทั้งหมด</p>
+                                    <h3 id="admin-total-users-count" class="text-3xl font-black text-slate-800">0</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+                            <div class="w-full sm:w-1/2 relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                                </div>
+                                <input type="text" id="admin-users-search" oninput="window.handleUserSearch(this.value)" class="input-premium w-full pl-10 pr-4 py-2 rounded-xl text-sm font-medium outline-none" placeholder="ค้นหาชื่อ หรืออีเมล...">
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <label class="text-sm font-bold text-slate-600">แสดง</label>
+                                <select id="admin-users-per-page" onchange="window.changeUserItemsPerPage(this.value)" class="input-premium px-3 py-1.5 rounded-lg text-sm font-medium outline-none">
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <label class="text-sm font-bold text-slate-600">รายการ</label>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="overflow-x-auto custom-scrollbar">
+                                <table class="min-w-full divide-y divide-slate-200">
+                                    <thead class="bg-slate-50/80">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-4 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest">ข้อมูลสมาชิก</th>
+                                            <th scope="col" class="px-6 py-4 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest">การติดต่อ</th>
+                                            <th scope="col" class="px-6 py-4 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest">วันที่สมัคร</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-users-table-body" class="bg-white divide-y divide-slate-100 text-sm">
+                                        </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="p-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+                                <span class="text-xs font-bold text-slate-500" id="admin-users-page-info">กำลังแสดง 0 ถึง 0 จาก 0 รายการ</span>
+                                <div class="flex gap-2">
+                                    <button onclick="window.prevUserPage()" id="btn-prev-users" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-teal-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fa-solid fa-chevron-left"></i> ก่อนหน้า
+                                    </button>
+                                    <button onclick="window.nextUserPage()" id="btn-next-users" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-teal-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                        ถัดไป <i class="fa-solid fa-chevron-right"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -2836,6 +2905,15 @@
                                 document.getElementById('modal-first-login-pwd').classList.remove('hidden');
                             }
 
+                            const usersMenuBtn = document.getElementById('nav-tab-users');
+                            if (usersMenuBtn && usersMenuBtn.parentElement) {
+                                if (currentAdminRole !== 'superadmin') {
+                                    usersMenuBtn.parentElement.classList.add('hidden');
+                                } else {
+                                    usersMenuBtn.parentElement.classList.remove('hidden');
+                                }
+                            }
+
                         } else {
                             btnAdmin.classList.add('hidden');
                             if (loginRole === 'kvdc') loginRole = 'customer';
@@ -3575,13 +3653,22 @@
         };
 
         window.switchAdminTab = function(tabName) {
-            if (tabName === 'team' && currentAdminRole !== 'superadmin') {
+            if ((tabName === 'team' || tabName === 'users') && currentAdminRole !== 'superadmin') {
                 showToast('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้', 'error');
                 window.switchAdminTab('events');
                 return;
             }
 
             document.getElementById('admin-content-events').classList.add('hidden');
+            document.getElementById('admin-content-events').classList.remove('block');
+            document.getElementById('admin-content-registrants').classList.add('hidden');
+            document.getElementById('admin-content-registrants').classList.remove('block');
+            document.getElementById('admin-content-logs').classList.add('hidden');
+            document.getElementById('admin-content-logs').classList.remove('block');
+            document.getElementById('admin-content-team').classList.add('hidden');
+            document.getElementById('admin-content-team').classList.remove('block');
+            document.getElementById('admin-content-users').classList.add('hidden');
+            document.getElementById('admin-content-users').classList.remove('block');
             document.getElementById('admin-content-events').classList.remove('block');
             document.getElementById('admin-content-registrants').classList.add('hidden');
             document.getElementById('admin-content-registrants').classList.remove('block');
@@ -4421,6 +4508,9 @@
                 await loadAdminsList();
                 await loadAdminQuizzes();
                 await loadAdminSurveys();
+                if (currentAdminRole === 'superadmin') {
+                    await loadAdminUsers();
+                }
 
                 showView('admin');
                 
@@ -5180,7 +5270,158 @@
         window.addEventListener('DOMContentLoaded', () => {
             showView('loading');
         });
+        window.allUsersData = [];
+        window.filteredUsersData = [];
+        window.currentUsersPage = 1;
+        window.usersPerPage = 20;
 
+        window.loadAdminUsers = async function() {
+            try {
+                const usersSnap = await getDocs(collection(db, "users"));
+                const countDisplay = document.getElementById('admin-total-users-count');
+                
+                if(countDisplay) countDisplay.textContent = usersSnap.size;
+
+                window.allUsersData = [];
+                usersSnap.forEach(docSnap => {
+                    window.allUsersData.push(docSnap.data());
+                });
+
+                // เรียงลำดับจากสมัครล่าสุดไปเก่าสุด
+                window.allUsersData.sort((a, b) => {
+                    const timeA = a.createdAt ? a.createdAt.toMillis() : 0;
+                    const timeB = b.createdAt ? b.createdAt.toMillis() : 0;
+                    return timeB - timeA;
+                });
+
+                window.filteredUsersData = [...window.allUsersData];
+                
+                const searchInput = document.getElementById('admin-users-search');
+                if (searchInput) searchInput.value = '';
+
+                window.currentUsersPage = 1;
+                window.renderUsersTable();
+
+            } catch(e) {
+                console.error("Error loading app users:", e);
+                if(e.code === 'permission-denied') showToast('สิทธิ์เข้าถึงฐานข้อมูลสมาชิกถูกปฏิเสธ', 'error');
+            }
+        };
+
+        window.handleUserSearch = function(query) {
+            query = query.trim().toLowerCase();
+            if (!query) {
+                window.filteredUsersData = [...window.allUsersData];
+            } else {
+                window.filteredUsersData = window.allUsersData.filter(user => {
+                    const nameTH = (user.fullnameTH || '').toLowerCase();
+                    const name = (user.fullname || '').toLowerCase();
+                    const email = (user.email || '').toLowerCase();
+                    
+                    return nameTH.includes(query) || name.includes(query) || email.includes(query);
+                }).sort((a, b) => {
+                    // จัดเรียง: ตัวที่ขึ้นต้นด้วยคำค้นหา ให้อยู่ด้านบนสุด
+                    const aNameTH = (a.fullnameTH || '').toLowerCase();
+                    const aName = (a.fullname || '').toLowerCase();
+                    const aEmail = (a.email || '').toLowerCase();
+                    
+                    const bNameTH = (b.fullnameTH || '').toLowerCase();
+                    const bName = (b.fullname || '').toLowerCase();
+                    const bEmail = (b.email || '').toLowerCase();
+
+                    const aStarts = aNameTH.startsWith(query) || aName.startsWith(query) || aEmail.startsWith(query);
+                    const bStarts = bNameTH.startsWith(query) || bName.startsWith(query) || bEmail.startsWith(query);
+
+                    if (aStarts && !bStarts) return -1;
+                    if (!aStarts && bStarts) return 1;
+                    return 0; // ถ้าตรงทั้งคู่ ให้คงลำดับเดิมไว้
+                });
+            }
+            window.currentUsersPage = 1;
+            window.renderUsersTable();
+        };
+
+        window.renderUsersTable = function() {
+            const tbody = document.getElementById('admin-users-table-body');
+            const pageInfo = document.getElementById('admin-users-page-info');
+            const btnPrev = document.getElementById('btn-prev-users');
+            const btnNext = document.getElementById('btn-next-users');
+            
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            const totalItems = window.filteredUsersData.length;
+            
+            if(totalItems === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-12 text-center text-slate-400 font-bold">ไม่พบข้อมูลสมาชิกที่ค้นหา</td></tr>`;
+                if(pageInfo) pageInfo.textContent = "ไม่มีข้อมูล";
+                if(btnPrev) btnPrev.disabled = true;
+                if(btnNext) btnNext.disabled = true;
+                return;
+            }
+
+            const totalPages = Math.ceil(totalItems / window.usersPerPage);
+            if(window.currentUsersPage > totalPages) window.currentUsersPage = totalPages;
+            if(window.currentUsersPage < 1) window.currentUsersPage = 1;
+
+            const startIndex = (window.currentUsersPage - 1) * window.usersPerPage;
+            const endIndex = Math.min(startIndex + window.usersPerPage, totalItems);
+            const currentData = window.filteredUsersData.slice(startIndex, endIndex);
+
+            currentData.forEach(data => {
+                const dateStr = data.createdAt ? formatDateTimeTH(data.createdAt.toDate()) : '-';
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden border border-slate-200">
+                                ${data.photoURL ? `<img src="${data.photoURL}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-xs"></i>`}
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-slate-800">${data.fullnameTH || data.fullname || '-'}</div>
+                                <div class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">${data.prefix || ''}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-slate-600 font-medium">${data.email || '-'}</div>
+                        <div class="text-xs text-slate-400">${data.phone || '-'}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-[11px] text-slate-400 font-medium">${dateStr}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if(pageInfo) {
+                pageInfo.textContent = `กำลังแสดง ${startIndex + 1} ถึง ${endIndex} จากทั้งหมด ${totalItems} รายการ`;
+            }
+
+            if(btnPrev) btnPrev.disabled = window.currentUsersPage === 1;
+            if(btnNext) btnNext.disabled = window.currentUsersPage === totalPages;
+        };
+
+        window.prevUserPage = function() {
+            if (window.currentUsersPage > 1) {
+                window.currentUsersPage--;
+                window.renderUsersTable();
+            }
+        };
+
+        window.nextUserPage = function() {
+            const totalPages = Math.ceil(window.filteredUsersData.length / window.usersPerPage);
+            if (window.currentUsersPage < totalPages) {
+                window.currentUsersPage++;
+                window.renderUsersTable();
+            }
+        };
+
+        window.changeUserItemsPerPage = function(value) {
+            window.usersPerPage = parseInt(value, 10);
+            window.currentUsersPage = 1;
+            window.renderUsersTable();
+        };
     </script>
 </body>
 
