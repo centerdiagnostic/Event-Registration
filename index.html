@@ -1268,7 +1268,7 @@
                         <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
                             <label class="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-filter text-blue-500"></i> เลือกกิจกรรมที่ต้องการแสดง</label>
                             <div class="relative max-w-xl">
-                                <select id="admin-registrant-select" onchange="window.viewRegistrants(this.value)" class="input-premium w-full px-4 py-3.5 rounded-xl appearance-none font-bold text-slate-800 shadow-sm">
+                                <select id="admin-registrant-select" onchange="window.viewRegistrants(this.value, true)" class="input-premium w-full px-4 py-3.5 rounded-xl appearance-none font-bold text-slate-800 shadow-sm">
                                     <option value="">-- กรุณาเลือก --</option>
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
@@ -2005,7 +2005,7 @@
         import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app-check.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, updatePassword, sendPasswordResetEmail }
             from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-        import { getFirestore, collection, doc, getDocs, getDoc, query, where, addDoc, setDoc, serverTimestamp, deleteDoc, updateDoc }
+        import { getFirestore, collection, doc, getDocs, getDoc, query, where, addDoc, setDoc, serverTimestamp, deleteDoc, updateDoc, writeBatch, increment }
             from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -2036,7 +2036,8 @@
         const googleProvider = new GoogleAuthProvider();
 
         let currentUser = null;
-        let isLoginMode = true;
+        let hasPdpaCache = null;
+        let currentAdminTab = 'events';
         let currentRoute = { path: '', eventId: null, optionId: null, eventDocId: null };
         let loginRole = sessionStorage.getItem('loginRole') || null;
         let currentAdminRole = sessionStorage.getItem('adminRole') || null;
@@ -2059,7 +2060,6 @@
             admin: document.getElementById('view-admin'),
             myEvents: document.getElementById('view-my-events') 
         };
-        const navUserEmail = document.getElementById('nav-user-email');
         const btnLogout = document.getElementById('btn-logout');
         const btnAdmin = document.getElementById('btn-admin');
         const btnMyEvents = document.getElementById('btn-my-events');
@@ -2091,6 +2091,28 @@
         }
         window.showView = showView;
 
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // ป้องกัน CSV formula injection: เติม ' นำหน้าค่าที่ Excel จะตีความเป็นสูตร
+        function sanitizeCsvValue(value) {
+            if (value === null || value === undefined) return '';
+            const str = String(value);
+            if (str === '-') return str;
+            return /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+        }
+
+        function isSafeHttpUrl(url) {
+            return typeof url === 'string' && /^https?:\/\//i.test(url.trim());
+        }
+
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -2098,7 +2120,8 @@
             const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-circle-exclamation' : 'fa-info-circle');
 
             toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 toast min-w-[250px] pointer-events-auto`;
-            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span></span>`;
+            toast.querySelector('span').textContent = message;
             container.appendChild(toast);
             setTimeout(() => toast.classList.add('show'), 10);
             setTimeout(() => {
@@ -2201,10 +2224,9 @@
             }
 
             try {
-                const qUser = query(collection(db, "users"), where("uid", "==", currentUser.uid));
-                const userSnap = await getDocs(qUser);
-                if (!userSnap.empty) {
-                    const data = userSnap.docs[0].data();
+                const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
                     if (data.fullnameTH) displayName = data.fullnameTH;
                     else if (data.fullname) displayName = data.fullname;
                     if (data.photoURL) photoBase64 = data.photoURL;
@@ -2264,10 +2286,9 @@
             let photoBase64 = '';
 
             try {
-                const qUser = query(collection(db, "users"), where("uid", "==", currentUser.uid));
-                const userSnap = await getDocs(qUser);
-                if (!userSnap.empty) {
-                    const data = userSnap.docs[0].data();
+                const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
                     nameTH = data.fullnameTH || data.fullname || '';
                     nameEN = data.fullnameEN || '';
                     phone = data.phone || '';
@@ -2645,10 +2666,9 @@
                     const result = await signInWithPopup(auth, googleProvider);
                     const user = result.user;
                     
-                    const qUser = query(collection(db, "users"), where("uid", "==", user.uid));
-                    const userSnap = await getDocs(qUser);
-                    
-                    if (userSnap.empty) {
+                    const userSnap = await getDoc(doc(db, "users", user.uid));
+
+                    if (!userSnap.exists()) {
                         const displayName = user.displayName || user.email.split('@')[0] || user.uid;
                         
                         await setDoc(doc(db, "users", user.uid), {
@@ -2736,35 +2756,35 @@
                 let hasRegistrations = false;
                 let hasPermissionError = false;
 
-                for (const eventDoc of eventsSnap.docs) {
-                    const eventData = eventDoc.data();
+                const regResults = await Promise.all(eventsSnap.docs.map(async (eventDoc) => {
                     const eventDocId = eventDoc.id;
-                    
-                    const pRef = collection(db, "events", eventDocId, "participants");
-                    const q = query(pRef, where("uid", "==", currentUser.uid));
-                    
-                    let pSnap = { empty: true };
-                    try { 
-                        pSnap = await getDocs(q); 
+                    try {
+                        const pSnap = await getDoc(doc(db, "events", eventDocId, "participants", currentUser.uid));
+                        return { eventDoc, pSnap };
                     } catch(e) {
                         console.warn("Permission denied checking participants for event:", eventDocId);
                         hasPermissionError = true;
+                        return { eventDoc, pSnap: null };
                     }
-                    
-                    if (!pSnap.empty) {
+                }));
+
+                for (const { eventDoc, pSnap } of regResults) {
+                    const eventData = eventDoc.data();
+
+                    if (pSnap && pSnap.exists()) {
                         hasRegistrations = true;
-                        const regData = pSnap.docs[0].data();
+                        const regData = pSnap.data();
                         const regDateStr = regData.createdAt ? formatDateTimeTH(regData.createdAt.toDate()) : '-';
-                        
+
                         const item = document.createElement('div');
                         item.className = "flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 border border-slate-200 rounded-2xl hover:border-teal-400 hover:shadow-md transition bg-white";
                         item.innerHTML = `
                             <div class="mb-4 sm:mb-0">
-                                <span class="text-[10px] font-black tracking-widest bg-teal-100 text-teal-700 px-2 py-0.5 rounded uppercase mb-2 inline-block">ID: ${eventData.id || '-'}</span>
-                                <h4 class="font-bold text-lg text-slate-800 tracking-tight leading-tight">${eventData.name || 'กิจกรรม'}</h4>
+                                <span class="text-[10px] font-black tracking-widest bg-teal-100 text-teal-700 px-2 py-0.5 rounded uppercase mb-2 inline-block">ID: ${escapeHtml(eventData.id || '-')}</span>
+                                <h4 class="font-bold text-lg text-slate-800 tracking-tight leading-tight">${escapeHtml(eventData.name || 'กิจกรรม')}</h4>
                                 <p class="text-xs text-slate-500 mt-2 font-medium"><i class="fa-regular fa-clock text-slate-400 mr-1"></i> บันทึกเมื่อ: ${regDateStr}</p>
                             </div>
-                            <a href="#/register/${eventData.id}/0" class="shrink-0 bg-white border border-slate-200 hover:bg-slate-50 hover:border-teal-300 text-teal-700 font-bold py-2.5 px-5 rounded-xl transition shadow-sm text-sm flex items-center gap-2 w-full sm:w-auto justify-center">
+                            <a href="#/register/${escapeHtml(eventData.id)}/0" class="shrink-0 bg-white border border-slate-200 hover:bg-slate-50 hover:border-teal-300 text-teal-700 font-bold py-2.5 px-5 rounded-xl transition shadow-sm text-sm flex items-center gap-2 w-full sm:w-auto justify-center">
                                 <i class="fa-solid fa-file-pen text-teal-500"></i> ดูข้อมูล/แก้ไข
                             </a>
                         `;
@@ -2790,6 +2810,25 @@
                 showToast('เกิดข้อผิดพลาดในการโหลดประวัติ', 'error');
                 window.location.hash = '#/home';
             }
+        }
+
+        // บังคับผู้ใช้ทั่วไปที่ยังไม่มีข้อมูล PDPA ไปหน้า pdpa-setup (คืนค่า false ถ้ามีการ redirect)
+        async function ensurePdpaOrRedirect() {
+            if (loginRole !== 'customer' || !currentUser) return true;
+            if (hasPdpaCache === true) return true;
+            try {
+                const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+                hasPdpaCache = userSnap.exists() && !!userSnap.data().pdpa;
+            } catch (e) {
+                console.warn("ไม่สามารถตรวจสอบข้อมูล PDPA ได้", e);
+                return true;
+            }
+            if (!hasPdpaCache) {
+                sessionStorage.setItem('redirectUrl', window.location.hash);
+                window.location.hash = '#/pdpa-setup';
+                return false;
+            }
+            return true;
         }
 
         async function handleRoute() {
@@ -2831,7 +2870,8 @@
                     showView('auth');
                     return;
                 }
-                
+                if (!(await ensurePdpaOrRedirect())) return;
+
                 document.getElementById('btn-consent-next').innerHTML = 'ถัดไป (กรอกข้อมูล) <i class="fa-solid fa-arrow-right ml-2 opacity-80"></i>';
                 document.getElementById('btn-consent-back').classList.remove('hidden');
                 
@@ -2860,12 +2900,14 @@
                     showView('auth');
                     return;
                 }
+                if (!(await ensurePdpaOrRedirect())) return;
                 await loadEventRegistration();
             } else if (currentRoute.path === 'my-events') {
                 if (!currentUser) {
                     window.location.hash = '#/home';
                     return;
                 }
+                if (!(await ensurePdpaOrRedirect())) return;
                 await loadMyEvents();
             } else if (currentRoute.path === 'admin') {
                 if (!currentUser) {
@@ -2904,6 +2946,7 @@
                     showView('auth');
                     return;
                 }
+                if (!(await ensurePdpaOrRedirect())) return;
                 await loadHomeEvents();
             } else {
                 showView('auth');
@@ -2983,6 +3026,8 @@
                 sessionStorage.removeItem('adminRole');
                 loginRole = null;
                 currentAdminRole = null;
+                hasPdpaCache = null;
+                currentAdminTab = 'events';
             }
 
             if (user && (!window.location.hash || window.location.hash === '#/' || window.location.hash === '')) {
@@ -2998,6 +3043,7 @@
                 sessionStorage.removeItem('loginRole');
                 sessionStorage.removeItem('redirectUrl');
                 loginRole = null;
+                hasPdpaCache = null;
                 showToast('ออกจากระบบสำเร็จ', 'success');
                 window.location.hash = '#/'; 
             } catch (error) {
@@ -3079,21 +3125,35 @@
                     window.homeCurrentEvents = [];
 
                     const now = new Date();
+                    const activeCards = [];
+                    const endedCards = [];
                     eventsWithReg.forEach(({ docId, eventData, userRegData }) => {
-                        // ซ่อนกิจกรรมที่จบไปแล้ว (เลย eventEnd) จากหน้าหลัก
+                        // กิจกรรมที่จบไปแล้ว (เลย eventEnd): ซ่อนเฉพาะผู้ที่ไม่ได้ลงทะเบียน ผู้ลงทะเบียนยังเห็นเพื่อทำแบบประเมิน/แบบทดสอบ
+                        let isEnded = false;
                         if (eventData.eventEnd) {
                             const endDate = new Date(eventData.eventEnd);
-                            if (endDate < now) return; 
+                            if (endDate < now) isEnded = true;
                         }
+                        if (isEnded && !userRegData) return;
 
                         window.homeCurrentEvents.push({ docId: docId, ...eventData });
-                        
+
                         // เช็คว่าหมดเวลารับสมัครหรือยัง
                         let isRegClosed = false;
                         if (eventData.regEnd) {
                             const regEndDate = new Date(eventData.regEnd + 'T23:59:59');
                             if (regEndDate < now) isRegClosed = true;
                         }
+
+                        // เช็คว่ายังไม่ถึงวันเปิดรับสมัคร
+                        let isRegNotOpen = false;
+                        if (eventData.regStart) {
+                            const regStartDate = new Date(eventData.regStart + 'T00:00:00');
+                            if (regStartDate > now) isRegNotOpen = true;
+                        }
+
+                        // เช็คว่าผู้สมัครเต็มโควต้าหรือยัง
+                        const isFull = !!eventData.limit && (eventData.participantCount ?? 0) >= eventData.limit;
 
                         let bgStyle = '';
                         let bgClass = 'border-b border-slate-100';
@@ -3110,18 +3170,19 @@
 
                         let limitDisplay = '';
                         if (eventData.limit) {
-                            limitDisplay = `<div class="mt-auto pt-3 border-t border-slate-100/50 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider"><span class="flex items-center gap-1.5"><i class="fa-solid fa-users text-teal-500"></i> รับจำนวนจำกัด</span><span>${eventData.limit} ท่าน</span></div>`;
+                            limitDisplay = `<div class="mt-auto pt-3 border-t border-slate-100/50 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider"><span class="flex items-center gap-1.5"><i class="fa-solid fa-users text-teal-500"></i> รับจำนวนจำกัด</span><span>${escapeHtml(eventData.limit)} ท่าน</span></div>`;
                         }
 
                         let scheduleBtnHtml = '';
-                        if (eventData.scheduleLink || eventData.scheduleFile) {
+                        const hasSafeScheduleLink = isSafeHttpUrl(eventData.scheduleLink);
+                        if (hasSafeScheduleLink || eventData.scheduleFile) {
                             let actionAttr = '';
-                            if (eventData.scheduleLink) {
-                                actionAttr = `href="${eventData.scheduleLink}" target="_blank"`;
+                            if (hasSafeScheduleLink) {
+                                actionAttr = `href="${escapeHtml(eventData.scheduleLink.trim())}" target="_blank" rel="noopener noreferrer"`;
                             } else if (eventData.scheduleFile) {
-                                actionAttr = `href="#" onclick="window.openBase64Schedule(event, '${docId}')"`;
+                                actionAttr = `href="#" data-action="open-schedule" data-doc-id="${escapeHtml(docId)}"`;
                             }
-                            
+
                             scheduleBtnHtml = `
                                 <a ${actionAttr} class="block text-center w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-3 px-4 rounded-xl transition shadow-sm mb-3 text-sm border border-slate-200 hover:border-slate-300 flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-file-pdf text-red-400"></i> ดูรายละเอียดกำหนดการ
@@ -3152,7 +3213,7 @@
                                 `;
                             } else {
                                 surveyBtnHtml = `
-                                    <button type="button" onclick="window.startSurvey('${eventData.surveyId}', '${docId}')" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md mb-3 text-sm flex items-center justify-center gap-2">
+                                    <button type="button" data-action="start-survey" data-survey-id="${escapeHtml(eventData.surveyId)}" data-doc-id="${escapeHtml(docId)}" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md mb-3 text-sm flex items-center justify-center gap-2">
                                         <i class="fa-solid fa-star"></i> เริ่มทำแบบประเมิน
                                     </button>
                                 `;
@@ -3172,12 +3233,12 @@
                                     quizBtnHtml = `
                                         <div class="bg-purple-50 text-purple-800 px-4 py-3 rounded-xl border border-purple-200 mb-3 text-sm font-bold flex items-center justify-between shadow-sm">
                                             <span><i class="fa-solid fa-check-circle text-purple-600 mr-1.5"></i>ทำข้อสอบแล้ว</span>
-                                            <span class="bg-white px-2.5 py-1 rounded-lg shadow-sm">คะแนน: ${userRegData.testScore}/${userRegData.testMaxScore}</span>
+                                            <span class="bg-white px-2.5 py-1 rounded-lg shadow-sm">คะแนน: ${escapeHtml(userRegData.testScore)}/${escapeHtml(userRegData.testMaxScore)}</span>
                                         </div>
                                     `;
                                 } else {
                                     quizBtnHtml = `
-                                        <button type="button" onclick="window.startQuiz('${eventData.quizId}', '${docId}')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md mb-3 text-sm flex items-center justify-center gap-2">
+                                        <button type="button" data-action="start-quiz" data-quiz-id="${escapeHtml(eventData.quizId)}" data-doc-id="${escapeHtml(docId)}" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md mb-3 text-sm flex items-center justify-center gap-2">
                                             <i class="fa-solid fa-pen-to-square"></i> เริ่มทำแบบทดสอบ
                                         </button>
                                     `;
@@ -3190,18 +3251,21 @@
                         card.innerHTML = `
                             <div class="h-40 ${bgClass} relative" style="${bgStyle}">
                                 ${overlay}
-                                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg shadow-sm border border-white/50 text-[10px] font-black text-slate-700 tracking-widest uppercase">ID: ${eventData.id || '-'}</div>
+                                <div class="absolute top-4 left-4 flex items-center gap-2">
+                                    <div class="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg shadow-sm border border-white/50 text-[10px] font-black text-slate-700 tracking-widest uppercase">ID: ${escapeHtml(eventData.id || '-')}</div>
+                                    ${isEnded ? `<div class="bg-rose-600/90 backdrop-blur-sm px-3 py-1 rounded-lg shadow-sm border border-rose-400/50 text-[10px] font-black text-white tracking-widest uppercase">จบแล้ว</div>` : ''}
+                                </div>
                             </div>
                             <div class="p-6 md:p-8 flex-grow flex flex-col relative">
                                 <div class="flex justify-between items-start mb-3">
                                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest pt-1">Event Details</span>
-                                    <span class="text-[11px] font-bold px-3 py-1 rounded-lg border shadow-sm ${feeClass}">${feeText}</span>
+                                    <span class="text-[11px] font-bold px-3 py-1 rounded-lg border shadow-sm ${feeClass}">${escapeHtml(feeText)}</span>
                                 </div>
-                                <h3 class="text-xl font-black text-slate-800 mb-1 line-clamp-2 tracking-tight group-hover:text-teal-700 transition-colors">${eventData.name || 'กิจกรรม'}</h3>
+                                <h3 class="text-xl font-black text-slate-800 mb-1 line-clamp-2 tracking-tight group-hover:text-teal-700 transition-colors">${escapeHtml(eventData.name || 'กิจกรรม')}</h3>
                                 ${visibilityBadge}
                                 <div class="mb-6 mt-3">
-                                    <p class="text-slate-500 text-sm line-clamp-2 font-medium leading-relaxed">${eventData.desc || 'ไม่มีรายละเอียด'}</p>
-                                    ${(eventData.desc && eventData.desc.length > 80) ? `<button type="button" onclick="window.showPublicEventDesc('${docId}')" class="text-teal-600 hover:text-teal-800 text-xs font-bold mt-1.5 inline-block transition"><i class="fa-solid fa-angles-down mr-1"></i>อ่านรายละเอียดเพิ่มเติม</button>` : ''}
+                                    <p class="text-slate-500 text-sm line-clamp-2 font-medium leading-relaxed">${escapeHtml(eventData.desc || 'ไม่มีรายละเอียด')}</p>
+                                    ${(eventData.desc && eventData.desc.length > 80) ? `<button type="button" data-action="show-desc" data-doc-id="${escapeHtml(docId)}" class="text-teal-600 hover:text-teal-800 text-xs font-bold mt-1.5 inline-block transition"><i class="fa-solid fa-angles-down mr-1"></i>อ่านรายละเอียดเพิ่มเติม</button>` : ''}
                                 </div>
                                 
                                 <div class="text-xs text-slate-600 mb-6 space-y-4">
@@ -3209,21 +3273,21 @@
                                         <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0"><i class="fa-solid fa-calendar-check"></i></div>
                                         <div>
                                             <p class="font-bold text-slate-400 uppercase tracking-widest text-[10px] mb-0.5">เปิดรับสมัคร</p>
-                                            <p class="font-semibold text-slate-700">${eventData.regPeriod || '-'}</p>
+                                            <p class="font-semibold text-slate-700">${escapeHtml(eventData.regPeriod || '-')}</p>
                                         </div>
                                     </div>
                                     <div class="flex items-start gap-3">
                                         <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500 shrink-0"><i class="fa-solid fa-clock"></i></div>
                                         <div>
                                             <p class="font-bold text-slate-400 uppercase tracking-widest text-[10px] mb-0.5">วันจัดกิจกรรม</p>
-                                            <p class="font-semibold text-slate-700">${eventData.eventPeriod || '-'}</p>
+                                            <p class="font-semibold text-slate-700">${escapeHtml(eventData.eventPeriod || '-')}</p>
                                         </div>
                                     </div>
                                     <div class="flex items-start gap-3">
                                         <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500 shrink-0"><i class="fa-solid fa-location-dot"></i></div>
                                         <div>
                                             <p class="font-bold text-slate-400 uppercase tracking-widest text-[10px] mb-0.5">สถานที่</p>
-                                            <p class="font-semibold text-slate-700">${eventData.location || '-'}</p>
+                                            <p class="font-semibold text-slate-700">${escapeHtml(eventData.location || '-')}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -3233,17 +3297,36 @@
                                     ${scheduleBtnHtml}
                                     ${quizBtnHtml}
                                     ${surveyBtnHtml}
-                                    ${userRegData 
-                                        ? `<a href="#/register/${eventData.id || 0}/0" class="block text-center w-full bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-bold py-3.5 px-4 rounded-xl transition flex justify-center items-center gap-2"><i class="fa-solid fa-file-invoice"></i> ข้อมูลลงทะเบียนของคุณ</a>` 
-                                        : (isRegClosed 
-                                            ? `<button disabled class="w-full bg-slate-200 text-slate-500 font-bold py-3.5 px-4 rounded-xl cursor-not-allowed flex justify-center items-center gap-2"><i class="fa-solid fa-lock"></i> ปิดรับสมัครแล้ว</button>` 
-                                            : `<a href="#/register/${eventData.id || 0}/0" class="block text-center w-full btn-primary text-white font-bold py-3.5 px-4 rounded-xl transition flex justify-center items-center gap-2">ลงทะเบียนทันที <i class="fa-solid fa-arrow-right"></i></a>`)
+                                    ${userRegData
+                                        ? `<a href="#/register/${escapeHtml(eventData.id || 0)}/0" class="block text-center w-full bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-bold py-3.5 px-4 rounded-xl transition flex justify-center items-center gap-2"><i class="fa-solid fa-file-invoice"></i> ข้อมูลลงทะเบียนของคุณ</a>`
+                                        : (isRegNotOpen
+                                            ? `<button disabled class="w-full bg-slate-200 text-slate-500 font-bold py-3.5 px-4 rounded-xl cursor-not-allowed flex justify-center items-center gap-2"><i class="fa-solid fa-lock"></i> ยังไม่เปิดรับสมัคร (เปิด ${escapeHtml(formatDateTH(eventData.regStart))})</button>`
+                                            : isRegClosed
+                                            ? `<button disabled class="w-full bg-slate-200 text-slate-500 font-bold py-3.5 px-4 rounded-xl cursor-not-allowed flex justify-center items-center gap-2"><i class="fa-solid fa-lock"></i> ปิดรับสมัครแล้ว</button>`
+                                            : isFull
+                                            ? `<button disabled class="w-full bg-slate-200 text-slate-500 font-bold py-3.5 px-4 rounded-xl cursor-not-allowed flex justify-center items-center gap-2"><i class="fa-solid fa-lock"></i> เต็มแล้ว</button>`
+                                            : `<a href="#/register/${escapeHtml(eventData.id || 0)}/0" class="block text-center w-full btn-primary text-white font-bold py-3.5 px-4 rounded-xl transition flex justify-center items-center gap-2">ลงทะเบียนทันที <i class="fa-solid fa-arrow-right"></i></a>`)
                                     }
                                 </div>
                             </div>
                         `;
-                        grid.appendChild(card);
+
+                        // ผูก event ให้ปุ่มที่ใช้ data-* แทน onclick แบบ string
+                        card.querySelectorAll('[data-action]').forEach(el => {
+                            el.addEventListener('click', (ev) => {
+                                const action = el.dataset.action;
+                                if (action === 'open-schedule') window.openBase64Schedule(ev, el.dataset.docId);
+                                else if (action === 'show-desc') window.showPublicEventDesc(el.dataset.docId);
+                                else if (action === 'start-survey') window.startSurvey(el.dataset.surveyId, el.dataset.docId);
+                                else if (action === 'start-quiz') window.startQuiz(el.dataset.quizId, el.dataset.docId);
+                            });
+                        });
+
+                        (isEnded ? endedCards : activeCards).push(card);
                     });
+
+                    // กิจกรรมที่ยังไม่จบขึ้นก่อน กิจกรรมที่จบแล้วอยู่ท้าย
+                    activeCards.concat(endedCards).forEach(card => grid.appendChild(card));
                 }
                 showView('home');
             } catch (error) {
@@ -3284,6 +3367,12 @@
                     const regEndDate = new Date(eventData.regEnd + 'T23:59:59');
                     if (regEndDate < now) isRegClosed = true;
                 }
+                let isRegNotOpen = false;
+                if (eventData.regStart) {
+                    const regStartDate = new Date(eventData.regStart + 'T00:00:00');
+                    if (regStartDate > now) isRegNotOpen = true;
+                }
+                const isFull = !!eventData.limit && (eventData.participantCount ?? 0) >= eventData.limit;
 
                 const btnSubmit = document.getElementById('btn-reg-submit');
                 btnSubmit.disabled = false;
@@ -3297,10 +3386,9 @@
                 document.getElementById('reg-email').value = currentUser.email;
 
                 try {
-                    const qUser = query(collection(db, "users"), where("uid", "==", currentUser.uid));
-                    const userSnap = await getDocs(qUser);
-                    if (!userSnap.empty) {
-                        const uData = userSnap.docs[0].data();
+                    const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+                    if (userSnap.exists()) {
+                        const uData = userSnap.data();
                         if (uData.prefix) {
                             const prefixSelect = document.getElementById('reg-prefix');
                             const prefixOther = document.getElementById('reg-prefix-other');
@@ -3339,25 +3427,19 @@
                 document.getElementById('reg-source-other').required = false;
                 document.getElementById('reg-factor-other').required = false;
 
-                const regRef = collection(db, "events", currentRoute.eventDocId, "participants");
-                const qReg = query(regRef,
-                    where("uid", "==", currentUser.uid),
-                    where("eventId", "==", eventId)
-                );
-                
-                let regSnap = { empty: true, docs: [] };
+                let regSnap = null;
                 let userRegData = null;
                 try {
-                    regSnap = await getDocs(qReg);
+                    regSnap = await getDoc(doc(db, "events", currentRoute.eventDocId, "participants", currentUser.uid));
                 } catch (err) {
                     console.warn("ไม่สามารถเช็คข้อมูลการลงทะเบียนซ้ำได้ เนื่องจากติดสิทธิ์การเข้าถึง (Missing Permissions):", err);
                 }
 
-                if (!regSnap.empty) {
+                if (regSnap && regSnap.exists()) {
                     document.getElementById('already-registered-alert').classList.remove('hidden');
                     document.getElementById('btn-reg-submit').innerHTML = '<i class="fa-solid fa-save mr-2"></i> อัปเดตข้อมูลการลงทะเบียน';
 
-                    userRegData = regSnap.docs[0].data();
+                    userRegData = regSnap.data();
 
                     if (userRegData.prefix) {
                         const prefixSelect = document.getElementById('reg-prefix');
@@ -3439,8 +3521,13 @@
                     }
 
                 } else {
-                    if (isRegClosed) {
-                        btnSubmit.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> ปิดรับสมัครแล้ว';
+                    let closedLabel = '';
+                    if (isRegNotOpen) closedLabel = 'ยังไม่เปิดรับสมัคร';
+                    else if (isRegClosed) closedLabel = 'ปิดรับสมัครแล้ว';
+                    else if (isFull) closedLabel = 'กิจกรรมนี้เต็มแล้ว';
+
+                    if (closedLabel) {
+                        btnSubmit.innerHTML = `<i class="fa-solid fa-lock mr-2"></i> ${closedLabel}`;
                         btnSubmit.disabled = true;
                         btnSubmit.classList.remove('btn-primary', 'text-white');
                         btnSubmit.classList.add('bg-slate-200', 'text-slate-500', 'cursor-not-allowed');
@@ -3496,6 +3583,7 @@
                     setButtonLoading('btn-consent-next', true, 'กำลังบันทึก...');
                     try {
                         await setDoc(doc(db, "users", currentUser.uid), { pdpa: pdpaConsent, updatedAt: serverTimestamp() }, { merge: true });
+                        hasPdpaCache = true;
                         showToast('บันทึกข้อมูลสำเร็จ', 'success');
                         const redirectUrl = sessionStorage.getItem('redirectUrl');
                         if (redirectUrl) {
@@ -3589,7 +3677,7 @@
                     return;
                 }
 
-                const isEditing = !document.getElementById('already-registered-alert').classList.contains('hidden');
+                let isEditing = !document.getElementById('already-registered-alert').classList.contains('hidden');
                 const defaultBtnText = isEditing ? '<i class="fa-solid fa-save mr-2"></i> อัปเดตข้อมูลการลงทะเบียน' : '<i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการลงทะเบียน';
 
                 setButtonLoading(btnId, true, defaultBtnText);
@@ -3625,20 +3713,37 @@
                         pdpa: pdpaConsent
                     };
 
+                    const participantRef = doc(db, "events", currentRoute.eventDocId, "participants", currentUser.uid);
+
+                    // กันการนับซ้ำ: ถ้ามีข้อมูลลงทะเบียนอยู่แล้ว ให้ถือเป็นการแก้ไขแทนการสร้างใหม่
+                    if (!isEditing) {
+                        try {
+                            const existingSnap = await getDoc(participantRef);
+                            if (existingSnap.exists()) isEditing = true;
+                        } catch (checkErr) {
+                            console.warn("ไม่สามารถตรวจสอบข้อมูลการลงทะเบียนเดิมได้", checkErr);
+                        }
+                    }
+
                     if (isEditing) {
                         regData.updatedAt = serverTimestamp();
-                        await setDoc(doc(db, "events", currentRoute.eventDocId, "participants", currentUser.uid), regData, { merge: true });
+                        await setDoc(participantRef, regData, { merge: true });
                     } else {
                         regData.createdAt = serverTimestamp();
                         // For new registrations, test state is false
                         regData.isTested = false;
                         regData.testScore = 0;
-                        await setDoc(doc(db, "events", currentRoute.eventDocId, "participants", currentUser.uid), regData);
+                        // สร้าง participant และ +1 participantCount ใน batch เดียวกัน (rules บังคับไม่ให้เกิน limit)
+                        const batch = writeBatch(db);
+                        batch.set(participantRef, regData);
+                        batch.update(doc(db, "events", currentRoute.eventDocId), { participantCount: increment(1) });
+                        await batch.commit();
                     }
 
                     // อัปเดต PDPA กลับไปที่ Global Profile ของผู้ใช้งานด้วยเสมอ
                     try {
                         await setDoc(doc(db, "users", currentUser.uid), { pdpa: pdpaConsent, updatedAt: serverTimestamp() }, { merge: true });
+                        hasPdpaCache = true;
                     } catch(pdpaErr) {
                         console.warn("Could not update global PDPA", pdpaErr);
                     }
@@ -3647,7 +3752,11 @@
                     window.location.hash = '#/success';
                 } catch (error) {
                     console.error("Registration Submit Error:", error);
-                    window.showErrorModal('บันทึกข้อมูลไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง');
+                    if (!isEditing && error.code === 'permission-denied') {
+                        window.showErrorModal('ลงทะเบียนไม่สำเร็จ', 'กิจกรรมนี้อาจเต็มแล้ว หรือปิดรับสมัคร กรุณาลองใหม่');
+                    } else {
+                        window.showErrorModal('บันทึกข้อมูลไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาดจากระบบ กรุณาลองใหม่อีกครั้ง');
+                    }
                     setButtonLoading(btnId, false, defaultBtnText);
                 }
             });
@@ -3748,6 +3857,8 @@
                 return;
             }
 
+            currentAdminTab = tabName;
+
             document.getElementById('admin-content-events').classList.add('hidden');
             document.getElementById('admin-content-events').classList.remove('block');
             document.getElementById('admin-content-registrants').classList.add('hidden');
@@ -3758,14 +3869,7 @@
             document.getElementById('admin-content-team').classList.remove('block');
             document.getElementById('admin-content-users').classList.add('hidden');
             document.getElementById('admin-content-users').classList.remove('block');
-            document.getElementById('admin-content-events').classList.remove('block');
-            document.getElementById('admin-content-registrants').classList.add('hidden');
-            document.getElementById('admin-content-registrants').classList.remove('block');
-            document.getElementById('admin-content-logs').classList.add('hidden');
-            document.getElementById('admin-content-logs').classList.remove('block');
-            document.getElementById('admin-content-team').classList.add('hidden');
-            document.getElementById('admin-content-team').classList.remove('block');
-            
+
             const quizContent = document.getElementById('admin-content-quizzes');
             if(quizContent) {
                 quizContent.classList.add('hidden');
@@ -3813,6 +3917,7 @@
                 sessionStorage.removeItem('loginRole');
                 sessionStorage.removeItem('redirectUrl');
                 loginRole = null;
+                hasPdpaCache = null;
                 showToast('ออกจากระบบสำเร็จ', 'success');
                 window.location.hash = '#/'; 
             } catch (error) {
@@ -4048,7 +4153,23 @@
             }
         };
 
-        window.viewRegistrants = async function(targetEventId) {
+        window.viewRegistrants = async function(targetEventId, fromSelect) {
+            // เลือก "-- กรุณาเลือกกิจกรรม --" จาก dropdown: ล้างการเลือกและแสดงข้อความเริ่มต้น
+            if (fromSelect && targetEventId === '') {
+                adminSelectedEvent = null;
+                currentRegistrantsData = [];
+                document.getElementById('registrants-table-body').innerHTML = `
+                                        <tr>
+                                            <td colspan="5" class="px-6 py-20 text-center">
+                                                <div class="flex flex-col items-center justify-center">
+                                                    <i class="fa-solid fa-hand-pointer text-4xl text-slate-200 mb-3 animate-bounce"></i>
+                                                    <p class="text-slate-500 font-bold">เลือกกิจกรรมด้านบนเพื่อดูข้อมูล</p>
+                                                </div>
+                                            </td>
+                                        </tr>`;
+                return;
+            }
+
             if (!targetEventId && typeof adminSelectedEvent !== 'undefined' && adminSelectedEvent) {
                 targetEventId = adminSelectedEvent.id;
             }
@@ -4098,7 +4219,7 @@
                         let scoreHtml = '<span class="text-slate-300">-</span>';
                         if (d.isTested !== undefined) {
                             if (d.isTested) {
-                                scoreHtml = `<span class="bg-purple-100 text-purple-700 px-2.5 py-1 rounded-md text-xs font-bold">${d.testScore}/${d.testMaxScore}</span>`;
+                                scoreHtml = `<span class="bg-purple-100 text-purple-700 px-2.5 py-1 rounded-md text-xs font-bold">${escapeHtml(d.testScore)}/${escapeHtml(d.testMaxScore)}</span>`;
                             } else {
                                 scoreHtml = `<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded-md text-[10px] font-medium">ยังไม่สอบ</span>`;
                             }
@@ -4107,12 +4228,12 @@
                         tr.innerHTML = `
                             <td class="px-6 py-4 align-top text-[11px] text-slate-400 font-medium">${dateStr}</td>
                             <td class="px-6 py-4 align-top break-words">
-                                <div class="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">${d.prefix || ''}${d.fullname || '-'}</div>
+                                <div class="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">${escapeHtml(d.prefix || '')}${escapeHtml(d.fullname || '-')}</div>
                             </td>
-                            <td class="px-6 py-4 align-top break-all text-sm text-slate-500 font-medium">${d.email || d.uid || '-'}</td>
+                            <td class="px-6 py-4 align-top break-all text-sm text-slate-500 font-medium">${escapeHtml(d.email || d.uid || '-')}</td>
                             <td class="px-6 py-4 align-top break-words text-sm text-slate-500">
-                                <div class="font-bold text-slate-700">${d.organization || '-'}</div>
-                                <div class="text-[11px] uppercase tracking-wide">${d.career || '-'}</div>
+                                <div class="font-bold text-slate-700">${escapeHtml(d.organization || '-')}</div>
+                                <div class="text-[11px] uppercase tracking-wide">${escapeHtml(d.career || '-')}</div>
                             </td>
                             <td class="px-6 py-4 align-top text-center">
                                 ${scoreHtml}
@@ -4142,8 +4263,8 @@
             document.getElementById('view-reg-career-display').textContent = d.career || '-';
             document.getElementById('view-reg-education-display').textContent = d.education || '-';
             
-            document.getElementById('view-reg-sources').innerHTML = (d.sources || []).map(s => `<span class="inline-block bg-white text-slate-600 px-3 py-1 border border-slate-200 rounded-lg text-xs font-bold shadow-sm">${s}</span>`).join('');
-            document.getElementById('view-reg-factors').innerHTML = (d.factors || []).map(f => `<span class="inline-block bg-white text-slate-600 px-3 py-1 border border-slate-200 rounded-lg text-xs font-bold shadow-sm">${f}</span>`).join('');
+            document.getElementById('view-reg-sources').innerHTML = (d.sources || []).map(s => `<span class="inline-block bg-white text-slate-600 px-3 py-1 border border-slate-200 rounded-lg text-xs font-bold shadow-sm">${escapeHtml(s)}</span>`).join('');
+            document.getElementById('view-reg-factors').innerHTML = (d.factors || []).map(f => `<span class="inline-block bg-white text-slate-600 px-3 py-1 border border-slate-200 rounded-lg text-xs font-bold shadow-sm">${escapeHtml(f)}</span>`).join('');
             
             // Populate PDPA
             let pdpaHtml = '';
@@ -4159,7 +4280,7 @@
             // Populate Score
             let scoreText = '<span class="text-slate-400 text-sm font-medium">ไม่มีการทดสอบ</span>';
             if (d.isTested !== undefined) {
-                scoreText = d.isTested ? `<span class="text-purple-600 bg-purple-50 px-4 py-2 rounded-xl border border-purple-100">${d.testScore} / ${d.testMaxScore} คะแนน</span>` : '<span class="text-slate-500 text-sm font-medium bg-slate-100 px-3 py-1.5 rounded-lg">ยังไม่ทำแบบทดสอบ</span>';
+                scoreText = d.isTested ? `<span class="text-purple-600 bg-purple-50 px-4 py-2 rounded-xl border border-purple-100">${escapeHtml(d.testScore)} / ${escapeHtml(d.testMaxScore)} คะแนน</span>` : '<span class="text-slate-500 text-sm font-medium bg-slate-100 px-3 py-1.5 rounded-lg">ยังไม่ทำแบบทดสอบ</span>';
             }
             document.getElementById('view-reg-score-display').innerHTML = scoreText;
 
@@ -4201,7 +4322,7 @@
 
                 surveyData.questions.forEach((q, qIndex) => {
                     const qNum = qIndex + 1;
-                    const qText = (q.question || '').toString().replace(/"/g, '""');
+                    const qText = sanitizeCsvValue(q.question || '').replace(/"/g, '""');
 
                     if (q.type === 'text') {
                         let textAnswers = [];
@@ -4216,7 +4337,7 @@
                             csvContent += `"${qNum}","${qText}","-","ไม่มีผู้ตอบ","-","-"\n`;
                         } else {
                             textAnswers.forEach((txt, idx) => {
-                                const safeTxt = txt.replace(/"/g, '""');
+                                const safeTxt = sanitizeCsvValue(txt).replace(/"/g, '""');
                                 csvContent += `"${qNum}","${qText}","ความคิดเห็นที่ ${idx + 1}","${safeTxt}","1","-"\n`;
                             });
                         }
@@ -4225,7 +4346,7 @@
                         const options = q.options || [];
 
                         rows.forEach((rText, rIndex) => {
-                            const safeRText = rText.replace(/"/g, '""');
+                            const safeRText = sanitizeCsvValue(rText).replace(/"/g, '""');
                             let optionCounts = new Array(options.length).fill(0);
                             let answeredCount = 0;
 
@@ -4243,7 +4364,7 @@
                             options.forEach((opt, optIdx) => {
                                 const count = optionCounts[optIdx];
                                 const percent = answeredCount > 0 ? ((count / answeredCount) * 100).toFixed(2) : 0;
-                                const safeOpt = opt.replace(/"/g, '""');
+                                const safeOpt = sanitizeCsvValue(opt).replace(/"/g, '""');
                                 csvContent += `"${qNum}","${qText}","${safeRText}","${safeOpt}","${count}","${percent}%"\n`;
                             });
                         });
@@ -4264,7 +4385,7 @@
                             let label = i;
                             if(i===1) label = `1 (${q.options[0] || 'น้อย'})`;
                             if(i===5) label = `5 (${q.options[1] || 'มาก'})`;
-                            const safeLabel = String(label).replace(/"/g, '""');
+                            const safeLabel = sanitizeCsvValue(label).replace(/"/g, '""');
                             csvContent += `"${qNum}","${qText}","-","${safeLabel}","${count}","${percent}%"\n`;
                         }
                     } else {
@@ -4283,7 +4404,7 @@
                         options.forEach((opt, optIdx) => {
                             const count = optionCounts[optIdx];
                             const percent = answeredCount > 0 ? ((count / answeredCount) * 100).toFixed(2) : 0;
-                            const safeOpt = opt.replace(/"/g, '""');
+                            const safeOpt = sanitizeCsvValue(opt).replace(/"/g, '""');
                             csvContent += `"${qNum}","${qText}","-","${safeOpt}","${count}","${percent}%"\n`;
                         });
                     }
@@ -4335,7 +4456,7 @@
                 const pdpa2 = row.pdpa ? (row.pdpa.agree_marketing ? 'ยินยอม' : 'ไม่ยินยอม') : 'N/A';
                 const pdpa3 = row.pdpa ? (row.pdpa.agree_sponsor ? 'ยินยอม' : 'ไม่ยินยอม') : 'N/A';
                 
-                const cleanStr = (str) => `"${(str||'').toString().replace(/"/g, '""')}"`;
+                const cleanStr = (str) => `"${sanitizeCsvValue(str||'').replace(/"/g, '""')}"`;
                 
                 const rowData = [
                     cleanStr(dateStr),
@@ -4399,6 +4520,11 @@
                     return;
                 }
 
+                if (scheduleLink && !isSafeHttpUrl(scheduleLink)) {
+                    showToast('ลิงก์กำหนดการต้องขึ้นต้นด้วย http:// หรือ https:// เท่านั้น', 'error');
+                    return;
+                }
+
                 setButtonLoading(btnId, true, 'บันทึกข้อมูล');
 
                 try {
@@ -4432,12 +4558,26 @@
                         await logActivity("แก้ไขกิจกรรม", title);
                         showToast('อัปเดตข้อมูลกิจกรรมสำเร็จ', 'success');
                     } else {
-                        const newId = Math.floor(Math.random() * 8999) + 1000;
+                        // สุ่ม id ที่ไม่ซ้ำกับกิจกรรมที่มีอยู่ (สูงสุด 20 ครั้ง)
+                        let newId = null;
+                        for (let attempt = 0; attempt < 20; attempt++) {
+                            const candidateId = Math.floor(Math.random() * 8999) + 1000;
+                            const dupSnap = await getDocs(query(collection(db, "events"), where("id", "==", candidateId)));
+                            if (dupSnap.empty) {
+                                newId = candidateId;
+                                break;
+                            }
+                        }
+                        if (newId === null) {
+                            showToast('ไม่สามารถสร้างรหัสกิจกรรมที่ไม่ซ้ำได้ กรุณาลองใหม่อีกครั้ง', 'error');
+                            return;
+                        }
+
                         eventData.id = newId;
+                        eventData.participantCount = 0;
                         eventData.createdAt = serverTimestamp();
-                        
-                        const safeDocId = title.replace(/\//g, '-');
-                        await setDoc(doc(db, "events", safeDocId), eventData);
+
+                        await addDoc(collection(db, "events"), eventData);
                         await logActivity("สร้างกิจกรรมใหม่", title);
                         
                         showToast('สร้างกิจกรรมใหม่สำเร็จ', 'success');
@@ -4483,10 +4623,20 @@
                             const participantsRef = collection(db, "events", docId, "participants");
                             const participantsSnap = await getDocs(participantsRef);
                             enrolled = participantsSnap.size;
+
+                            // ซิงก์ตัวนับ participantCount ให้ตรงกับจำนวนจริง (รองรับกิจกรรมเดิมที่ยังไม่มี field นี้)
+                            if (data.participantCount !== enrolled) {
+                                try {
+                                    await updateDoc(doc(db, "events", docId), { participantCount: enrolled });
+                                    data.participantCount = enrolled;
+                                } catch (syncErr) {
+                                    // ไม่ต้องแจ้งผู้ใช้
+                                }
+                            }
                         } catch(err) {
                             console.warn("ไม่สามารถนับจำนวนผู้สมัครได้ (Permission Denied)");
                         }
-                        
+
                         return { docId: docId, enrolledCount: enrolled, ...data };
                     });
 
@@ -4515,28 +4665,28 @@
                         tr.className = "hover:bg-slate-50 transition cursor-pointer group";
                         tr.onclick = () => window.openEventDetails(eventObj.docId);
                         
-                        let limitTxt = eventObj.limit ? ` / ${eventObj.limit}` : '';
-                        
+                        let limitTxt = eventObj.limit ? ` / ${escapeHtml(eventObj.limit)}` : '';
+
                         tr.innerHTML = `
                             <td class="px-6 py-5">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 group-hover:bg-teal-100 group-hover:text-teal-600 transition-colors"><i class="fa-solid fa-cube"></i></div>
                                     <div>
                                         <div class="flex items-center gap-2 mb-0.5">
-                                            <p class="font-bold text-slate-800 line-clamp-1 max-w-sm group-hover:text-teal-700 transition-colors text-sm">${eventObj.name || '-'}</p>
+                                            <p class="font-bold text-slate-800 line-clamp-1 max-w-sm group-hover:text-teal-700 transition-colors text-sm">${escapeHtml(eventObj.name || '-')}</p>
                                             ${eventObj.visibility === 'internal' ? '<span class="text-[9px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200"><i class="fa-solid fa-lock"></i> ภายใน</span>' : ''}
                                         </div>
                                         <div class="flex items-center gap-2 mt-1">
-                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: ${eventObj.id || '-'}</p>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: ${escapeHtml(eventObj.id || '-')}</p>
                                             ${eventObj.eventEnd && new Date(eventObj.eventEnd) < new Date() ? '<span class="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-md shadow-md font-bold tracking-wide animate-pulse">จบแล้ว</span>' : '<span class="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-md shadow-md font-bold tracking-wide">กำลังจัด</span>'}   </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-5 whitespace-nowrap text-sm text-center text-slate-500 font-medium">
-                                ${eventObj.regPeriod || '-'}
+                                ${escapeHtml(eventObj.regPeriod || '-')}
                             </td>
                             <td class="px-6 py-5 whitespace-nowrap text-sm text-center text-slate-500 font-medium">
-                                ${eventObj.eventPeriod || '-'}
+                                ${escapeHtml(eventObj.eventPeriod || '-')}
                             </td>
                             <td class="px-6 py-5 whitespace-nowrap text-center">
                                 <span class="px-3 py-1.5 rounded-lg text-xs font-black bg-emerald-50 border border-emerald-100 text-emerald-600 shadow-sm">
@@ -4584,10 +4734,10 @@
                             tr.innerHTML = `
                                 <td class="px-6 py-4 whitespace-nowrap text-[11px] text-slate-400 font-medium">${dateStr}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-[10px] font-bold px-2 py-1 rounded border ${actionColor}">${log.action || '-'}</span>
+                                    <span class="text-[10px] font-bold px-2 py-1 rounded border ${actionColor}">${escapeHtml(log.action || '-')}</span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700">${log.eventName || '-'}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-[11px] text-slate-500 tracking-wide">${log.userEmail || '-'}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700">${escapeHtml(log.eventName || '-')}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-[11px] text-slate-500 tracking-wide">${escapeHtml(log.userEmail || '-')}</td>
                             `;
                             logsTbody.appendChild(tr);
                         });
@@ -4602,8 +4752,8 @@
                 }
 
                 showView('admin');
-                
-                window.switchAdminTab('events');
+
+                window.switchAdminTab(currentAdminTab || 'events');
             } catch (error) {
                 console.error("Load Admin Data Error:", error);
                 showToast('ไม่สามารถดึงข้อมูล Admin ได้', 'error');
@@ -4636,19 +4786,21 @@
                     
                     let deleteBtnHtml = '';
                     if (email !== currentUser.email) {
-                        deleteBtnHtml = `<button onclick="window.removeAdminAccess('${email}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 w-8 h-8 rounded-lg transition shadow-sm mx-auto flex items-center justify-center border border-red-100" title="ลบสิทธิ์"><i class="fa-solid fa-trash-can"></i></button>`;
+                        deleteBtnHtml = `<button type="button" data-action="remove-admin" data-email="${escapeHtml(email)}" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 w-8 h-8 rounded-lg transition shadow-sm mx-auto flex items-center justify-center border border-red-100" title="ลบสิทธิ์"><i class="fa-solid fa-trash-can"></i></button>`;
                     } else {
                         deleteBtnHtml = `<span class="text-[10px] text-slate-400 font-bold bg-slate-100 px-2 py-1 rounded-md border border-slate-200">ไม่สามารถลบตัวเองได้</span>`;
                     }
 
                     tr.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800"><i class="fa-solid fa-user-shield text-teal-500 mr-2 opacity-50"></i> ${email}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800"><i class="fa-solid fa-user-shield text-teal-500 mr-2 opacity-50"></i> ${escapeHtml(email)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-[11px] text-slate-400 font-medium">${dateStr}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-[11px] text-slate-500 tracking-wide">${addedBy}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-[11px] text-slate-500 tracking-wide">${escapeHtml(addedBy)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
                             ${deleteBtnHtml}
                         </td>
                     `;
+                    const removeBtn = tr.querySelector('[data-action="remove-admin"]');
+                    if (removeBtn) removeBtn.addEventListener('click', () => window.removeAdminAccess(removeBtn.dataset.email));
                     tbody.appendChild(tr);
                 });
                 
@@ -4732,11 +4884,11 @@
                         <div class="flex items-center gap-4 mb-2">
                             <div class="flex-1">
                                 <label class="text-xs text-slate-500 font-bold">ป้ายกำกับคะแนน 1 (น้อยที่สุด)</label>
-                                <input type="text" value="${q.options[0] || 'น้อยที่สุด'}" onchange="window.updateSurveyOption(${qIndex}, 0, this.value)" class="input-premium w-full px-3 py-2 text-sm rounded-lg mt-1" placeholder="น้อยที่สุด">
+                                <input type="text" value="${escapeHtml(q.options[0] || 'น้อยที่สุด')}" onchange="window.updateSurveyOption(${qIndex}, 0, this.value)" class="input-premium w-full px-3 py-2 text-sm rounded-lg mt-1" placeholder="น้อยที่สุด">
                             </div>
                             <div class="flex-1">
                                 <label class="text-xs text-slate-500 font-bold">ป้ายกำกับคะแนน 5 (มากที่สุด)</label>
-                                <input type="text" value="${q.options[1] || 'มากที่สุด'}" onchange="window.updateSurveyOption(${qIndex}, 1, this.value)" class="input-premium w-full px-3 py-2 text-sm rounded-lg mt-1" placeholder="มากที่สุด">
+                                <input type="text" value="${escapeHtml(q.options[1] || 'มากที่สุด')}" onchange="window.updateSurveyOption(${qIndex}, 1, this.value)" class="input-premium w-full px-3 py-2 text-sm rounded-lg mt-1" placeholder="มากที่สุด">
                             </div>
                         </div>
                         <p class="text-xs text-pink-500 italic mt-2">* ระบบจะสร้างปุ่มเลือกคะแนน 1 ถึง 5 ให้อัตโนมัติ</p>
@@ -4747,7 +4899,7 @@
                         rowsHtml += `
                             <div class="flex items-center gap-2 mb-2">
                                 <i class="fa-solid fa-bars text-slate-300"></i>
-                                <input type="text" value="${row}" onchange="window.updateSurveyRowText(${qIndex}, ${rIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="หัวข้อย่อยที่ ${rIndex + 1}">
+                                <input type="text" value="${escapeHtml(row)}" onchange="window.updateSurveyRowText(${qIndex}, ${rIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="หัวข้อย่อยที่ ${rIndex + 1}">
                                 <button type="button" onclick="window.removeSurveyRow(${qIndex}, ${rIndex})" class="text-red-400 hover:text-red-600 px-2 transition"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                         `;
@@ -4758,7 +4910,7 @@
                         colsHtml += `
                             <div class="flex items-center gap-2 mb-2">
                                 <i class="fa-regular fa-circle text-pink-300"></i>
-                                <input type="text" value="${opt}" onchange="window.updateSurveyOption(${qIndex}, ${oIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="คอลัมน์ระดับที่ ${oIndex + 1}">
+                                <input type="text" value="${escapeHtml(opt)}" onchange="window.updateSurveyOption(${qIndex}, ${oIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="คอลัมน์ระดับที่ ${oIndex + 1}">
                                 <button type="button" onclick="window.removeSurveyOption(${qIndex}, ${oIndex})" class="text-red-400 hover:text-red-600 px-2 transition"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                         `;
@@ -4784,7 +4936,7 @@
                         optionsHtml += `
                             <div class="flex items-center gap-2 mb-2">
                                 <i class="fa-regular fa-circle text-pink-300"></i>
-                                <input type="text" value="${opt}" onchange="window.updateSurveyOption(${qIndex}, ${oIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="ตัวเลือกที่ ${oIndex + 1}">
+                                <input type="text" value="${escapeHtml(opt)}" onchange="window.updateSurveyOption(${qIndex}, ${oIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="ตัวเลือกที่ ${oIndex + 1}">
                                 <button type="button" onclick="window.removeSurveyOption(${qIndex}, ${oIndex})" class="text-red-400 hover:text-red-600 px-2 transition"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                         `;
@@ -4809,7 +4961,7 @@
                                 <option value="text" ${q.type === 'text' ? 'selected' : ''}>เขียนตอบ (ข้อเสนอแนะ)</option>
                             </select>
                         </div>
-                        <input type="text" value="${q.question}" onchange="window.updateSurveyQuestionText(${qIndex}, this.value)" class="input-premium w-full px-4 py-3 rounded-xl mb-4 font-bold text-slate-800" placeholder="ระบุหัวข้อประเมิน หรือคำถามข้อเสนอแนะ...">
+                        <input type="text" value="${escapeHtml(q.question)}" onchange="window.updateSurveyQuestionText(${qIndex}, this.value)" class="input-premium w-full px-4 py-3 rounded-xl mb-4 font-bold text-slate-800" placeholder="ระบุหัวข้อประเมิน หรือคำถามข้อเสนอแนะ...">
                         <div class="pl-2">
                             ${contentHtml}
                         </div>
@@ -4820,6 +4972,9 @@
 
         window.changeQuestionType = (type, qIndex, newType) => updateBuilderState(type, 'CHANGE_TYPE', {qIndex: qIndex, value: newType});
         window.updateTextAnswer = (type, qIndex, text) => updateBuilderState(type, 'UPDATE_TEXT_ANSWER', {qIndex: qIndex, text: text});
+
+        // เก็บตัวเลือกเดิมก่อนเปลี่ยนเป็น scale (key = object คำถาม) ไม่เก็บใน field คำถามเพื่อไม่ให้ถูกบันทึกลง Firestore
+        const savedOptionsBeforeScale = new WeakMap();
 
         // Core Engine สำหรับจัดการ State ของ Quiz และ Survey ร่วมกัน (Refactored)
         const updateBuilderState = (type, action, payload) => {
@@ -4833,14 +4988,30 @@
                         ? { type: 'choice', question: '', options: ['ตัวเลือก 1', 'ตัวเลือก 2'], answerIndex: 0, textAnswer: '' } 
                         : { type: 'choice', question: '', options: ['มากที่สุด', 'มาก', 'ปานกลาง', 'น้อย', 'น้อยที่สุด'], rows: ['หัวข้อย่อย 1'] });
                     break;
-                case 'CHANGE_TYPE':
-                    state.questions[qIndex].type = value;
-                    if(value === 'scale' && state.questions[qIndex].options.length > 2) {
-                        state.questions[qIndex].options = ['น้อยที่สุด', 'มากที่สุด'];
-                    } else if (value === 'grid' && !state.questions[qIndex].rows) {
-                        state.questions[qIndex].rows = ['หัวข้อย่อย 1'];
+                case 'CHANGE_TYPE': {
+                    const q = state.questions[qIndex];
+                    const prevType = q.type;
+                    if (value === 'scale') {
+                        if (prevType !== 'scale' && !savedOptionsBeforeScale.has(q)) {
+                            savedOptionsBeforeScale.set(q, [...(q.options || [])]);
+                        }
+                        q.options = ['น้อยที่สุด', 'มากที่สุด'];
+                    } else if (value === 'choice' || value === 'grid') {
+                        if (savedOptionsBeforeScale.has(q)) {
+                            q.options = [...savedOptionsBeforeScale.get(q)];
+                            savedOptionsBeforeScale.delete(q);
+                        } else if (prevType === 'scale') {
+                            q.options = type === 'quiz'
+                                ? ['ตัวเลือก 1', 'ตัวเลือก 2']
+                                : ['มากที่สุด', 'มาก', 'ปานกลาง', 'น้อย', 'น้อยที่สุด'];
+                        }
+                    }
+                    q.type = value;
+                    if (value === 'grid' && !q.rows) {
+                        q.rows = ['หัวข้อย่อย 1'];
                     }
                     break;
+                }
                 case 'UPDATE_TEXT_ANSWER':
                     state.questions[qIndex].textAnswer = text;
                     return; 
@@ -4900,10 +5071,27 @@
             if(!title) return showToast('กรุณาระบุชื่อแบบประเมิน', 'error');
             if(window.adminCurrentSurveyDraft.questions.length === 0) return showToast('กรุณาเพิ่มอย่างน้อย 1 หัวข้อประเมิน', 'error');
             
-            for(let q of window.adminCurrentSurveyDraft.questions) {
-                if(!q.question.trim()) return showToast('กรุณากรอกคำถาม/หัวข้อให้ครบถ้วน', 'error');
+            for(let i = 0; i < window.adminCurrentSurveyDraft.questions.length; i++) {
+                const q = window.adminCurrentSurveyDraft.questions[i];
+                const qNum = i + 1;
+                if(!(q.question || '').trim()) return showToast(`กรุณากรอกคำถาม/หัวข้อของข้อที่ ${qNum}`, 'error');
+                if (q.type === 'text') continue;
+                if (q.type === 'scale') {
+                    if (!(q.options[0] || '').trim() || !(q.options[1] || '').trim()) {
+                        return showToast(`กรุณากรอกป้ายกำกับคะแนนทั้ง 2 ด้านของข้อที่ ${qNum}`, 'error');
+                    }
+                    continue;
+                }
+                if (q.type === 'grid') {
+                    const rows = q.rows || [];
+                    if (rows.length === 0) return showToast(`กรุณาเพิ่มหัวข้อย่อยอย่างน้อย 1 แถวในข้อที่ ${qNum}`, 'error');
+                    for (let row of rows) {
+                        if (!(row || '').trim()) return showToast(`กรุณากรอกหัวข้อย่อยให้ครบถ้วนในข้อที่ ${qNum}`, 'error');
+                    }
+                    if (q.options.length < 2) return showToast(`ข้อที่ ${qNum} ต้องมีคอลัมน์ระดับการประเมินอย่างน้อย 2 ตัวเลือก`, 'error');
+                }
                 for(let opt of q.options) {
-                    if(!opt.trim()) return showToast('กรุณากรอกระดับตัวเลือกให้ครบถ้วน', 'error');
+                    if(!(opt || '').trim()) return showToast(`กรุณากรอกระดับตัวเลือกให้ครบถ้วนในข้อที่ ${qNum}`, 'error');
                 }
             }
 
@@ -4954,13 +5142,15 @@
                                 const tr = document.createElement('tr');
                                 tr.className = "hover:bg-slate-50 transition";
                                 tr.innerHTML = `
-                                    <td class="px-6 py-5 font-bold text-slate-800 text-sm"><i class="fa-solid fa-star text-pink-400 mr-2"></i>${data.title}</td>
+                                    <td class="px-6 py-5 font-bold text-slate-800 text-sm"><i class="fa-solid fa-star text-pink-400 mr-2"></i>${escapeHtml(data.title)}</td>
                                     <td class="px-6 py-5 text-center text-sm font-black text-pink-600 bg-pink-50/50">${data.questions.length} ข้อ</td>
                                     <td class="px-6 py-5 text-center">
-                                        <button onclick="window.editSurvey('${d.id}')" class="text-amber-500 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 w-8 h-8 rounded-lg transition mr-2"><i class="fa-solid fa-pen"></i></button>
-                                        <button onclick="window.deleteSurvey('${d.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 w-8 h-8 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
+                                        <button type="button" data-action="edit-survey" data-id="${escapeHtml(d.id)}" class="text-amber-500 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 w-8 h-8 rounded-lg transition mr-2"><i class="fa-solid fa-pen"></i></button>
+                                        <button type="button" data-action="delete-survey" data-id="${escapeHtml(d.id)}" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 w-8 h-8 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
                                     </td>
                                 `;
+                                tr.querySelector('[data-action="edit-survey"]').addEventListener('click', (ev) => window.editSurvey(ev.currentTarget.dataset.id));
+                                tr.querySelector('[data-action="delete-survey"]').addEventListener('click', (ev) => window.deleteSurvey(ev.currentTarget.dataset.id));
                                 tbody.appendChild(tr);
                             }
                             const opt = document.createElement('option');
@@ -5014,7 +5204,7 @@
                 if (q.type === 'text') {
                     contentHtml = `
                         <label class="block text-[10px] font-bold text-purple-600 mb-2 uppercase tracking-widest"><i class="fa-solid fa-pen"></i> ระบุคำตอบที่ถูกต้อง (ระบบจะตรวจตรงกับคำนี้)</label>
-                        <input type="text" value="${q.textAnswer || ''}" onchange="window.updateTextAnswer('quiz', ${qIndex}, this.value)" class="input-premium w-full px-3 py-2 text-sm rounded-lg" placeholder="คำตอบที่ถูกต้องที่ผู้ใช้ต้องพิมพ์...">
+                        <input type="text" value="${escapeHtml(q.textAnswer || '')}" onchange="window.updateTextAnswer('quiz', ${qIndex}, this.value)" class="input-premium w-full px-3 py-2 text-sm rounded-lg" placeholder="คำตอบที่ถูกต้องที่ผู้ใช้ต้องพิมพ์...">
                     `;
                 } else {
                     let optionsHtml = '';
@@ -5022,7 +5212,7 @@
                         optionsHtml += `
                             <div class="flex items-center gap-2 mb-2">
                                 <input type="radio" name="correct_answer_${qIndex}" value="${oIndex}" ${q.answerIndex === oIndex ? 'checked' : ''} onchange="window.updateQuizAnswer(${qIndex}, ${oIndex})" class="w-4 h-4 text-purple-600 focus:ring-purple-500 cursor-pointer" title="คลิกเพื่อเลือกเป็นคำตอบที่ถูก">
-                                <input type="text" value="${opt}" onchange="window.updateQuizOption(${qIndex}, ${oIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="ตัวเลือกที่ ${oIndex + 1}">
+                                <input type="text" value="${escapeHtml(opt)}" onchange="window.updateQuizOption(${qIndex}, ${oIndex}, this.value)" class="input-premium flex-1 px-3 py-2 text-sm rounded-lg" placeholder="ตัวเลือกที่ ${oIndex + 1}">
                                 <button type="button" onclick="window.removeQuizOption(${qIndex}, ${oIndex})" class="text-red-400 hover:text-red-600 px-2 transition"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                         `;
@@ -5046,7 +5236,7 @@
                                 <option value="text" ${q.type === 'text' ? 'selected' : ''}>เขียนตอบสั้นๆ (Text)</option>
                             </select>
                         </div>
-                        <input type="text" value="${q.question}" onchange="window.updateQuizQuestionText(${qIndex}, this.value)" class="input-premium w-full px-4 py-3 rounded-xl mb-4 font-bold text-slate-800" placeholder="ระบุคำถาม...">
+                        <input type="text" value="${escapeHtml(q.question)}" onchange="window.updateQuizQuestionText(${qIndex}, this.value)" class="input-premium w-full px-4 py-3 rounded-xl mb-4 font-bold text-slate-800" placeholder="ระบุคำถาม...">
                         <div class="pl-2">
                             ${contentHtml}
                         </div>
@@ -5071,10 +5261,16 @@
             if(!title) return showToast('กรุณาระบุชื่อแบบทดสอบ', 'error');
             if(window.adminCurrentQuizDraft.questions.length === 0) return showToast('กรุณาเพิ่มอย่างน้อย 1 คำถาม', 'error');
             
-            for(let q of window.adminCurrentQuizDraft.questions) {
-                if(!q.question.trim()) return showToast('กรุณากรอกคำถามให้ครบถ้วน', 'error');
+            for(let i = 0; i < window.adminCurrentQuizDraft.questions.length; i++) {
+                const q = window.adminCurrentQuizDraft.questions[i];
+                const qNum = i + 1;
+                if(!(q.question || '').trim()) return showToast(`กรุณากรอกคำถามของข้อที่ ${qNum}`, 'error');
+                if (q.type === 'text') {
+                    if (!(q.textAnswer || '').trim()) return showToast(`กรุณาระบุคำตอบที่ถูกต้องของข้อที่ ${qNum}`, 'error');
+                    continue;
+                }
                 for(let opt of q.options) {
-                    if(!opt.trim()) return showToast('กรุณากรอกตัวเลือกให้ครบถ้วน', 'error');
+                    if(!(opt || '').trim()) return showToast(`กรุณากรอกตัวเลือกให้ครบถ้วนในข้อที่ ${qNum}`, 'error');
                 }
             }
 
@@ -5125,13 +5321,15 @@
                                 const tr = document.createElement('tr');
                                 tr.className = "hover:bg-slate-50 transition";
                                 tr.innerHTML = `
-                                    <td class="px-6 py-5 font-bold text-slate-800 text-sm"><i class="fa-solid fa-list-check text-purple-400 mr-2"></i>${data.title}</td>
+                                    <td class="px-6 py-5 font-bold text-slate-800 text-sm"><i class="fa-solid fa-list-check text-purple-400 mr-2"></i>${escapeHtml(data.title)}</td>
                                     <td class="px-6 py-5 text-center text-sm font-black text-purple-600 bg-purple-50/50">${data.questions.length} ข้อ</td>
                                     <td class="px-6 py-5 text-center">
-                                        <button onclick="window.editQuiz('${d.id}')" class="text-amber-500 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 w-8 h-8 rounded-lg transition mr-2"><i class="fa-solid fa-pen"></i></button>
-                                        <button onclick="window.deleteQuiz('${d.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 w-8 h-8 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
+                                        <button type="button" data-action="edit-quiz" data-id="${escapeHtml(d.id)}" class="text-amber-500 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 w-8 h-8 rounded-lg transition mr-2"><i class="fa-solid fa-pen"></i></button>
+                                        <button type="button" data-action="delete-quiz" data-id="${escapeHtml(d.id)}" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 w-8 h-8 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
                                     </td>
                                 `;
+                                tr.querySelector('[data-action="edit-quiz"]').addEventListener('click', (ev) => window.editQuiz(ev.currentTarget.dataset.id));
+                                tr.querySelector('[data-action="delete-quiz"]').addEventListener('click', (ev) => window.deleteQuiz(ev.currentTarget.dataset.id));
                                 tbody.appendChild(tr);
                             }
                             const opt = document.createElement('option');
@@ -5173,18 +5371,18 @@
                     window.currentUserQuizSession = { eventDocId: eventDocId, quizId: quizId, data: docSnap.data(), answers: [] };
                     window.renderUserQuiz();
                     document.getElementById('modal-take-quiz').classList.remove('hidden');
-                    showView('register');
+                    showView('home');
                 } else {
                     showToast('ไม่พบข้อมูลแบบทดสอบ', 'error');
-                    showView('register');
+                    showView('home');
                 }
-            } catch(e) { showToast('ดึงข้อมูลข้อสอบไม่สำเร็จ', 'error'); showView('register'); }
+            } catch(e) { showToast('ดึงข้อมูลข้อสอบไม่สำเร็จ', 'error'); showView('home'); }
         };
 
         window.renderUserQuiz = function() {
             const container = document.getElementById('quiz-questions-container');
             const quiz = window.currentUserQuizSession.data;
-            container.innerHTML = `<h2 class="text-2xl font-black text-slate-800 mb-6 text-center">${quiz.title}</h2>`;
+            container.innerHTML = `<h2 class="text-2xl font-black text-slate-800 mb-6 text-center">${escapeHtml(quiz.title)}</h2>`;
             
             quiz.questions.forEach((q, qIndex) => {
                 let optionsHtml = '';
@@ -5195,12 +5393,12 @@
                         optionsHtml += `
                             <label class="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-purple-400 hover:shadow-sm transition group">
                                 <input type="radio" name="user_q_${qIndex}" value="${oIndex}" onchange="window.currentUserQuizSession.answers[${qIndex}] = ${oIndex}" class="mt-0.5 w-4 h-4 text-purple-600 focus:ring-purple-500 border-slate-300 cursor-pointer">
-                                <span class="text-slate-700 font-medium group-hover:text-purple-900 leading-relaxed">${opt}</span>
+                                <span class="text-slate-700 font-medium group-hover:text-purple-900 leading-relaxed">${escapeHtml(opt)}</span>
                             </label>
                         `;
                     });
                 }
-                container.innerHTML += `<div class="mb-8"><p class="font-bold text-slate-800 mb-3 text-lg leading-relaxed"><span class="text-purple-600 mr-2">ข้อ ${qIndex + 1}.</span> ${q.question}</p><div class="space-y-3 pl-1 sm:pl-6">${optionsHtml}</div></div>`;
+                container.innerHTML += `<div class="mb-8"><p class="font-bold text-slate-800 mb-3 text-lg leading-relaxed"><span class="text-purple-600 mr-2">ข้อ ${qIndex + 1}.</span> ${escapeHtml(q.question)}</p><div class="space-y-3 pl-1 sm:pl-6">${optionsHtml}</div></div>`;
             });
         };
 
@@ -5265,7 +5463,7 @@
         window.renderUserSurvey = function() {
             const container = document.getElementById('survey-questions-container');
             const survey = window.currentUserSurveySession.data;
-            container.innerHTML = `<h2 class="text-2xl font-black text-slate-800 mb-6 text-center">${survey.title}</h2>`;
+            container.innerHTML = `<h2 class="text-2xl font-black text-slate-800 mb-6 text-center">${escapeHtml(survey.title)}</h2>`;
             
             survey.questions.forEach((q, qIndex) => {
                 let optionsHtml = '';
@@ -5273,7 +5471,7 @@
                     optionsHtml = `<textarea rows="3" onchange="window.currentUserSurveySession.answers[${qIndex}] = this.value" class="input-premium w-full px-4 py-3 rounded-xl font-medium resize-none" placeholder="พิมพ์ข้อเสนอแนะของคุณ..."></textarea>`;
                 } else if (q.type === 'scale') {
                     let scaleHtml = '<div class="flex justify-between items-end mt-4 max-w-md mx-auto relative px-2">';
-                    scaleHtml += `<span class="text-xs text-slate-500 font-bold mb-1 absolute left-0 -translate-x-4">${q.options[0] || 'น้อย'}</span>`;
+                    scaleHtml += `<span class="text-xs text-slate-500 font-bold mb-1 absolute left-0 -translate-x-4">${escapeHtml(q.options[0] || 'น้อย')}</span>`;
                     scaleHtml += '<div class="flex flex-1 justify-between px-8">';
                     for(let i=1; i<=5; i++) {
                         scaleHtml += `
@@ -5283,17 +5481,17 @@
                         </label>`;
                     }
                     scaleHtml += '</div>';
-                    scaleHtml += `<span class="text-xs text-slate-500 font-bold mb-1 absolute right-0 translate-x-4">${q.options[1] || 'มาก'}</span>`;
+                    scaleHtml += `<span class="text-xs text-slate-500 font-bold mb-1 absolute right-0 translate-x-4">${escapeHtml(q.options[1] || 'มาก')}</span>`;
                     scaleHtml += '<div class="absolute top-[28px] left-10 right-10 h-0.5 bg-slate-100 -z-0"></div>';
                     scaleHtml += '</div>';
                     optionsHtml = scaleHtml;
                 } else if (q.type === 'grid') {
                     window.currentUserSurveySession.answers[qIndex] = window.currentUserSurveySession.answers[qIndex] || {};
                     let gridHtml = '<div class="overflow-x-auto bg-white rounded-xl border border-slate-200 shadow-sm"><table class="w-full text-sm text-left"><thead class="bg-slate-50 text-slate-600 border-b border-slate-200"><tr><th class="p-4"></th>';
-                    q.options.forEach(col => gridHtml += `<th class="p-4 text-center font-bold min-w-[100px]">${col}</th>`);
+                    q.options.forEach(col => gridHtml += `<th class="p-4 text-center font-bold min-w-[100px]">${escapeHtml(col)}</th>`);
                     gridHtml += '</tr></thead><tbody class="divide-y divide-slate-100">';
                     (q.rows || ['คำถามย่อย 1']).forEach((r, rIndex) => {
-                        gridHtml += `<tr class="hover:bg-pink-50/30 transition-colors"><td class="p-4 font-medium text-slate-700">${r}</td>`;
+                        gridHtml += `<tr class="hover:bg-pink-50/30 transition-colors"><td class="p-4 font-medium text-slate-700">${escapeHtml(r)}</td>`;
                         q.options.forEach((col, cIndex) => {
                             gridHtml += `<td class="p-4 text-center"><input type="radio" name="user_survey_q_${qIndex}_r_${rIndex}" value="${cIndex}" onchange="window.currentUserSurveySession.answers[${qIndex}][${rIndex}] = ${cIndex}" class="w-5 h-5 text-pink-600 focus:ring-pink-500 border-slate-300 cursor-pointer"></td>`;
                         });
@@ -5306,12 +5504,12 @@
                         optionsHtml += `
                             <label class="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-pink-400 hover:shadow-sm transition group">
                                 <input type="radio" name="user_survey_q_${qIndex}" value="${oIndex}" onchange="window.currentUserSurveySession.answers[${qIndex}] = ${oIndex}" class="mt-0.5 w-4 h-4 text-pink-600 focus:ring-pink-500 border-slate-300 cursor-pointer">
-                                <span class="text-slate-700 font-medium group-hover:text-pink-900 leading-relaxed">${opt}</span>
+                                <span class="text-slate-700 font-medium group-hover:text-pink-900 leading-relaxed">${escapeHtml(opt)}</span>
                             </label>
                         `;
                     });
                 }
-                container.innerHTML += `<div class="mb-8"><p class="font-bold text-slate-800 mb-3 text-lg leading-relaxed"><span class="text-pink-600 mr-2">${qIndex + 1}.</span> ${q.question}</p><div class="space-y-3 pl-1 sm:pl-4">${optionsHtml}</div></div>`;
+                container.innerHTML += `<div class="mb-8"><p class="font-bold text-slate-800 mb-3 text-lg leading-relaxed"><span class="text-pink-600 mr-2">${qIndex + 1}.</span> ${escapeHtml(q.question)}</p><div class="space-y-3 pl-1 sm:pl-4">${optionsHtml}</div></div>`;
             });
         };
 
@@ -5442,7 +5640,7 @@
             const totalItems = window.filteredUsersData.length;
             
             if(totalItems === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-12 text-center text-slate-400 font-bold">ไม่พบข้อมูลสมาชิกที่ค้นหา</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400 font-bold">ไม่พบข้อมูลสมาชิกที่ค้นหา</td></tr>`;
                 if(pageInfo) pageInfo.textContent = "ไม่มีข้อมูล";
                 if(btnPrev) btnPrev.disabled = true;
                 if(btnNext) btnNext.disabled = true;
@@ -5477,17 +5675,17 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 overflow-hidden border border-slate-200">
-                                ${data.photoURL ? `<img src="${data.photoURL}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-xs"></i>`}
+                                ${data.photoURL ? `<img src="${escapeHtml(data.photoURL)}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-xs"></i>`}
                             </div>
                             <div>
-                                <div class="text-sm font-bold text-slate-800">${data.fullnameTH || data.fullname || '-'}</div>
-                                <div class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">${data.prefix || ''}</div>
+                                <div class="text-sm font-bold text-slate-800">${escapeHtml(data.fullnameTH || data.fullname || '-')}</div>
+                                <div class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">${escapeHtml(data.prefix || '')}</div>
                             </div>
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-slate-600 font-medium">${data.email || '-'}</div>
-                        <div class="text-xs text-slate-400">${data.phone || '-'}</div>
+                        <div class="text-sm text-slate-600 font-medium">${escapeHtml(data.email || '-')}</div>
+                        <div class="text-xs text-slate-400">${escapeHtml(data.phone || '-')}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-[11px] text-slate-400 font-medium">${dateStr}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">${pdpaHtml}</td>
@@ -5519,7 +5717,7 @@
                 const pdpa2 = row.pdpa ? (row.pdpa.agree_marketing ? 'ยินยอม' : 'ไม่ยินยอม') : 'ยังไม่ทำรายการ';
                 const pdpa3 = row.pdpa ? (row.pdpa.agree_sponsor ? 'ยินยอม' : 'ไม่ยินยอม') : 'ยังไม่ทำรายการ';
                 
-                const cleanStr = (str) => `"${(str||'').toString().replace(/"/g, '""')}"`;
+                const cleanStr = (str) => `"${sanitizeCsvValue(str||'').replace(/"/g, '""')}"`;
                 
                 const rowData = [
                     cleanStr(dateStr),
