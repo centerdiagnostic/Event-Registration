@@ -169,6 +169,19 @@
         main > div:not(.hidden) {
             animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
+
+        /* มือถือ: กัน iPhone ซูมเองเมื่อแตะช่องกรอกที่ตัวอักษรเล็กกว่า 16px */
+        @media (max-width: 767px) {
+            input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: 16px !important; }
+        }
+
+        /* มือถือ: ใช้ dvh (หักแถบเบราว์เซอร์) เมื่อรองรับ คลาส vh เดิมเป็นค่าสำรอง
+           (ใส่ selector ซ้ำ 2 ครั้งเพื่อให้ชนะ CSS ของ Tailwind CDN ที่ถูกแทรกทีหลัง) */
+        @supports (height: 100dvh) {
+            .max-h-\[90vh\].max-h-\[90vh\] { max-height: 90dvh; }
+            .max-h-\[95vh\].max-h-\[95vh\] { max-height: 95dvh; }
+            .h-\[85vh\].h-\[85vh\] { height: 85dvh; }
+        }
     </style>
 </head>
 
@@ -219,7 +232,7 @@
             <div class="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-teal-600">
                 <i class="fa-solid fa-qrcode text-2xl"></i>
             </div>
-            <h3 class="text-xl font-black text-slate-800 mb-2">QR Code สำหรับลงทะเบียน</h3>
+            <h3 id="qr-modal-title" class="text-xl font-black text-slate-800 mb-2">QR Code สำหรับลงทะเบียน</h3>
             <p id="qr-event-name" class="text-sm text-slate-500 mb-6 line-clamp-2 font-medium"></p>
             <div class="flex justify-center p-5 bg-white border border-slate-200 rounded-3xl shadow-inner mb-8">
                 <img id="qr-image" src="" alt="QR Code" class="w-48 h-48 object-contain">
@@ -478,7 +491,7 @@
     </div>
 
     <!-- Main Content Area -->
-    <main class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <main class="flex-grow flex items-center justify-center p-2 sm:p-6 lg:p-8">
 
         <!-- ==================== VIEW: LOADING ==================== -->
         <div id="view-loading" class="w-full max-w-md text-center py-20 hidden flex-col items-center justify-center">
@@ -527,35 +540,35 @@
 
                 <!-- Right Side: Login (55%) -->
                 <div
-                    class="w-full md:w-[55%] flex flex-col justify-center items-center p-8 sm:p-12 relative overflow-y-auto bg-white">
+                    class="w-full md:w-[55%] flex flex-col justify-center items-center p-5 sm:p-12 relative overflow-y-auto bg-white">
                     <div class="w-full max-w-md">
                         <!-- Mobile Logo -->
-                        <div class="md:hidden flex flex-col items-center mb-8">
+                        <div class="md:hidden flex flex-col items-center mb-5">
                             <!-- โลโก้ของคุณ สำหรับแสดงผลบนมือถือ -->
-                            <img src="https://kvdc-vetku.com/wp-content/uploads/2026/02/1.png" alt="Logo" class="h-16 mb-4 object-contain">
-                            
-                            <i class="fa-solid fa-microscope text-5xl text-teal-600 mb-4"></i>
-                            <h1 class="text-3xl font-black text-slate-900 tracking-tight text-center flex items-center justify-center">
+                            <img src="https://kvdc-vetku.com/wp-content/uploads/2026/02/1.png" alt="Logo" class="h-12 mb-4 object-contain">
+
+                            <i class="hidden fa-solid fa-microscope text-5xl text-teal-600 mb-4"></i>
+                            <h1 class="text-2xl font-black text-slate-900 tracking-tight text-center flex items-center justify-center">
                                 Ne<i class="fa-solid fa-flask-vial text-teal-600 mx-1 text-2xl"></i>us<span class="text-teal-600">Event</span>
                             </h1>
                         </div>
 
-                        <div class="mb-8 text-center md:text-left">
+                        <div class="mb-5 md:mb-8 text-center md:text-left">
                             <h2 class="text-3xl font-black text-gray-900 tracking-tight">เข้าสู่ระบบ</h2>
                             <p class="text-gray-500 mt-2 font-medium">กรุณาเลือกรูปแบบการเข้าใช้งานของคุณ</p>
                         </div>
 
                         <!-- Tabs -->
-                        <div class="flex p-1.5 bg-slate-100 rounded-2xl mb-8 border border-slate-200/60 shadow-inner">
-                            <button id="tab-btn-kvdc"
-                                class="w-full py-3 text-sm font-bold rounded-xl bg-white text-slate-800 shadow-sm transition-all focus:outline-none border border-slate-200">KVDC
-                                (Staff)</button>
+                        <div class="flex p-1.5 bg-slate-100 rounded-2xl mb-5 md:mb-8 border border-slate-200/60 shadow-inner">
                             <button id="tab-btn-customer" data-testid="customer-tab-button"
-    class="w-full py-3 text-sm font-bold rounded-xl text-slate-500 hover:text-slate-700 transition-all focus:outline-none">ผู้เข้าร่วมกิจกรรม</button>
+                                class="w-full py-3 text-sm font-bold rounded-xl bg-white text-slate-800 shadow-sm transition-all focus:outline-none border border-slate-200">ผู้เข้าร่วมกิจกรรม</button>
+                            <button id="tab-btn-kvdc"
+                                class="w-full py-3 text-sm font-bold rounded-xl text-slate-500 hover:text-slate-700 transition-all focus:outline-none">KVDC
+                                (Staff)</button>
                         </div>
 
                         <!-- Tab Content: KVDC (Staff) -->
-                        <div id="tab-content-kvdc" class="block space-y-4">
+                        <div id="tab-content-kvdc" class="hidden space-y-4">
                             <form id="auth-form-kvdc" class="space-y-5">
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1.5">Email <span class="text-red-500">*</span></label>
@@ -583,7 +596,14 @@
                         </div>
 
                         <!-- Tab Content: Customer -->
-                        <div id="tab-content-customer" class="hidden space-y-4">
+                        <div id="tab-content-customer" class="block space-y-4">
+                            <!-- แจ้งเตือนเมื่อเปิดผ่านเบราว์เซอร์ในแอป (Facebook/LINE/Instagram) -->
+                            <div id="inapp-browser-notice" class="hidden bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl p-4 text-sm font-medium leading-relaxed">
+                                <p><i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-1.5"></i>คุณกำลังเปิดผ่านแอป (เช่น Facebook/LINE) ซึ่งไม่รองรับการเข้าสู่ระบบด้วย Google กรุณาเข้าสู่ระบบด้วยอีเมล หรือกดเมนู ⋯ แล้วเลือก "เปิดในเบราว์เซอร์"</p>
+                                <button type="button" onclick="window.copyToClipboard(window.location.href)" class="mt-3 w-full min-h-[44px] bg-white hover:bg-yellow-100 border border-yellow-300 text-yellow-800 font-bold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-copy"></i> คัดลอกลิงก์
+                                </button>
+                            </div>
                             <button type="button" id="btn-google-signin"
                                 class="w-full bg-white hover:bg-slate-50 border-2 border-slate-200 text-slate-700 font-bold py-3.5 px-5 rounded-xl transition shadow-sm flex items-center justify-center gap-3">
                                 <div class="w-6 flex justify-center">
@@ -643,7 +663,7 @@
         <!-- ==================== VIEW: CONSENT (PDPA) ==================== -->
         <div id="view-consent"
             class="w-full max-w-3xl glass-modal rounded-3xl overflow-hidden hidden">
-            <div class="bg-gradient-to-r from-science-blue to-teal-800 p-8 md:p-10 text-white relative flex items-center justify-between overflow-hidden">
+            <div class="bg-gradient-to-r from-science-blue to-teal-800 p-6 md:p-10 text-white relative flex items-center justify-between overflow-hidden">
                 <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNykiLz48L3N2Zz4=')] opacity-30"></div>
                 <div class="relative z-10">
                     <div class="inline-flex items-center justify-center bg-white/10 backdrop-blur px-3 py-1 rounded-full border border-white/20 mb-3">
@@ -658,8 +678,8 @@
                 </div>
             </div>
             
-            <div class="p-6 md:p-10 space-y-8 bg-white/60">
-                <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] h-72 overflow-y-auto custom-scrollbar text-sm text-slate-600 leading-relaxed relative">
+            <div class="p-4 md:p-10 space-y-8 bg-white/60">
+                <div class="bg-white p-4 md:p-8 rounded-2xl border border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] h-72 overflow-y-auto custom-scrollbar text-sm text-slate-600 leading-relaxed relative">
                     <div class="absolute top-0 left-0 w-full h-4 bg-gradient-to-b from-white to-transparent pointer-events-none sticky"></div>
                     <p class="font-bold mb-4 text-slate-900 text-base uppercase tracking-wide border-b border-slate-100 pb-2">Privacy Notice</p>
                     <p class="font-bold mt-4 text-slate-800">1. บทนำ</p>
@@ -766,7 +786,7 @@
 
         <!-- ==================== VIEW: REGISTER FORM (Event) ==================== -->
         <div id="view-register" class="w-full max-w-4xl glass-modal rounded-3xl overflow-hidden hidden">
-            <div class="bg-gradient-to-r from-science-blue via-slate-800 to-teal-900 p-8 md:p-12 text-white relative overflow-hidden">
+            <div class="bg-gradient-to-r from-science-blue via-slate-800 to-teal-900 p-6 md:p-12 text-white relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-96 h-96 bg-teal-500/20 rounded-full blur-[80px] transform translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
                 <div class="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/20 rounded-full blur-[60px] transform -translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
                 
@@ -777,12 +797,12 @@
                         </div>
                         <div class="uppercase tracking-widest text-[10px] font-bold text-teal-200 bg-teal-900/50 px-3 py-1 rounded-full border border-teal-500/30">Official Registration Form</div>
                     </div>
-                    <h2 id="event-name" class="text-3xl md:text-4xl font-black tracking-tight drop-shadow-md">กำลังโหลดชื่อกิจกรรม...</h2>
+                    <h2 id="event-name" class="text-2xl md:text-4xl font-black tracking-tight drop-shadow-md">กำลังโหลดชื่อกิจกรรม...</h2>
                     <p id="event-desc" class="mt-4 text-slate-300 text-sm leading-relaxed max-w-2xl font-medium border-l-2 border-teal-500 pl-4">รายละเอียดกิจกรรมจะแสดงที่นี่</p>
                 </div>
             </div>
 
-            <div class="p-6 md:p-10 bg-white/80">
+            <div class="p-4 md:p-10 bg-white/80">
                 <div id="already-registered-alert" class="hidden mb-8 bg-blue-50 border border-blue-200 text-blue-800 rounded-2xl p-5 flex items-start shadow-sm">
                     <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mr-4 border border-blue-200">
                         <i class="fa-solid fa-clock-rotate-left text-blue-600 text-lg"></i>
@@ -797,9 +817,14 @@
                     </div>
                 </div>
 
-                <form id="reg-form" class="space-y-10">
+                <div id="walkin-register-alert" class="hidden mb-8 bg-sky-50 border border-sky-200 text-sky-800 rounded-2xl p-5 flex items-center gap-3 shadow-sm">
+                    <i class="fa-solid fa-person-walking-arrow-right text-sky-600 text-lg shrink-0"></i>
+                    <p class="text-sm font-bold">ลงทะเบียนหน้างาน: เมื่อบันทึกแล้วระบบจะพากลับไปหน้าเช็คอิน</p>
+                </div>
+
+                <form id="reg-form" class="space-y-6 md:space-y-10">
                     <!-- SECTION 1: ข้อมูลส่วนตัว -->
-                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
+                    <div class="bg-white p-5 md:p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
                         <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                             <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600"><i class="fa-solid fa-address-card"></i></div>
@@ -845,11 +870,15 @@
                                 <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">4. เลขที่ใบประกอบวิชาชีพ (ถ้ามี)</label>
                                 <input type="text" id="reg-license" class="input-premium w-full px-4 py-3.5 rounded-xl font-medium" placeholder="ระบุเลขที่ หรือปล่อยว่าง">
                             </div>
+                            <div class="md:col-span-6">
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">5. เบอร์โทรศัพท์ (ถ้ามี)</label>
+                                <input type="tel" id="reg-phone" class="input-premium w-full px-4 py-3.5 rounded-xl font-medium" placeholder="เช่น 0812345678" autocomplete="tel">
+                            </div>
                         </div>
                     </div>
 
                     <!-- SECTION 2: ข้อมูลการศึกษาและอาชีพ -->
-                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
+                    <div class="bg-white p-5 md:p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
                         <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                             <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600"><i class="fa-solid fa-building-user"></i></div>
@@ -916,7 +945,7 @@
                     </div>
 
                     <!-- SECTION 3: ข้อมูลทางการตลาด/การติดตามผล -->
-                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
+                    <div class="bg-white p-5 md:p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
                         <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                             <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600"><i class="fa-solid fa-chart-pie"></i></div>
@@ -1028,7 +1057,7 @@
                         </div>
                     </div>
 
-                    <div class="pt-8 flex flex-col-reverse sm:flex-row justify-between items-center gap-4 mt-12 border-t border-slate-200">
+                    <div class="pt-8 flex flex-col-reverse sm:flex-row justify-between items-center gap-4 mt-6 md:mt-12 border-t border-slate-200">
                         <button type="button" onclick="window.location.hash='#/home'" class="w-full sm:w-auto text-slate-500 hover:bg-slate-100 font-bold py-3.5 px-8 rounded-xl transition cursor-pointer">
                             <i class="fa-solid fa-arrow-left mr-2"></i> ยกเลิก
                         </button>
@@ -1074,6 +1103,24 @@
         </div>
 
         <!-- ==================== VIEW: SUCCESS ==================== -->
+        <!-- ==================== VIEW: CHECK-IN ==================== -->
+        <div id="view-checkin" class="w-full max-w-md hidden flex-col gap-4">
+            <div class="glass-modal rounded-3xl overflow-hidden border border-white">
+                <div class="bg-gradient-to-r from-science-blue via-slate-800 to-teal-900 p-6 text-white relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-48 h-48 bg-teal-500/20 rounded-full blur-[60px] transform translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
+                    <div class="relative z-10">
+                        <span class="text-[10px] font-black tracking-widest bg-white/15 border border-white/20 px-2 py-0.5 rounded uppercase inline-block mb-3"><i class="fa-solid fa-user-check mr-1"></i> Check-in</span>
+                        <h2 id="checkin-event-name" class="text-2xl font-black tracking-tight leading-tight"></h2>
+                        <p id="checkin-event-period" class="text-sm text-slate-200 mt-2 font-medium"></p>
+                        <p id="checkin-event-sessions" class="hidden text-xs text-teal-200 mt-1 font-bold"></p>
+                        <p id="checkin-user-name" class="text-sm text-white mt-3 font-bold"><i class="fa-solid fa-user mr-1.5 opacity-70"></i><span></span></p>
+                    </div>
+                </div>
+                <div id="checkin-status" class="p-5 bg-white/80"></div>
+            </div>
+            <div id="checkin-summary" class="hidden glass-modal rounded-3xl p-5 border border-white"></div>
+        </div>
+
         <div id="view-success" class="w-full max-w-md glass-modal rounded-3xl p-10 md:p-12 text-center hidden flex-col items-center justify-center border border-white">
             <div class="w-28 h-28 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 relative rotate-3">
                 <div class="absolute inset-0 bg-emerald-400 rounded-[2rem] animate-ping opacity-20"></div>
@@ -1258,6 +1305,9 @@
                                 <button onclick="window.exportToCsv()" class="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 font-bold py-3 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2 whitespace-nowrap text-sm">
                                     <i class="fa-solid fa-file-csv"></i> ข้อมูลลงทะเบียน
                                 </button>
+                                <button onclick="window.exportAttendanceToCsv()" class="bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 font-bold py-3 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2 whitespace-nowrap text-sm">
+                                    <i class="fa-solid fa-user-check"></i> รายชื่อผู้เข้าร่วมจริง (CSV)
+                                </button>
                                 <button onclick="window.exportSurveyToCsv()" class="bg-pink-50 text-pink-600 hover:bg-pink-100 border border-pink-200 font-bold py-3 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2 whitespace-nowrap text-sm">
                                     <i class="fa-solid fa-star"></i> ผลประเมิน
                                 </button>
@@ -1277,6 +1327,8 @@
                             </div>
                         </div>
 
+                        <div id="registrants-summary" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 px-6 py-4 text-sm font-bold text-slate-700"></div>
+
                         <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative min-h-[400px]">
                             <div class="overflow-x-auto custom-scrollbar">
                                 <table class="min-w-full divide-y divide-slate-200">
@@ -1287,11 +1339,12 @@
                                             <th scope="col" class="px-6 py-5 text-left text-[11px] font-black text-slate-500 uppercase tracking-widest">การติดต่อ</th>
                                             <th scope="col" class="px-6 py-5 text-left text-[11px] font-black text-slate-500 uppercase tracking-widest">สังกัด / อาชีพ</th>
                                             <th scope="col" class="px-6 py-5 text-center text-[11px] font-black text-slate-500 uppercase tracking-widest">คะแนนสอบ</th>
+                                            <th scope="col" class="px-6 py-5 text-center text-[11px] font-black text-slate-500 uppercase tracking-widest">เช็คอิน</th>
                                         </tr>
                                     </thead>
                                     <tbody id="registrants-table-body" class="bg-white divide-y divide-slate-100 text-sm">
                                         <tr>
-                                            <td colspan="5" class="px-6 py-20 text-center">
+                                            <td colspan="6" class="px-6 py-20 text-center">
                                                 <div class="flex flex-col items-center justify-center">
                                                     <i class="fa-solid fa-hand-pointer text-4xl text-slate-200 mb-3 animate-bounce"></i>
                                                     <p class="text-slate-500 font-bold">เลือกกิจกรรมด้านบนเพื่อดูข้อมูล</p>
@@ -1741,6 +1794,55 @@
                         </div>
                     </div>
 
+                    <!-- SECTION 6: การเช็คอินเข้างาน -->
+                    <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)] relative">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-amber-500 rounded-l-2xl"></div>
+                        <div class="mb-6 flex items-center justify-between">
+                            <h4 class="font-bold text-lg text-slate-800 tracking-tight">6. การเช็คอินเข้างาน</h4>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1"><i class="fa-solid fa-user-check text-slate-400 mr-1"></i> รูปแบบการเช็คอิน</label>
+                                <div class="relative">
+                                    <select id="admin-event-checkin-mode" class="input-premium w-full px-4 py-3 rounded-xl appearance-none font-medium">
+                                        <option value="single">ครั้งเดียวต่อวัน (งานครึ่งวัน หรือนับทั้งวัน)</option>
+                                        <option value="split">แยกรอบเช้า–บ่าย</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col justify-center pt-6">
+                                <label class="flex items-center cursor-pointer group">
+                                    <div class="relative">
+                                        <input type="checkbox" id="admin-event-checkin-open" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                                    </div>
+                                    <span class="ml-3 text-sm font-bold text-slate-700 group-hover:text-amber-600 transition-colors">เปิดให้ผู้เข้าร่วมเช็คอิน</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div id="admin-event-checkin-times" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 mt-6 border-t border-slate-100">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">เริ่ม รอบเช้า</label>
+                                <input type="time" id="admin-event-morning-start" class="input-premium w-full px-4 py-3 rounded-xl font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">สิ้นสุด รอบเช้า</label>
+                                <input type="time" id="admin-event-morning-end" class="input-premium w-full px-4 py-3 rounded-xl font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">เริ่ม รอบบ่าย</label>
+                                <input type="time" id="admin-event-afternoon-start" class="input-premium w-full px-4 py-3 rounded-xl font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">สิ้นสุด รอบบ่าย</label>
+                                <input type="time" id="admin-event-afternoon-end" class="input-premium w-full px-4 py-3 rounded-xl font-medium">
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="pt-6 border-t border-slate-200 flex flex-col-reverse sm:flex-row justify-end gap-3 mt-4 shrink-0">
                         <button type="button" onclick="document.getElementById('modal-event-form').classList.add('hidden')" class="w-full sm:w-auto bg-white border border-slate-300 hover:bg-slate-50 text-slate-600 font-bold py-3.5 px-8 rounded-xl transition shadow-sm">ยกเลิก</button>
                         <button type="submit" id="btn-create-event" class="w-full sm:w-auto btn-primary text-white font-bold py-3.5 px-10 rounded-xl transition flex justify-center items-center gap-2">
@@ -1857,6 +1959,10 @@
                         <span class="font-bold text-emerald-800">ยอดลงทะเบียนปัจจุบัน</span>
                         <span id="detail-event-enrolled" class="font-black text-emerald-600 text-xl bg-white px-3 py-1 rounded-lg shadow-sm"></span>
                     </div>
+                    <div class="flex items-center gap-2 bg-amber-50 border border-amber-100 p-4 rounded-xl">
+                        <i class="fa-solid fa-user-check text-amber-500"></i>
+                        <span id="detail-event-checkin-status" class="font-bold text-amber-800 text-xs"></span>
+                    </div>
                 </div>
                 <div class="p-6 md:p-8 bg-slate-50 border-t border-slate-100 grid grid-cols-2 gap-3 shrink-0">
                     <button onclick="window.viewRegistrants()" class="col-span-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-md shadow-blue-500/20 flex justify-center items-center gap-2">
@@ -1867,6 +1973,15 @@
                     </button>
                     <button onclick="window.adminShowQr()" class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-bold py-3 rounded-xl transition shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
                         <i class="fa-solid fa-qrcode text-slate-400 mr-1"></i> โชว์ QR
+                    </button>
+                    <button onclick="window.adminCopyCheckinLink()" class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-bold py-3 rounded-xl transition shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+                        <i class="fa-solid fa-link text-slate-400 mr-1"></i> ลิงก์เช็คอิน
+                    </button>
+                    <button onclick="window.adminShowCheckinQr()" class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-bold py-3 rounded-xl transition shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+                        <i class="fa-solid fa-qrcode text-slate-400 mr-1"></i> QR เช็คอิน
+                    </button>
+                    <button id="btn-toggle-checkin" onclick="window.toggleCheckinOpen()" class="col-span-2 bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 font-bold py-3 rounded-xl transition">
+                        <i class="fa-solid fa-user-check mr-1"></i> <span id="btn-toggle-checkin-text">เปิดเช็คอิน</span>
                     </button>
                     <button onclick="window.duplicateEvent()" class="bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-bold py-3 rounded-xl transition">
                         <i class="fa-solid fa-copy mr-1"></i> คัดลอกเปิดใหม่
@@ -1902,15 +2017,19 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">ชื่อ-นามสกุล</label>
-                                <div class="font-bold text-slate-800 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-fullname-display"></div>
+                                <div class="font-bold text-slate-800 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100"><span id="view-reg-fullname-display"></span> <span id="view-reg-walkin-badge" class="hidden ml-1 text-[10px] font-bold bg-sky-100 text-sky-700 border border-sky-200 px-2 py-0.5 rounded">ลงทะเบียนหน้างาน</span></div>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">อีเมล</label>
                                 <div class="font-medium text-slate-700 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100"><i class="fa-regular fa-envelope mr-1 text-slate-400"></i> <span id="view-reg-email-display"></span></div>
                             </div>
-                            <div class="md:col-span-2">
+                            <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">เลขใบประกอบวิชาชีพ</label>
                                 <div class="font-medium text-slate-700 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-license-display"></div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">เบอร์โทรศัพท์</label>
+                                <div class="font-medium text-slate-700 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100"><i class="fa-solid fa-phone mr-1 text-slate-400"></i> <span id="view-reg-phone-display"></span></div>
                             </div>
                         </div>
                     </div>
@@ -1963,6 +2082,12 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-amber-500"></div>
+                        <h4 class="font-bold text-slate-400 uppercase tracking-widest text-[10px] mb-4 border-b border-slate-100 pb-2">การเช็คอิน</h4>
+                        <div id="view-reg-checkins" class="overflow-x-auto custom-scrollbar"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2005,8 +2130,22 @@
         import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app-check.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, updatePassword, sendPasswordResetEmail }
             from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-        import { getFirestore, collection, doc, getDocs, getDoc, query, where, addDoc, setDoc, serverTimestamp, deleteDoc, updateDoc, writeBatch, increment }
+        import { getFirestore, collection, doc, getDocs, getDoc, query, where, addDoc, setDoc, serverTimestamp, deleteDoc, updateDoc, writeBatch, increment, getCountFromServer, orderBy, limit, deleteField, FieldPath }
             from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        // LINE: บังคับเปิดในเบราว์เซอร์ภายนอก (Google ไม่อนุญาตให้ล็อกอินในเบราว์เซอร์ของแอป)
+        {
+            const currentUrl = new URL(window.location.href);
+            const isLineApp = (navigator.userAgent || '').indexOf('Line/') > -1;
+            const hasExternalParam = currentUrl.searchParams.get('openExternalBrowser') === '1';
+            if (isLineApp && !hasExternalParam) {
+                currentUrl.searchParams.set('openExternalBrowser', '1');
+                window.location.replace(currentUrl.toString());
+            } else if (!isLineApp && currentUrl.searchParams.has('openExternalBrowser')) {
+                currentUrl.searchParams.delete('openExternalBrowser');
+                history.replaceState(history.state, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+            }
+        }
 
         const firebaseConfig = {
             apiKey: "AIzaSyAdmcWIoxrKJNJGJ_djXwgsv6DFBI78HnU",
@@ -2041,7 +2180,11 @@
         let currentRoute = { path: '', eventId: null, optionId: null, eventDocId: null };
         let loginRole = sessionStorage.getItem('loginRole') || null;
         let currentAdminRole = sessionStorage.getItem('adminRole') || null;
-        
+        let adminCheckCache = null; // { email, isAdmin, role } จากการอ่าน admins/{email} ใน onAuthStateChanged
+        let adminAuxLoadPromise = null; // โหลดทีม/แบบทดสอบ/แบบประเมินเบื้องหลังหลังแสดงหน้าแอดมิน
+        let adminUsersLoaded = false;
+        let isWalkInMode = false; // ลงทะเบียนหน้างานผ่าน QR เช็คอิน (ตั้งค่าใน loadEventRegistration)
+
         window.homeCurrentEvents = [];
         window.adminQuizzes = [];
         window.adminSurveys = [];
@@ -2058,7 +2201,8 @@
             success: document.getElementById('view-success'),
             home: document.getElementById('view-home'),
             admin: document.getElementById('view-admin'),
-            myEvents: document.getElementById('view-my-events') 
+            myEvents: document.getElementById('view-my-events'),
+            checkin: document.getElementById('view-checkin')
         };
         const btnLogout = document.getElementById('btn-logout');
         const btnAdmin = document.getElementById('btn-admin');
@@ -2075,7 +2219,7 @@
             if (views[viewName]) {
                 views[viewName].classList.remove('hidden');
                 
-                if (['auth', 'home', 'myEvents', 'admin'].includes(viewName)) {
+                if (['loading', 'auth', 'home', 'myEvents', 'admin', 'checkin'].includes(viewName)) {
                     views[viewName].classList.add('flex');
                 }
             }
@@ -2159,9 +2303,10 @@
             });
         };
 
-        window.showQrCode = function(url, eventName) {
+        window.showQrCode = function(url, eventName, title) {
             const modal = document.getElementById('qr-modal');
             const qrImg = document.getElementById('qr-image');
+            document.getElementById('qr-modal-title').textContent = title || 'QR Code สำหรับลงทะเบียน';
             document.getElementById('qr-event-name').textContent = eventName;
             qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
             modal.classList.remove('hidden');
@@ -2189,23 +2334,45 @@
             }
         };
 
-        window.openBase64Schedule = function(e, docId) {
+        function dataUrlToBlobUrl(dataUrl) {
+            const base64Data = dataUrl.split(',')[1];
+            const mimeType = dataUrl.split(';')[0].split(':')[1];
+            const byteString = atob(base64Data);
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            const blob = new Blob([ab], {type: mimeType});
+            return URL.createObjectURL(blob);
+        }
+
+        window.openBase64Schedule = async function(e, docId) {
             e.preventDefault();
             const ev = window.homeCurrentEvents.find(ev => ev.docId === docId);
             if(ev && ev.scheduleFile) {
+                // ข้อมูลรูปแบบเก่า: ไฟล์อยู่ในเอกสาร event
                 try {
-                    const base64Data = ev.scheduleFile.split(',')[1];
-                    const mimeType = ev.scheduleFile.split(';')[0].split(':')[1];
-                    const byteString = atob(base64Data);
-                    const ab = new ArrayBuffer(byteString.length);
-                    const ia = new Uint8Array(ab);
-                    for (let i = 0; i < byteString.length; i++) {
-                        ia[i] = byteString.charCodeAt(i);
-                    }
-                    const blob = new Blob([ab], {type: mimeType});
-                    const blobUrl = URL.createObjectURL(blob);
-                    window.open(blobUrl, '_blank');
+                    window.open(dataUrlToBlobUrl(ev.scheduleFile), '_blank');
                 } catch(error) {
+                    console.error("Error opening file", error);
+                    showToast('ไม่สามารถเปิดไฟล์ได้', 'error');
+                }
+            } else if (ev && ev.hasScheduleFile) {
+                // เปิดหน้าต่างทันทีตอนคลิก (ก่อน await) เพราะ Safari บนมือถือบล็อก window.open ที่เรียกหลัง await
+                const win = window.open('', '_blank');
+                try {
+                    const fileSnap = await getDoc(doc(db, "events", docId, "files", "schedule"));
+                    const fileData = fileSnap.exists() ? fileSnap.data().data : null;
+                    if (!fileData) throw new Error('Schedule file not found');
+                    const blobUrl = dataUrlToBlobUrl(fileData);
+                    if (win) {
+                        win.location.href = blobUrl;
+                    } else {
+                        window.location.href = blobUrl;
+                    }
+                } catch(error) {
+                    if (win) win.close();
                     console.error("Error opening file", error);
                     showToast('ไม่สามารถเปิดไฟล์ได้', 'error');
                 }
@@ -2643,7 +2810,12 @@
 
         function isInAppBrowser() {
             const ua = navigator.userAgent || navigator.vendor || window.opera;
-            return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Line") > -1) || (ua.indexOf("Instagram") > -1);
+            return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Line/") > -1) || (ua.indexOf("Instagram") > -1);
+        }
+
+        const inAppNotice = document.getElementById('inapp-browser-notice');
+        if (inAppNotice) {
+            inAppNotice.classList.toggle('hidden', !isInAppBrowser());
         }
 
         const btnGoogle = document.getElementById('btn-google-signin');
@@ -2850,6 +3022,9 @@
                 currentRoute.eventId = parseInt(parts[1], 10);
                 currentRoute.optionId = parseInt(parts[2], 10);
             }
+            if (currentRoute.path === 'checkin') {
+                currentRoute.eventId = parts.length >= 2 ? parseInt(parts[1], 10) : null;
+            }
 
             if (currentRoute.path === 'pdpa-setup') {
                 if (!currentUser) {
@@ -2902,6 +3077,14 @@
                 }
                 if (!(await ensurePdpaOrRedirect())) return;
                 await loadEventRegistration();
+            } else if (currentRoute.path === 'checkin') {
+                if (!currentUser) {
+                    sessionStorage.setItem('redirectUrl', window.location.hash);
+                    showView('auth');
+                    return;
+                }
+                if (!(await ensurePdpaOrRedirect())) return;
+                await loadCheckin();
             } else if (currentRoute.path === 'my-events') {
                 if (!currentUser) {
                     window.location.hash = '#/home';
@@ -2924,9 +3107,15 @@
                 showView('loading');
 
                 try {
-                    const adminDocSnap = await getDoc(doc(db, "admins", currentUser.email));
-                    
-                    if (!adminDocSnap.exists()) {
+                    let isAdmin;
+                    if (adminCheckCache && adminCheckCache.email === currentUser.email) {
+                        isAdmin = adminCheckCache.isAdmin;
+                    } else {
+                        const adminDocSnap = await getDoc(doc(db, "admins", currentUser.email));
+                        isAdmin = adminDocSnap.exists();
+                    }
+
+                    if (!isAdmin) {
                         showToast('คุณไม่มีสิทธิ์เข้าถึงหน้าผู้ดูแลระบบ (Access Denied)', 'error');
                         window.location.hash = '#/home';
                         return;
@@ -2959,8 +3148,9 @@
             const navProfileBtn = document.getElementById('nav-user-profile-btn');
 
             if (user) {
-                await window.updateUserProfileUI();
-                
+                // แค่แสดงชื่อ/รูป ไม่ต้องรอ เพื่อให้เช็คสิทธิ์และ routing เริ่มเร็วขึ้น
+                window.updateUserProfileUI();
+
                 btnLogout.classList.remove('hidden');
                 
                 if(btnMyEvents) btnMyEvents.classList.remove('hidden');
@@ -2983,6 +3173,7 @@
                             let adminData = adminDocSnap.data();
                             currentAdminRole = adminData.role || 'admin';
                             sessionStorage.setItem('adminRole', currentAdminRole);
+                            adminCheckCache = { email: user.email, isAdmin: true, role: currentAdminRole };
 
                             const teamMenuBtn = document.getElementById('nav-tab-team');
                             if (teamMenuBtn && teamMenuBtn.parentElement) {
@@ -3011,6 +3202,7 @@
                             if (loginRole === 'kvdc') loginRole = 'customer';
                             currentAdminRole = null;
                             sessionStorage.removeItem('adminRole');
+                            adminCheckCache = { email: user.email, isAdmin: false, role: null };
                         }
                     } catch (error) {
                         btnAdmin.classList.add('hidden');
@@ -3028,6 +3220,8 @@
                 currentAdminRole = null;
                 hasPdpaCache = null;
                 currentAdminTab = 'events';
+                adminCheckCache = null;
+                adminUsersLoaded = false;
             }
 
             if (user && (!window.location.hash || window.location.hash === '#/' || window.location.hash === '')) {
@@ -3042,30 +3236,38 @@
                 await signOut(auth);
                 sessionStorage.removeItem('loginRole');
                 sessionStorage.removeItem('redirectUrl');
+                sessionStorage.removeItem('walkInEventId');
                 loginRole = null;
                 hasPdpaCache = null;
+                adminCheckCache = null;
+                adminUsersLoaded = false;
                 showToast('ออกจากระบบสำเร็จ', 'success');
-                window.location.hash = '#/'; 
+                window.location.hash = '#/';
             } catch (error) {
                 showToast(error.message, 'error');
             }
         });
 
+        // true = ค่าใน admin-event-schedule-base64 เป็นไฟล์ใหม่ที่ต้องเขียนไปที่ files/schedule
+        let scheduleFileIsNew = false;
+
         window.handleScheduleUpload = function(input) {
             const file = input.files[0];
             const hiddenBase64 = document.getElementById('admin-event-schedule-base64');
             const nameDisplay = document.getElementById('schedule-file-name');
-            
+
             if (!file) {
                 hiddenBase64.value = '';
+                scheduleFileIsNew = false;
                 nameDisplay.classList.add('hidden');
                 return;
             }
 
-            if (file.size > 1024 * 1024) { 
+            if (file.size > 1024 * 1024) {
                 showToast('ไฟล์มีขนาดใหญ่เกินไป (จำกัดไม่เกิน 1MB)', 'error');
                 input.value = '';
                 hiddenBase64.value = '';
+                scheduleFileIsNew = false;
                 nameDisplay.classList.add('hidden');
                 return;
             }
@@ -3074,6 +3276,7 @@
             reader.readAsDataURL(file);
             reader.onload = event => {
                 hiddenBase64.value = event.target.result;
+                scheduleFileIsNew = true;
                 nameDisplay.textContent = `พร้อมอัปโหลด: ${file.name}`;
                 nameDisplay.classList.remove('hidden');
             };
@@ -3175,11 +3378,11 @@
 
                         let scheduleBtnHtml = '';
                         const hasSafeScheduleLink = isSafeHttpUrl(eventData.scheduleLink);
-                        if (hasSafeScheduleLink || eventData.scheduleFile) {
+                        if (hasSafeScheduleLink || eventData.scheduleFile || eventData.hasScheduleFile) {
                             let actionAttr = '';
                             if (hasSafeScheduleLink) {
                                 actionAttr = `href="${escapeHtml(eventData.scheduleLink.trim())}" target="_blank" rel="noopener noreferrer"`;
-                            } else if (eventData.scheduleFile) {
+                            } else if (eventData.scheduleFile || eventData.hasScheduleFile) {
                                 actionAttr = `href="#" data-action="open-schedule" data-doc-id="${escapeHtml(docId)}"`;
                             }
 
@@ -3354,6 +3557,18 @@
                 currentRoute.eventDocId = eventSnap.docs[0].id;
                 const eventData = eventSnap.docs[0].data();
 
+                // โหมดลงทะเบียนหน้างาน: มาจากหน้าเช็คอินของกิจกรรมนี้ วันนี้เป็นวันงาน และเปิดเช็คอินอยู่
+                isWalkInMode = false;
+                const walkInEventId = sessionStorage.getItem('walkInEventId');
+                if (walkInEventId !== null) {
+                    if (walkInEventId === String(eventId) && getEventDays(eventData).includes(getTodayKey()) && eventData.isCheckinOpen === true) {
+                        isWalkInMode = true;
+                    } else {
+                        sessionStorage.removeItem('walkInEventId');
+                    }
+                }
+                document.getElementById('walkin-register-alert').classList.toggle('hidden', !isWalkInMode);
+
                 document.getElementById('event-name').textContent = eventData.name || `กิจกรรมที่ ${eventId}`;
                 document.getElementById('event-desc').textContent = `วันที่: ${eventData.eventPeriod || '-'} | สถานที่: ${eventData.location || '-'}`;
                 
@@ -3406,6 +3621,7 @@
                         }
                         const fName = uData.fullnameTH || uData.fullname || '';
                         if (fName) document.getElementById('reg-fullname').value = fName;
+                        if (uData.phone) document.getElementById('reg-phone').value = uData.phone;
                     }
                 } catch (profileErr) {
                     console.warn("ข้ามการดึงชื่อโปรไฟล์อัตโนมัติ (Missing Permissions)");
@@ -3458,6 +3674,7 @@
                     }
                     if (userRegData.fullname && document.getElementById('reg-fullname')) document.getElementById('reg-fullname').value = userRegData.fullname;
                     if (userRegData.license) document.getElementById('reg-license').value = userRegData.license;
+                    if (userRegData.phone !== undefined) document.getElementById('reg-phone').value = userRegData.phone || '';
                     if (userRegData.education && document.getElementById('reg-education')) document.getElementById('reg-education').value = userRegData.education;
 
                     if (userRegData.organization) {
@@ -3526,7 +3743,10 @@
                     else if (isRegClosed) closedLabel = 'ปิดรับสมัครแล้ว';
                     else if (isFull) closedLabel = 'กิจกรรมนี้เต็มแล้ว';
 
-                    if (closedLabel) {
+                    if (isWalkInMode) {
+                        // ลงทะเบียนหน้างานได้แม้ยังไม่เปิดรับ / ปิดรับแล้ว / เต็มแล้ว
+                        btnSubmit.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ลงทะเบียนหน้างาน';
+                    } else if (closedLabel) {
                         btnSubmit.innerHTML = `<i class="fa-solid fa-lock mr-2"></i> ${closedLabel}`;
                         btnSubmit.disabled = true;
                         btnSubmit.classList.remove('btn-primary', 'text-white');
@@ -3551,6 +3771,150 @@
             } catch (error) {
                 console.error("loadEventRegistration Error:", error);
                 showToast('ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
+                window.location.hash = '#/home';
+            }
+        }
+
+        // ===== หน้าเช็คอิน (#/checkin/{eventId}) =====
+        function renderCheckinStatus(tone, title, detail, action) {
+            const statusEl = document.getElementById('checkin-status');
+            const tones = {
+                info: 'bg-amber-50 border-amber-200 text-amber-800',
+                neutral: 'bg-slate-50 border-slate-200 text-slate-700',
+                success: 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            };
+            const icons = { info: 'fa-circle-info', neutral: 'fa-user-clock', success: 'fa-circle-check' };
+            statusEl.innerHTML = `
+                <div class="${tones[tone]} border rounded-2xl p-5 text-center">
+                    <i class="fa-solid ${icons[tone]} text-3xl mb-3"></i>
+                    <p class="text-lg font-black leading-snug">${escapeHtml(title)}</p>
+                    ${detail ? `<p class="text-sm font-medium mt-2 opacity-80">${escapeHtml(detail)}</p>` : ''}
+                </div>`;
+            if (action) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                if (action.id) btn.id = action.id;
+                btn.className = `w-full min-h-[56px] mt-4 ${action.primary ? 'btn-primary text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'} font-bold text-lg py-4 px-4 rounded-2xl transition flex justify-center items-center gap-2 shadow-sm`;
+                btn.innerHTML = `<i class="fa-solid ${action.icon}"></i> <span></span>`;
+                btn.querySelector('span').textContent = action.label;
+                btn.addEventListener('click', action.onClick);
+                statusEl.appendChild(btn);
+            }
+        }
+
+        function renderCheckinSummary(ev, participant) {
+            const summaryEl = document.getElementById('checkin-summary');
+            const slots = getCheckinSlots(ev);
+            let html = `<h4 class="font-bold text-slate-400 uppercase tracking-widest text-[10px] mb-4 border-b border-slate-100 pb-2">สรุปการเช็คอินของคุณ</h4><div class="space-y-2">`;
+            getEventDays(ev).forEach(day => {
+                html += `<div class="flex justify-between items-center gap-3 bg-white border border-slate-100 rounded-xl px-4 py-3">
+                    <span class="font-bold text-slate-700 text-sm shrink-0">${escapeHtml(formatDayKeyTH(day))}</span>
+                    <div class="flex flex-wrap justify-end gap-2">`;
+                slots.forEach(slot => {
+                    const t = formatTimeHM(getCheckinValue(participant, day, slot));
+                    html += `<span class="text-xs font-bold px-2.5 py-1 rounded-lg ${t ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-100 text-slate-400 border border-slate-200'}">${escapeHtml(slotLabel(slot))} ${t ? escapeHtml(t) : '-'}</span>`;
+                });
+                html += '</div></div>';
+            });
+            html += '</div>';
+            summaryEl.innerHTML = html;
+            summaryEl.classList.remove('hidden');
+        }
+
+        async function loadCheckin() {
+            showView('loading');
+            try {
+                const eventId = currentRoute.eventId;
+                const eventSnap = await getDocs(query(collection(db, "events"), where("id", "==", eventId)));
+                if (eventSnap.empty) {
+                    showToast('ไม่พบข้อมูลกิจกรรมนี้', 'error');
+                    window.location.hash = '#/home';
+                    return;
+                }
+
+                const eventDocId = eventSnap.docs[0].id;
+                const ev = eventSnap.docs[0].data();
+                const participantRef = doc(db, "events", eventDocId, "participants", currentUser.uid);
+                const pSnap = await getDoc(participantRef);
+                const participant = pSnap.exists() ? pSnap.data() : null;
+
+                const todayKey = getTodayKey();
+                const isEventDay = getEventDays(ev).includes(todayKey);
+                const isOpen = ev.isCheckinOpen === true;
+                const slot = getCurrentSlot(ev);
+                const isSplit = ev.checkinMode === 'split';
+
+                document.getElementById('checkin-event-name').textContent = ev.name || `กิจกรรมที่ ${eventId}`;
+                document.getElementById('checkin-event-period').textContent = ev.eventPeriod || '-';
+                const sessionsEl = document.getElementById('checkin-event-sessions');
+                sessionsEl.textContent = isSplit ? checkinSessionsText(ev) : '';
+                sessionsEl.classList.toggle('hidden', !isSplit);
+                const userName = participant ? `${participant.prefix || ''}${participant.fullname || ''}` : '';
+                document.querySelector('#checkin-user-name span').textContent = userName || currentUser.displayName || currentUser.email || '';
+
+                const summaryEl = document.getElementById('checkin-summary');
+                summaryEl.classList.add('hidden');
+                summaryEl.innerHTML = '';
+                const regHash = `#/register/${eventId}/0`;
+                const retryAction = { label: 'ลองอีกครั้ง', icon: 'fa-rotate-right', onClick: () => loadCheckin() };
+
+                if (!participant) {
+                    if (isEventDay && isOpen) {
+                        renderCheckinStatus('info', 'คุณยังไม่ได้ลงทะเบียนกิจกรรมนี้', null, {
+                            label: 'ลงทะเบียนหน้างาน', icon: 'fa-person-walking-arrow-right', primary: true,
+                            onClick: () => {
+                                sessionStorage.setItem('walkInEventId', String(eventId));
+                                window.location.hash = regHash;
+                            }
+                        });
+                    } else {
+                        renderCheckinStatus('info', 'คุณยังไม่ได้ลงทะเบียนกิจกรรมนี้', null, {
+                            label: 'ไปหน้าลงทะเบียน', icon: 'fa-file-signature', primary: true,
+                            onClick: () => { window.location.hash = regHash; }
+                        });
+                    }
+                } else {
+                    if (!isEventDay) {
+                        renderCheckinStatus('neutral', 'เช็คอินได้เฉพาะวันจัดกิจกรรม', ev.eventPeriod || '-', null);
+                    } else if (!isOpen) {
+                        renderCheckinStatus('neutral', 'ยังไม่เปิดให้เช็คอิน กรุณารอสัญญาณจากเจ้าหน้าที่', null, retryAction);
+                    } else if (slot === null) {
+                        renderCheckinStatus('neutral', 'ขณะนี้ไม่อยู่ในช่วงเวลาเช็คอิน', checkinSessionsText(ev), retryAction);
+                    } else {
+                        const existing = getCheckinValue(participant, todayKey, slot);
+                        if (existing) {
+                            const doneTitle = slot === 'all' ? 'เช็คอินแล้ว' : `เช็คอิน${slotLabel(slot)}แล้ว`;
+                            renderCheckinStatus('success', `${doneTitle} เวลา ${formatTimeHM(existing)} น.`, null, null);
+                        } else {
+                            const btnId = 'btn-checkin-confirm';
+                            const btnLabel = `ยืนยันเข้าร่วม · ${slotLabel(slot)} ${formatDayKeyTH(todayKey)}`;
+                            renderCheckinStatus('info', 'พร้อมเช็คอิน', null, {
+                                id: btnId, label: btnLabel, icon: 'fa-user-check', primary: true,
+                                onClick: async () => {
+                                    const btn = document.getElementById(btnId);
+                                    if (!btn || btn.disabled) return;
+                                    const defaultHtml = btn.innerHTML;
+                                    setButtonLoading(btnId, true, defaultHtml);
+                                    try {
+                                        await updateDoc(participantRef, new FieldPath('checkins', todayKey, slot), serverTimestamp());
+                                        showToast('เช็คอินสำเร็จ', 'success');
+                                        await loadCheckin();
+                                    } catch (err) {
+                                        console.error("Checkin Error:", err);
+                                        setButtonLoading(btnId, false, defaultHtml);
+                                        window.showErrorModal('เช็คอินไม่สำเร็จ', 'กรุณาลองใหม่ หรือติดต่อเจ้าหน้าที่');
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    renderCheckinSummary(ev, participant);
+                }
+
+                showView('checkin');
+            } catch (error) {
+                console.error("loadCheckin Error:", error);
+                showToast('ไม่สามารถโหลดข้อมูลการเช็คอินได้', 'error');
                 window.location.hash = '#/home';
             }
         }
@@ -3656,6 +4020,7 @@
                 
                 const fullname = document.getElementById('reg-fullname').value.trim();
                 const license = document.getElementById('reg-license').value.trim();
+                const phone = document.getElementById('reg-phone').value.trim();
 
                 let org = document.getElementById('reg-org').value;
                 if (org === 'อื่นๆ') org = document.getElementById('reg-org-other').value.trim();
@@ -3678,7 +4043,7 @@
                 }
 
                 let isEditing = !document.getElementById('already-registered-alert').classList.contains('hidden');
-                const defaultBtnText = isEditing ? '<i class="fa-solid fa-save mr-2"></i> อัปเดตข้อมูลการลงทะเบียน' : '<i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการลงทะเบียน';
+                const defaultBtnText = isEditing ? '<i class="fa-solid fa-save mr-2"></i> อัปเดตข้อมูลการลงทะเบียน' : (isWalkInMode ? '<i class="fa-solid fa-paper-plane mr-2"></i> ลงทะเบียนหน้างาน' : '<i class="fa-solid fa-paper-plane mr-2"></i> ยืนยันการลงทะเบียน');
 
                 setButtonLoading(btnId, true, defaultBtnText);
 
@@ -3705,6 +4070,7 @@
                         prefix: prefix || '',
                         fullname: fullname || '',
                         license: license || '',
+                        phone: phone,
                         organization: org || '',
                         career: career || '',
                         education: education || '',
@@ -3733,6 +4099,7 @@
                         // For new registrations, test state is false
                         regData.isTested = false;
                         regData.testScore = 0;
+                        if (isWalkInMode) regData.walkIn = true;
                         // สร้าง participant และ +1 participantCount ใน batch เดียวกัน (rules บังคับไม่ให้เกิน limit)
                         const batch = writeBatch(db);
                         batch.set(participantRef, regData);
@@ -3748,8 +4115,16 @@
                         console.warn("Could not update global PDPA", pdpaErr);
                     }
                     
-                    window.showView('success');
-                    window.location.hash = '#/success';
+                    if (isWalkInMode) {
+                        // ลงทะเบียนหน้างานเสร็จ: กลับไปหน้าเช็คอินแทนหน้า success
+                        isWalkInMode = false;
+                        sessionStorage.removeItem('walkInEventId');
+                        setButtonLoading(btnId, false, defaultBtnText);
+                        window.location.hash = `#/checkin/${currentRoute.eventId}`;
+                    } else {
+                        window.showView('success');
+                        window.location.hash = '#/success';
+                    }
                 } catch (error) {
                     console.error("Registration Submit Error:", error);
                     if (!isEditing && error.code === 'permission-denied') {
@@ -3884,6 +4259,11 @@
             document.getElementById(`admin-content-${tabName}`).classList.remove('hidden');
             document.getElementById(`admin-content-${tabName}`).classList.add('block');
 
+            // ฐานข้อมูลสมาชิกโหลดเมื่อเปิดแท็บนี้ครั้งแรกเท่านั้น
+            if (tabName === 'users' && !adminUsersLoaded) {
+                window.loadAdminUsers();
+            }
+
             const navBtns = document.querySelectorAll('.admin-nav-btn');
             navBtns.forEach(btn => {
                 btn.classList.remove('text-teal-300', 'bg-white/10');
@@ -3916,10 +4296,13 @@
                 await signOut(auth);
                 sessionStorage.removeItem('loginRole');
                 sessionStorage.removeItem('redirectUrl');
+                sessionStorage.removeItem('walkInEventId');
                 loginRole = null;
                 hasPdpaCache = null;
+                adminCheckCache = null;
+                adminUsersLoaded = false;
                 showToast('ออกจากระบบสำเร็จ', 'success');
-                window.location.hash = '#/'; 
+                window.location.hash = '#/';
             } catch (error) {
                 showToast(error.message, 'error');
             }
@@ -3954,7 +4337,113 @@
             return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()+543}`;
         }
 
-        window.openEventFormModal = function() {
+        // ===== ระบบเช็คอิน: ฟังก์ชันกลาง =====
+        function toDayKey(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        // วันที่ "YYYY-MM-DD" ทุกวันตั้งแต่ eventStart ถึง eventEnd (คิดตามเวลาเครื่อง ไม่ผ่าน UTC)
+        function getEventDays(ev) {
+            const dayPattern = /^\d{4}-\d{2}-\d{2}$/;
+            const startStr = String((ev && ev.eventStart) || '').slice(0, 10);
+            let endStr = String((ev && ev.eventEnd) || '').slice(0, 10);
+            if (!dayPattern.test(startStr)) return [];
+            if (!dayPattern.test(endStr) || endStr < startStr) endStr = startStr;
+            const [y, m, d] = startStr.split('-').map(Number);
+            const cur = new Date(y, m - 1, d);
+            const days = [];
+            for (let i = 0; i < 366; i++) {
+                const key = toDayKey(cur);
+                days.push(key);
+                if (key >= endStr) break;
+                cur.setDate(cur.getDate() + 1);
+            }
+            return days;
+        }
+
+        function getTodayKey() {
+            return toDayKey(new Date());
+        }
+
+        // "YYYY-MM-DD" → วันที่ไทย (ต่อ T00:00:00 ให้ตีความเป็นเวลาเครื่อง ไม่ใช่ UTC)
+        function formatDayKeyTH(dayKey) {
+            return formatDateTH(`${dayKey}T00:00:00`);
+        }
+
+        function getCheckinSlots(ev) {
+            return ev && ev.checkinMode === 'split' ? ['morning', 'afternoon'] : ['all'];
+        }
+
+        function getCurrentSlot(ev) {
+            if (!ev || ev.checkinMode !== 'split') return 'all';
+            const s = ev.checkinSessions || {};
+            const d = new Date();
+            const now = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+            if (s.morningStart && s.morningEnd && s.morningStart <= now && now <= s.morningEnd) return 'morning';
+            if (s.afternoonStart && s.afternoonEnd && s.afternoonStart <= now && now <= s.afternoonEnd) return 'afternoon';
+            return null;
+        }
+
+        function slotLabel(slot) {
+            if (slot === 'morning') return 'รอบเช้า';
+            if (slot === 'afternoon') return 'รอบบ่าย';
+            return 'เช็คอิน';
+        }
+
+        function countCheckins(p) {
+            let count = 0;
+            const checkins = (p && p.checkins) || {};
+            Object.values(checkins).forEach(day => {
+                if (day && typeof day === 'object') {
+                    Object.values(day).forEach(v => { if (v) count++; });
+                }
+            });
+            return count;
+        }
+
+        function totalSlots(ev) {
+            return getEventDays(ev).length * getCheckinSlots(ev).length;
+        }
+
+        // ค่าเวลาเช็คอินของวัน/รอบ (Timestamp) หรือ null
+        function getCheckinValue(p, dayKey, slot) {
+            const day = p && p.checkins ? p.checkins[dayKey] : null;
+            return day && day[slot] ? day[slot] : null;
+        }
+
+        function formatTimeHM(ts) {
+            if (!ts || typeof ts.toDate !== 'function') return '';
+            const d = ts.toDate();
+            return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        }
+
+        function checkinSessionsText(ev) {
+            const s = (ev && ev.checkinSessions) || {};
+            return `เช้า ${s.morningStart || '-'}–${s.morningEnd || '-'} / บ่าย ${s.afternoonStart || '-'}–${s.afternoonEnd || '-'}`;
+        }
+
+        function setCheckinFormValues(mode, sessions, isOpen) {
+            const isSplit = mode === 'split';
+            const s = sessions || {};
+            document.getElementById('admin-event-checkin-mode').value = isSplit ? 'split' : 'single';
+            document.getElementById('admin-event-morning-start').value = s.morningStart || '';
+            document.getElementById('admin-event-morning-end').value = s.morningEnd || '';
+            document.getElementById('admin-event-afternoon-start').value = s.afternoonStart || '';
+            document.getElementById('admin-event-afternoon-end').value = s.afternoonEnd || '';
+            document.getElementById('admin-event-checkin-times').classList.toggle('hidden', !isSplit);
+            document.getElementById('admin-event-checkin-open').checked = !!isOpen;
+        }
+
+        const checkinModeSelect = document.getElementById('admin-event-checkin-mode');
+        if (checkinModeSelect) {
+            checkinModeSelect.addEventListener('change', () => {
+                document.getElementById('admin-event-checkin-times').classList.toggle('hidden', checkinModeSelect.value !== 'split');
+            });
+        }
+
+        window.openEventFormModal = async function() {
+            // รอ option ของแบบทดสอบ/แบบประเมินโหลดเสร็จก่อนตั้งค่า select
+            if (adminAuxLoadPromise) await adminAuxLoadPromise;
             document.getElementById('create-event-form').reset();
             document.getElementById('admin-event-doc-id').value = '';
             
@@ -3965,11 +4454,14 @@
             
             document.getElementById('admin-event-schedule-file').value = '';
             document.getElementById('admin-event-schedule-base64').value = '';
+            scheduleFileIsNew = false;
             document.getElementById('admin-event-schedule-link').value = '';
             document.getElementById('schedule-file-name').classList.add('hidden');
 
             document.getElementById('admin-event-quiz').value = '';
             document.getElementById('admin-event-quiz-open').checked = false;
+
+            setCheckinFormValues('single', null, false);
 
             document.getElementById('modal-form-title').textContent = 'สร้างกิจกรรม';
             document.getElementById('modal-event-form').classList.remove('hidden');
@@ -3989,8 +4481,53 @@
             document.getElementById('detail-event-fee').textContent = event.fee || '-';
             let limitTxt = event.limit ? ` / ${event.limit}` : '';
             document.getElementById('detail-event-enrolled').textContent = `${event.enrolledCount || 0}${limitTxt}`;
-            
+            renderEventCheckinStatus(event);
+
             document.getElementById('modal-event-details').classList.remove('hidden');
+        };
+
+        function renderEventCheckinStatus(event) {
+            const isOpen = event.isCheckinOpen === true;
+            const modeText = event.checkinMode === 'split' ? checkinSessionsText(event) : 'ครั้งเดียวต่อวัน';
+            document.getElementById('detail-event-checkin-status').textContent = `เช็คอิน: ${isOpen ? 'เปิดอยู่' : 'ปิดอยู่'} · ${modeText}`;
+            document.getElementById('btn-toggle-checkin-text').textContent = isOpen ? 'ปิดเช็คอิน' : 'เปิดเช็คอิน';
+        }
+
+        function getCheckinUrl(ev) {
+            return `${window.location.origin}${window.location.pathname}#/checkin/${ev.id}`;
+        }
+
+        window.adminCopyCheckinLink = function() {
+            if(!adminSelectedEvent) return;
+            window.copyToClipboard(getCheckinUrl(adminSelectedEvent));
+        };
+
+        window.adminShowCheckinQr = function() {
+            if(!adminSelectedEvent) return;
+            document.getElementById('modal-event-details').classList.add('hidden');
+            window.showQrCode(getCheckinUrl(adminSelectedEvent), adminSelectedEvent.name, 'QR Code สำหรับเช็คอินเข้างาน');
+        };
+
+        window.toggleCheckinOpen = async function() {
+            if(!adminSelectedEvent) return;
+            const ev = adminSelectedEvent;
+            const newValue = ev.isCheckinOpen !== true;
+            const btn = document.getElementById('btn-toggle-checkin');
+            btn.disabled = true;
+            try {
+                await updateDoc(doc(db, "events", ev.docId), { isCheckinOpen: newValue });
+                ev.isCheckinOpen = newValue;
+                const listEvent = adminCurrentEvents.find(e => e.docId === ev.docId);
+                if (listEvent) listEvent.isCheckinOpen = newValue;
+                renderEventCheckinStatus(ev);
+                await logActivity(newValue ? "เปิดเช็คอิน" : "ปิดเช็คอิน", ev.name);
+                showToast(newValue ? 'เปิดให้เช็คอินแล้ว' : 'ปิดการเช็คอินแล้ว', 'success');
+            } catch (error) {
+                console.error("Toggle Checkin Error:", error);
+                showToast('ไม่สามารถเปลี่ยนสถานะการเช็คอินได้', 'error');
+            } finally {
+                btn.disabled = false;
+            }
         };
 
         window.adminCopyLink = function() {
@@ -4008,10 +4545,24 @@
             window.showQrCode(url, adminSelectedEvent.name);
         };
 
-        window.duplicateEvent = function() {
+        window.duplicateEvent = async function() {
             if(!adminSelectedEvent) return;
             const ev = adminSelectedEvent;
-            
+            // รอ option ของแบบทดสอบ/แบบประเมินโหลดเสร็จก่อนตั้งค่า select
+            if (adminAuxLoadPromise) await adminAuxLoadPromise;
+
+            // ดึงไฟล์กำหนดการของกิจกรรมต้นทาง (รูปแบบเก่าอยู่ใน ev.scheduleFile, รูปแบบใหม่อยู่ใน files/schedule)
+            let sourceScheduleFile = ev.scheduleFile || '';
+            if (!sourceScheduleFile && ev.hasScheduleFile) {
+                try {
+                    const fileSnap = await getDoc(doc(db, "events", ev.docId, "files", "schedule"));
+                    if (fileSnap.exists()) sourceScheduleFile = fileSnap.data().data || '';
+                } catch (error) {
+                    console.error("Load schedule file error:", error);
+                    showToast('ไม่สามารถคัดลอกไฟล์กำหนดการได้ กรุณาอัปโหลดใหม่', 'error');
+                }
+            }
+
             document.getElementById('admin-event-doc-id').value = ''; 
             document.getElementById('admin-event-title').value = ev.name + ' (Copy)';
             document.getElementById('admin-event-desc').value = ev.desc;
@@ -4043,12 +4594,15 @@
             const scheduleFile = document.getElementById('admin-event-schedule-file');
             const scheduleNameDisplay = document.getElementById('schedule-file-name');
             scheduleFile.value = '';
-            if (ev.scheduleFile) {
-                scheduleBase64.value = ev.scheduleFile;
+            if (sourceScheduleFile) {
+                // ถือเป็นไฟล์ใหม่ เพื่อให้ตอนบันทึกถูกเขียนไปที่ files/schedule ของกิจกรรมใหม่
+                scheduleBase64.value = sourceScheduleFile;
+                scheduleFileIsNew = true;
                 scheduleNameDisplay.textContent = 'มีไฟล์แนบเดิมในระบบ (หากต้องการเปลี่ยนให้อัปโหลดใหม่)';
                 scheduleNameDisplay.classList.remove('hidden');
             } else {
                 scheduleBase64.value = '';
+                scheduleFileIsNew = false;
                 scheduleNameDisplay.classList.add('hidden');
             }
 
@@ -4057,16 +4611,21 @@
             document.getElementById('admin-event-survey').value = ev.surveyId || '';
             document.getElementById('admin-event-survey-open').checked = ev.isSurveyOpen || false;
 
+            // คัดลอกรูปแบบและเวลาเช็คอิน แต่ปิดการเช็คอินไว้ก่อน
+            setCheckinFormValues(ev.checkinMode, ev.checkinSessions, false);
+
             document.getElementById('modal-form-title').textContent = 'สร้างกิจกรรมใหม่ (คัดลอกจากของเดิม)';
             document.getElementById('modal-event-details').classList.add('hidden');
             document.getElementById('modal-event-form').classList.remove('hidden');
             showToast('คัดลอกรายละเอียดแล้ว กรุณาตั้งค่าวันที่ใหม่ก่อนกดบันทึก', 'success');
         };
 
-        window.openEditEventModal = function() {
+        window.openEditEventModal = async function() {
             if(!adminSelectedEvent) return;
             const ev = adminSelectedEvent;
-            
+            // รอ option ของแบบทดสอบ/แบบประเมินโหลดเสร็จก่อนตั้งค่า select
+            if (adminAuxLoadPromise) await adminAuxLoadPromise;
+
             document.getElementById('admin-event-doc-id').value = ev.docId;
             document.getElementById('admin-event-title').value = ev.name;
             document.getElementById('admin-event-desc').value = ev.desc;
@@ -4098,12 +4657,13 @@
             const scheduleFile = document.getElementById('admin-event-schedule-file');
             const scheduleNameDisplay = document.getElementById('schedule-file-name');
             scheduleFile.value = '';
-            if (ev.scheduleFile) {
-                scheduleBase64.value = ev.scheduleFile;
+            // ไม่โหลดไฟล์เดิมมาใส่ hidden field ถ้าไม่อัปโหลดใหม่ ไฟล์เดิมจะไม่ถูกแตะ
+            scheduleBase64.value = '';
+            scheduleFileIsNew = false;
+            if (ev.hasScheduleFile || ev.scheduleFile) {
                 scheduleNameDisplay.textContent = 'มีไฟล์แนบเดิมในระบบ (อัปโหลดใหม่เพื่อเปลี่ยน)';
                 scheduleNameDisplay.classList.remove('hidden');
             } else {
-                scheduleBase64.value = '';
                 scheduleNameDisplay.classList.add('hidden');
             }
 
@@ -4112,6 +4672,8 @@
             document.getElementById('admin-event-quiz-open').checked = ev.isQuizOpen || false;
             document.getElementById('admin-event-survey').value = ev.surveyId || '';
             document.getElementById('admin-event-survey-open').checked = ev.isSurveyOpen || false;
+
+            setCheckinFormValues(ev.checkinMode, ev.checkinSessions, ev.isCheckinOpen === true);
 
             document.getElementById('modal-form-title').textContent = 'แก้ไขข้อมูลกิจกรรม';
             document.getElementById('modal-event-details').classList.add('hidden');
@@ -4138,6 +4700,12 @@
                     const deletePromises = participantsSnap.docs.map(pDoc => deleteDoc(pDoc.ref));
                     await Promise.all(deletePromises);
 
+                    // ลบไฟล์แนบใน Subcollection 'files' (เช่น files/schedule)
+                    const filesSnap = await getDocs(collection(db, "events", adminSelectedEvent.docId, "files"));
+                    for (const fDoc of filesSnap.docs) {
+                        await deleteDoc(fDoc.ref);
+                    }
+
                     // จากนั้นจึงลบ Document หลัก
                     await deleteDoc(eventDocRef);
                     
@@ -4158,9 +4726,10 @@
             if (fromSelect && targetEventId === '') {
                 adminSelectedEvent = null;
                 currentRegistrantsData = [];
+                document.getElementById('registrants-summary').classList.add('hidden');
                 document.getElementById('registrants-table-body').innerHTML = `
                                         <tr>
-                                            <td colspan="5" class="px-6 py-20 text-center">
+                                            <td colspan="6" class="px-6 py-20 text-center">
                                                 <div class="flex flex-col items-center justify-center">
                                                     <i class="fa-solid fa-hand-pointer text-4xl text-slate-200 mb-3 animate-bounce"></i>
                                                     <p class="text-slate-500 font-bold">เลือกกิจกรรมด้านบนเพื่อดูข้อมูล</p>
@@ -4180,7 +4749,8 @@
             }
 
             if(!targetEventId || !adminSelectedEvent) {
-                document.getElementById('registrants-table-body').innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500">กรุณาเลือกกิจกรรมจากเมนูด้านบนเพื่อดูข้อมูล</td></tr>`;
+                document.getElementById('registrants-summary').classList.add('hidden');
+                document.getElementById('registrants-table-body').innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-gray-500">กรุณาเลือกกิจกรรมจากเมนูด้านบนเพื่อดูข้อมูล</td></tr>`;
                 return;
             }
 
@@ -4201,49 +4771,10 @@
                 const regSnap = await getDocs(regRef);
                 
                 currentRegistrantsData = [];
-                const tbody = document.getElementById('registrants-table-body');
-                tbody.innerHTML = '';
+                regSnap.forEach(doc => currentRegistrantsData.push({ ...doc.data(), _docId: doc.id }));
+                renderRegistrantsTable();
 
-                if (regSnap.empty) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-20 text-center"><div class="flex flex-col items-center justify-center"><i class="fa-solid fa-box-open text-4xl text-slate-200 mb-3"></i><p class="text-slate-500 font-bold">ยังไม่มีข้อมูลผู้ลงทะเบียนสำหรับกิจกรรมนี้</p></div></td></tr>`;
-                } else {
-                    regSnap.forEach(doc => currentRegistrantsData.push(doc.data()));
-
-                    currentRegistrantsData.forEach((d, index) => {
-                        const tr = document.createElement('tr');
-                        tr.className = "hover:bg-slate-50 transition cursor-pointer group";
-                        tr.onclick = () => window.viewRegistrantDetail(index);
-                        
-                        const dateStr = d.createdAt ? formatDateTimeTH(d.createdAt.toDate()) : '-';
-                        
-                        let scoreHtml = '<span class="text-slate-300">-</span>';
-                        if (d.isTested !== undefined) {
-                            if (d.isTested) {
-                                scoreHtml = `<span class="bg-purple-100 text-purple-700 px-2.5 py-1 rounded-md text-xs font-bold">${escapeHtml(d.testScore)}/${escapeHtml(d.testMaxScore)}</span>`;
-                            } else {
-                                scoreHtml = `<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded-md text-[10px] font-medium">ยังไม่สอบ</span>`;
-                            }
-                        }
-
-                        tr.innerHTML = `
-                            <td class="px-6 py-4 align-top text-[11px] text-slate-400 font-medium">${dateStr}</td>
-                            <td class="px-6 py-4 align-top break-words">
-                                <div class="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">${escapeHtml(d.prefix || '')}${escapeHtml(d.fullname || '-')}</div>
-                            </td>
-                            <td class="px-6 py-4 align-top break-all text-sm text-slate-500 font-medium">${escapeHtml(d.email || d.uid || '-')}</td>
-                            <td class="px-6 py-4 align-top break-words text-sm text-slate-500">
-                                <div class="font-bold text-slate-700">${escapeHtml(d.organization || '-')}</div>
-                                <div class="text-[11px] uppercase tracking-wide">${escapeHtml(d.career || '-')}</div>
-                            </td>
-                            <td class="px-6 py-4 align-top text-center">
-                                ${scoreHtml}
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                }
-                
-                showView('admin'); 
+                showView('admin');
             } catch(e) {
                 console.error(e);
                 showToast('ไม่สามารถดึงข้อมูลผู้ลงทะเบียนได้', 'error');
@@ -4251,14 +4782,138 @@
             }
         };
 
+        function renderRegistrantsTable() {
+            const tbody = document.getElementById('registrants-table-body');
+            const summaryEl = document.getElementById('registrants-summary');
+            tbody.innerHTML = '';
+
+            const total = currentRegistrantsData.length;
+            const checkedIn = currentRegistrantsData.filter(d => countCheckins(d) >= 1).length;
+            const walkIns = currentRegistrantsData.filter(d => d.walkIn === true).length;
+            summaryEl.textContent = `ลงทะเบียน ${total} คน · เช็คอินแล้ว ${checkedIn} คน (มาอย่างน้อย 1 ครั้ง) · ลงทะเบียนหน้างาน ${walkIns} คน`;
+            summaryEl.classList.remove('hidden');
+
+            if (total === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-20 text-center"><div class="flex flex-col items-center justify-center"><i class="fa-solid fa-box-open text-4xl text-slate-200 mb-3"></i><p class="text-slate-500 font-bold">ยังไม่มีข้อมูลผู้ลงทะเบียนสำหรับกิจกรรมนี้</p></div></td></tr>`;
+                return;
+            }
+
+            const slotsTotal = totalSlots(adminSelectedEvent);
+            currentRegistrantsData.forEach((d, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition cursor-pointer group";
+                tr.onclick = () => window.viewRegistrantDetail(index);
+
+                const dateStr = d.createdAt ? formatDateTimeTH(d.createdAt.toDate()) : '-';
+
+                let scoreHtml = '<span class="text-slate-300">-</span>';
+                if (d.isTested !== undefined) {
+                    if (d.isTested) {
+                        scoreHtml = `<span class="bg-purple-100 text-purple-700 px-2.5 py-1 rounded-md text-xs font-bold">${escapeHtml(d.testScore)}/${escapeHtml(d.testMaxScore)}</span>`;
+                    } else {
+                        scoreHtml = `<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded-md text-[10px] font-medium">ยังไม่สอบ</span>`;
+                    }
+                }
+
+                const checkinCount = countCheckins(d);
+                const checkinHtml = checkinCount >= 1
+                    ? `<span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-md text-xs font-bold">${checkinCount}/${slotsTotal}</span>`
+                    : `<span class="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md text-xs font-bold">${checkinCount}/${slotsTotal}</span>`;
+                const walkInBadge = d.walkIn === true ? ' <span class="ml-1 text-[10px] font-bold bg-sky-100 text-sky-700 border border-sky-200 px-1.5 py-0.5 rounded">หน้างาน</span>' : '';
+                const phoneHtml = d.phone ? `<div class="text-[11px] text-slate-400 mt-0.5"><i class="fa-solid fa-phone mr-1"></i>${escapeHtml(d.phone)}</div>` : '';
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 align-top text-[11px] text-slate-400 font-medium">${dateStr}</td>
+                    <td class="px-6 py-4 align-top break-words">
+                        <div class="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">${escapeHtml(d.prefix || '')}${escapeHtml(d.fullname || '-')}${walkInBadge}</div>
+                    </td>
+                    <td class="px-6 py-4 align-top break-all text-sm text-slate-500 font-medium">${escapeHtml(d.email || d.uid || '-')}${phoneHtml}</td>
+                    <td class="px-6 py-4 align-top break-words text-sm text-slate-500">
+                        <div class="font-bold text-slate-700">${escapeHtml(d.organization || '-')}</div>
+                        <div class="text-[11px] uppercase tracking-wide">${escapeHtml(d.career || '-')}</div>
+                    </td>
+                    <td class="px-6 py-4 align-top text-center">
+                        ${scoreHtml}
+                    </td>
+                    <td class="px-6 py-4 align-top text-center">
+                        ${checkinHtml}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // การ์ดการเช็คอินใน modal-registrant-view (แถว = วัน, คอลัมน์ = รอบ)
+        function renderRegistrantCheckins(index) {
+            const d = currentRegistrantsData[index];
+            const container = document.getElementById('view-reg-checkins');
+            if (!d || !adminSelectedEvent) { container.innerHTML = ''; return; }
+
+            const days = getEventDays(adminSelectedEvent);
+            const slots = getCheckinSlots(adminSelectedEvent);
+            if (days.length === 0) {
+                container.innerHTML = '<span class="text-slate-400 text-sm font-medium">ไม่พบวันจัดกิจกรรม</span>';
+                return;
+            }
+
+            let html = '<table class="w-full text-sm text-left"><thead class="bg-slate-50 text-slate-600 border-b border-slate-200"><tr><th class="p-3 font-bold">วันที่</th>';
+            slots.forEach(slot => html += `<th class="p-3 text-center font-bold">${escapeHtml(slotLabel(slot))}</th>`);
+            html += '</tr></thead><tbody class="divide-y divide-slate-100">';
+            days.forEach(day => {
+                html += `<tr><td class="p-3 font-medium text-slate-700 whitespace-nowrap">${escapeHtml(formatDayKeyTH(day))}</td>`;
+                slots.forEach(slot => {
+                    const t = formatTimeHM(getCheckinValue(d, day, slot));
+                    const btn = t
+                        ? `<button type="button" data-checkin-action="cancel" data-day="${escapeHtml(day)}" data-slot="${escapeHtml(slot)}" class="text-[10px] font-bold bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 px-2 py-1 rounded-md transition">ยกเลิก</button>`
+                        : `<button type="button" data-checkin-action="checkin" data-day="${escapeHtml(day)}" data-slot="${escapeHtml(slot)}" class="text-[10px] font-bold bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 px-2 py-1 rounded-md transition">เช็คอินแทน</button>`;
+                    html += `<td class="p-3 text-center"><div class="flex flex-col items-center gap-1.5"><span class="font-bold ${t ? 'text-emerald-600' : 'text-slate-300'}">${t ? escapeHtml(t) : '-'}</span>${btn}</div></td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+
+            container.querySelectorAll('[data-checkin-action]').forEach(btn => {
+                btn.addEventListener('click', () => adminSetCheckin(index, btn.dataset.day, btn.dataset.slot, btn.dataset.checkinAction === 'checkin', btn));
+            });
+        }
+
+        async function adminSetCheckin(index, dayKey, slot, isCheckin, btn) {
+            const d = currentRegistrantsData[index];
+            if (!d || !d._docId || !adminSelectedEvent) return;
+            const registrantName = `${d.prefix || ''}${d.fullname || '-'}`;
+            if (!isCheckin && !confirm(`ยืนยันยกเลิกการเช็คอิน${slotLabel(slot) === 'เช็คอิน' ? '' : slotLabel(slot)} วันที่ ${formatDayKeyTH(dayKey)} ของ "${registrantName}" ?`)) return;
+
+            btn.disabled = true;
+            try {
+                const participantRef = doc(db, "events", adminSelectedEvent.docId, "participants", d._docId);
+                await updateDoc(participantRef, new FieldPath('checkins', dayKey, slot), isCheckin ? serverTimestamp() : deleteField());
+                await logActivity(isCheckin ? "เช็คอินแทน" : "ยกเลิกเช็คอิน", `${adminSelectedEvent.name} - ${registrantName}`);
+
+                // อ่านใบลงทะเบียนใหม่เพื่อให้ได้เวลาจริงจากเซิร์ฟเวอร์
+                const freshSnap = await getDoc(participantRef);
+                if (freshSnap.exists()) currentRegistrantsData[index] = { ...freshSnap.data(), _docId: d._docId };
+                renderRegistrantCheckins(index);
+                renderRegistrantsTable();
+                showToast(isCheckin ? 'เช็คอินแทนสำเร็จ' : 'ยกเลิกการเช็คอินแล้ว', 'success');
+            } catch (error) {
+                console.error("Admin Checkin Error:", error);
+                showToast(isCheckin ? 'เช็คอินแทนไม่สำเร็จ' : 'ยกเลิกการเช็คอินไม่สำเร็จ', 'error');
+                btn.disabled = false;
+            }
+        }
+
         window.viewRegistrantDetail = function(index) {
             const d = currentRegistrantsData[index];
             if(!d) return;
-            
+
             document.getElementById('view-reg-event-name').textContent = adminSelectedEvent ? adminSelectedEvent.name : '';
             document.getElementById('view-reg-fullname-display').textContent = (d.prefix || '') + (d.fullname || '-');
+            document.getElementById('view-reg-walkin-badge').classList.toggle('hidden', d.walkIn !== true);
             document.getElementById('view-reg-email-display').textContent = d.email || d.uid || '-';
             document.getElementById('view-reg-license-display').textContent = d.license || '-';
+            document.getElementById('view-reg-phone-display').textContent = d.phone || '-';
+            renderRegistrantCheckins(index);
             document.getElementById('view-reg-org-display').textContent = d.organization || '-';
             document.getElementById('view-reg-career-display').textContent = d.career || '-';
             document.getElementById('view-reg-education-display').textContent = d.education || '-';
@@ -4434,7 +5089,7 @@
             }
             
             // เพิ่ม Header สำหรับ PDPA และ คะแนนแบบทดสอบ
-            const headers = ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'เลขที่ใบประกอบวิชาชีพ', 'หน่วยงาน', 'อาชีพ', 'ระดับการศึกษา', 'ช่องทางรับข่าวสาร', 'ปัจจัยความสนใจ', 'คะแนนแบบทดสอบ', 'ทำแบบประเมิน', 'ยอมรับนโยบายความเป็นส่วนตัว', 'ยินยอมประชาสัมพันธ์', 'ยินยอมเปิดเผยต่อ Sponsor'];
+            const headers = ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'เบอร์โทร', 'เลขที่ใบประกอบวิชาชีพ', 'หน่วยงาน', 'อาชีพ', 'ระดับการศึกษา', 'ช่องทางรับข่าวสาร', 'ปัจจัยความสนใจ', 'คะแนนแบบทดสอบ', 'ทำแบบประเมิน', 'ยอมรับนโยบายความเป็นส่วนตัว', 'ยินยอมประชาสัมพันธ์', 'ยินยอมเปิดเผยต่อ Sponsor', 'ลงทะเบียนหน้างาน'];
             let csvContent = "\uFEFF";
             csvContent += headers.join(",") + "\n";
             
@@ -4463,6 +5118,7 @@
                     cleanStr(row.prefix),
                     cleanStr(row.fullname),
                     cleanStr(row.email || '-'),
+                    cleanStr(row.phone || '-'),
                     cleanStr(row.license || '-'),
                     cleanStr(row.organization),
                     cleanStr(row.career),
@@ -4473,16 +5129,74 @@
                     cleanStr(isSurveyedTxt),
                     cleanStr(pdpa1),
                     cleanStr(pdpa2),
-                    cleanStr(pdpa3)
+                    cleanStr(pdpa3),
+                    cleanStr(row.walkIn === true ? 'ใช่' : 'ไม่ใช่')
                 ];
                 csvContent += rowData.join(",") + "\n";
             });
-            
+
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
             link.setAttribute("download", `Registrants_${adminSelectedEvent.id}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        window.exportAttendanceToCsv = function() {
+            if (!adminSelectedEvent) {
+                showToast('กรุณาเลือกกิจกรรมก่อน', 'error');
+                return;
+            }
+            const attendees = (currentRegistrantsData || []).filter(row => countCheckins(row) >= 1);
+            if (attendees.length === 0) {
+                showToast('ยังไม่มีผู้เช็คอิน', 'error');
+                return;
+            }
+
+            const days = getEventDays(adminSelectedEvent);
+            const slots = getCheckinSlots(adminSelectedEvent);
+            const slotsTotal = days.length * slots.length;
+            const slotHeaderLabel = { all: 'เช็คอิน', morning: 'เช้า', afternoon: 'บ่าย' };
+            const cleanStr = (str) => `"${sanitizeCsvValue(str||'').replace(/"/g, '""')}"`;
+
+            const headers = ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'เบอร์โทร', 'เลขที่ใบประกอบวิชาชีพ', 'หน่วยงาน', 'อาชีพ', 'ระดับการศึกษา', 'ลงทะเบียนหน้างาน'];
+            days.forEach(day => slots.forEach(slot => headers.push(`${formatDayKeyTH(day)} ${slotHeaderLabel[slot]}`)));
+            headers.push('จำนวนรอบที่มา');
+
+            let csvContent = "﻿";
+            csvContent += headers.map(h => cleanStr(h)).join(",") + "\n";
+
+            attendees.forEach(row => {
+                const dateStr = row.createdAt ? formatDateTimeTH(row.createdAt.toDate()) : '-';
+                const rowData = [
+                    cleanStr(dateStr),
+                    cleanStr(row.prefix),
+                    cleanStr(row.fullname),
+                    cleanStr(row.email || '-'),
+                    cleanStr(row.phone || '-'),
+                    cleanStr(row.license || '-'),
+                    cleanStr(row.organization),
+                    cleanStr(row.career),
+                    cleanStr(row.education),
+                    cleanStr(row.walkIn === true ? 'ใช่' : 'ไม่ใช่')
+                ];
+                days.forEach(day => slots.forEach(slot => {
+                    const t = formatTimeHM(getCheckinValue(row, day, slot));
+                    rowData.push(cleanStr(t ? `${t} น.` : ''));
+                }));
+                // ใส่ ' นำหน้าเพื่อไม่ให้ Excel แปลง x/y เป็นวันที่
+                rowData.push(cleanStr(`'${countCheckins(row)}/${slotsTotal}`));
+                csvContent += rowData.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Attendance_${adminSelectedEvent.id}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -4506,18 +5220,42 @@
                 const limit = document.getElementById('admin-event-limit').value.trim();
                 const scheduleLink = document.getElementById('admin-event-schedule-link').value.trim();
                 const scheduleFile = document.getElementById('admin-event-schedule-base64').value;
-                
+                const hasNewScheduleFile = scheduleFileIsNew && !!scheduleFile;
+
                 const quizId = document.getElementById('admin-event-quiz').value;
                 const isQuizOpen = document.getElementById('admin-event-quiz-open').checked;
 
                 const surveyId = document.getElementById('admin-event-survey').value;
                 const isSurveyOpen = document.getElementById('admin-event-survey-open').checked;
-                
+
+                const checkinMode = document.getElementById('admin-event-checkin-mode').value === 'split' ? 'split' : 'single';
+                const isCheckinOpen = document.getElementById('admin-event-checkin-open').checked;
+                const morningStart = document.getElementById('admin-event-morning-start').value;
+                const morningEnd = document.getElementById('admin-event-morning-end').value;
+                const afternoonStart = document.getElementById('admin-event-afternoon-start').value;
+                const afternoonEnd = document.getElementById('admin-event-afternoon-end').value;
+
                 const btnId = 'btn-create-event';
 
                 if (!title || !desc || !regStart || !regEnd || !evStart || !evEnd || !location || !fee) {
                     showToast('กรุณากรอกข้อมูลให้ครบทุกช่อง', 'error');
                     return;
+                }
+
+                // ตรวจช่วงเวลาเช็คอินแบบแยกรอบ (สตริง "HH:mm" เทียบกันตรงๆ ได้)
+                if (checkinMode === 'split') {
+                    if (!morningStart || !morningEnd || !afternoonStart || !afternoonEnd) {
+                        showToast('กรุณากรอกเวลาเช็คอินรอบเช้าและรอบบ่ายให้ครบ', 'error');
+                        return;
+                    }
+                    if (morningStart >= morningEnd || afternoonStart >= afternoonEnd) {
+                        showToast('เวลาเริ่มต้องน้อยกว่าเวลาสิ้นสุดในแต่ละรอบ', 'error');
+                        return;
+                    }
+                    if (morningEnd > afternoonStart) {
+                        showToast('เวลาสิ้นสุดรอบเช้าต้องไม่เกินเวลาเริ่มรอบบ่าย', 'error');
+                        return;
+                    }
                 }
 
                 if (scheduleLink && !isSafeHttpUrl(scheduleLink)) {
@@ -4546,15 +5284,41 @@
                         coverImage: coverImage || null,
                         limit: limit ? parseInt(limit, 10) : null,
                         scheduleLink: scheduleLink || null,
-                        scheduleFile: scheduleFile || null,
                         quizId: quizId || null,
                         isQuizOpen: isQuizOpen,
                         surveyId: surveyId || null,
-                        isSurveyOpen: isSurveyOpen
+                        isSurveyOpen: isSurveyOpen,
+                        checkinMode: checkinMode,
+                        checkinSessions: checkinMode === 'split' ? { morningStart, morningEnd, afternoonStart, afternoonEnd } : null,
+                        isCheckinOpen: isCheckinOpen
+                    };
+
+                    // ไฟล์กำหนดการเก็บแยกที่ events/{docId}/files/schedule (ถ้าล้มเหลวไม่ rollback ข้อมูลกิจกรรม)
+                    const saveScheduleFile = async (eventDocId) => {
+                        try {
+                            await setDoc(doc(db, "events", eventDocId, "files", "schedule"), {
+                                data: scheduleFile,
+                                updatedAt: serverTimestamp()
+                            });
+                            return true;
+                        } catch (fileErr) {
+                            console.error("Save Schedule File Error:", fileErr);
+                            showToast('บันทึกไฟล์กำหนดการไม่สำเร็จ', 'error');
+                            return false;
+                        }
                     };
 
                     if (docId) {
+                        // ไม่ได้อัปโหลดไฟล์ใหม่: ไม่แตะไฟล์เดิมและไม่เขียน scheduleFile ทับ
                         await updateDoc(doc(db, "events", docId), eventData);
+                        if (hasNewScheduleFile && await saveScheduleFile(docId)) {
+                            try {
+                                await updateDoc(doc(db, "events", docId), { hasScheduleFile: true, scheduleFile: deleteField() });
+                            } catch (flagErr) {
+                                console.error("Update Schedule Flag Error:", flagErr);
+                                showToast('บันทึกไฟล์กำหนดการไม่สำเร็จ', 'error');
+                            }
+                        }
                         await logActivity("แก้ไขกิจกรรม", title);
                         showToast('อัปเดตข้อมูลกิจกรรมสำเร็จ', 'success');
                     } else {
@@ -4577,7 +5341,16 @@
                         eventData.participantCount = 0;
                         eventData.createdAt = serverTimestamp();
 
-                        await addDoc(collection(db, "events"), eventData);
+                        const newEventRef = await addDoc(collection(db, "events"), eventData);
+                        // ตั้ง hasScheduleFile หลังบันทึกไฟล์สำเร็จเท่านั้น
+                        if (hasNewScheduleFile && await saveScheduleFile(newEventRef.id)) {
+                            try {
+                                await updateDoc(newEventRef, { hasScheduleFile: true });
+                            } catch (flagErr) {
+                                console.error("Update Schedule Flag Error:", flagErr);
+                                showToast('บันทึกไฟล์กำหนดการไม่สำเร็จ', 'error');
+                            }
+                        }
                         await logActivity("สร้างกิจกรรมใหม่", title);
                         
                         showToast('สร้างกิจกรรมใหม่สำเร็จ', 'success');
@@ -4598,6 +5371,8 @@
         const btnRefreshAdmin = document.getElementById('btn-refresh-admin');
         if(btnRefreshAdmin) {
             btnRefreshAdmin.addEventListener('click', async () => {
+                // รีเฟรชขณะอยู่แท็บสมาชิก: ให้ switchAdminTab โหลดฐานข้อมูลสมาชิกใหม่
+                if (currentAdminTab === 'users') adminUsersLoaded = false;
                 await loadAdminData();
             });
         }
@@ -4605,24 +5380,18 @@
         async function loadAdminData() {
             showView('loading');
             try {
-                const eventsRef = collection(db, "events");
-                const eventsSnap = await getDocs(eventsRef);
+                const loadEventsWithCounts = async () => {
+                    const eventsSnap = await getDocs(collection(db, "events"));
+                    if (eventsSnap.empty) return [];
 
-                const logsRef = collection(db, "logs");
-                const logsSnap = await getDocs(logsRef);
-
-                let processedEvents = [];
-
-                if (!eventsSnap.empty) {
                     const eventPromises = eventsSnap.docs.map(async (d) => {
                         const data = d.data();
                         const docId = d.id;
-                        
+
                         let enrolled = 0;
                         try {
-                            const participantsRef = collection(db, "events", docId, "participants");
-                            const participantsSnap = await getDocs(participantsRef);
-                            enrolled = participantsSnap.size;
+                            const countSnap = await getCountFromServer(collection(db, "events", docId, "participants"));
+                            enrolled = countSnap.data().count;
 
                             // ซิงก์ตัวนับ participantCount ให้ตรงกับจำนวนจริง (รองรับกิจกรรมเดิมที่ยังไม่มี field นี้)
                             if (data.participantCount !== enrolled) {
@@ -4640,8 +5409,11 @@
                         return { docId: docId, enrolledCount: enrolled, ...data };
                     });
 
-                    processedEvents = await Promise.all(eventPromises);
-                }
+                    return Promise.all(eventPromises);
+                };
+
+                const logsQuery = query(collection(db, "logs"), orderBy("createdAt", "desc"), limit(50));
+                const [processedEvents, logsSnap] = await Promise.all([loadEventsWithCounts(), getDocs(logsQuery)]);
 
                 const tbody = document.getElementById('admin-events-table-body');
                 const emptyState = document.getElementById('admin-events-empty');
@@ -4744,16 +5516,13 @@
                     }
                 }
 
-                await loadAdminsList();
-                await loadAdminQuizzes();
-                await loadAdminSurveys();
-                if (currentAdminRole === 'superadmin') {
-                    await loadAdminUsers();
-                }
-
                 showView('admin');
 
                 window.switchAdminTab(currentAdminTab || 'events');
+
+                // โหลดทีม/แบบทดสอบ/แบบประเมินเบื้องหลัง ไม่ต้องรอก่อนแสดงหน้า
+                adminAuxLoadPromise = Promise.all([loadAdminsList(), loadAdminQuizzes(), loadAdminSurveys()])
+                    .catch(err => console.error("Load Admin Aux Data Error:", err));
             } catch (error) {
                 console.error("Load Admin Data Error:", error);
                 showToast('ไม่สามารถดึงข้อมูล Admin ได้', 'error');
@@ -5470,9 +6239,11 @@
                 if (q.type === 'text') {
                     optionsHtml = `<textarea rows="3" onchange="window.currentUserSurveySession.answers[${qIndex}] = this.value" class="input-premium w-full px-4 py-3 rounded-xl font-medium resize-none" placeholder="พิมพ์ข้อเสนอแนะของคุณ..."></textarea>`;
                 } else if (q.type === 'scale') {
-                    let scaleHtml = '<div class="flex justify-between items-end mt-4 max-w-md mx-auto relative px-2">';
-                    scaleHtml += `<span class="text-xs text-slate-500 font-bold mb-1 absolute left-0 -translate-x-4">${escapeHtml(q.options[0] || 'น้อย')}</span>`;
-                    scaleHtml += '<div class="flex flex-1 justify-between px-8">';
+                    // จอเล็กกว่า 640px: ป้ายซ้าย–ขวาอยู่แถวบนเหนือตัวเลข
+                    let scaleHtml = `<div class="flex sm:hidden justify-between mt-4 max-w-md mx-auto px-2 gap-4"><span class="text-xs text-slate-500 font-bold">${escapeHtml(q.options[0] || 'น้อย')}</span><span class="text-xs text-slate-500 font-bold text-right">${escapeHtml(q.options[1] || 'มาก')}</span></div>`;
+                    scaleHtml += '<div class="flex justify-between items-end mt-2 sm:mt-4 max-w-md mx-auto relative px-2">';
+                    scaleHtml += `<span class="hidden sm:block text-xs text-slate-500 font-bold mb-1 absolute left-0 -translate-x-4">${escapeHtml(q.options[0] || 'น้อย')}</span>`;
+                    scaleHtml += '<div class="flex flex-1 justify-between px-2 sm:px-8">';
                     for(let i=1; i<=5; i++) {
                         scaleHtml += `
                         <label class="flex flex-col items-center gap-2 cursor-pointer group z-10">
@@ -5481,8 +6252,8 @@
                         </label>`;
                     }
                     scaleHtml += '</div>';
-                    scaleHtml += `<span class="text-xs text-slate-500 font-bold mb-1 absolute right-0 translate-x-4">${escapeHtml(q.options[1] || 'มาก')}</span>`;
-                    scaleHtml += '<div class="absolute top-[28px] left-10 right-10 h-0.5 bg-slate-100 -z-0"></div>';
+                    scaleHtml += `<span class="hidden sm:block text-xs text-slate-500 font-bold mb-1 absolute right-0 translate-x-4">${escapeHtml(q.options[1] || 'มาก')}</span>`;
+                    scaleHtml += '<div class="absolute top-[28px] left-4 right-4 sm:left-10 sm:right-10 h-0.5 bg-slate-100 -z-0"></div>';
                     scaleHtml += '</div>';
                     optionsHtml = scaleHtml;
                 } else if (q.type === 'grid') {
@@ -5588,6 +6359,7 @@
 
                 window.currentUsersPage = 1;
                 window.renderUsersTable();
+                adminUsersLoaded = true;
 
             } catch(e) {
                 console.error("Error loading app users:", e);
@@ -5700,7 +6472,8 @@
             if(btnPrev) btnPrev.disabled = window.currentUsersPage === 1;
             if(btnNext) btnNext.disabled = window.currentUsersPage === totalPages;
         };
-        window.exportUsersToCsv = function() {
+        window.exportUsersToCsv = async function() {
+            if (!adminUsersLoaded) await window.loadAdminUsers();
             if(!window.allUsersData || window.allUsersData.length === 0) {
                 showToast('ไม่มีข้อมูลสำหรับ Export', 'error');
                 return;
