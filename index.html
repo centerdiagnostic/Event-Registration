@@ -816,6 +816,28 @@
                         </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                            <div id="reg-org-name-wrap" class="hidden md:col-span-6">
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">ชื่อสังกัด/หน่วยงาน <span class="text-red-500">*</span></label>
+                                <input type="text" id="reg-org-name" class="input-premium w-full px-4 py-3.5 rounded-xl font-medium" placeholder="ระบุชื่อสังกัดหรือหน่วยงาน">
+                            </div>
+
+                            <div id="reg-org-type-wrap" class="hidden md:col-span-6">
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">ประเภทหน่วยงาน <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <select id="reg-org-type" class="input-premium w-full px-4 py-3.5 rounded-xl appearance-none font-medium">
+                                        <option value="" disabled selected>เลือกประเภทหน่วยงาน...</option>
+                                        <option value="ห้องปฏิบัติการภาครัฐ">ห้องปฏิบัติการภาครัฐ</option>
+                                        <option value="ห้องปฏิบัติการภาคเอกชน">ห้องปฏิบัติการภาคเอกชน</option>
+                                        <option value="ห้องปฏิบัติการมหาวิทยาลัย">ห้องปฏิบัติการมหาวิทยาลัย</option>
+                                        <option value="อื่นๆ">อื่นๆ (โปรดระบุ)</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-blue-600">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                                <input type="text" id="reg-org-type-other" class="hidden mt-3 input-premium w-full px-4 py-3.5 rounded-xl" placeholder="โปรดระบุประเภทหน่วยงาน...">
+                            </div>
+
                             <div class="md:col-span-3">
                                 <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">1. คำนำหน้า <span class="text-red-500">*</span></label>
                                 <div class="relative">
@@ -862,11 +884,28 @@
                                 <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">ตำแหน่ง <span class="text-red-500">*</span></label>
                                 <input type="text" id="reg-position" class="input-premium w-full px-4 py-3.5 rounded-xl font-medium" placeholder="ระบุตำแหน่งงาน">
                             </div>
+                            <div id="reg-education-seminar-wrap" class="hidden md:col-span-6">
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">ระดับการศึกษา <span class="text-red-500">*</span></label>
+                                <div class="relative max-w-md">
+                                    <select id="reg-education-seminar" class="input-premium w-full px-4 py-3.5 rounded-xl appearance-none font-medium">
+                                        <option value="" disabled selected>เลือกระดับการศึกษาสูงสุด...</option>
+                                        <option value="ต่ำกว่าปริญญาตรี">ต่ำกว่าปริญญาตรี</option>
+                                        <option value="ปริญญาตรี">ปริญญาตรี</option>
+                                        <option value="ปริญญาโท">ปริญญาโท</option>
+                                        <option value="ปริญญาเอก">ปริญญาเอก</option>
+                                        <option value="อื่นๆ">อื่นๆ (โปรดระบุ)</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-blue-600">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                                <input type="text" id="reg-education-seminar-other" class="hidden mt-3 max-w-md input-premium w-full px-4 py-3.5 rounded-xl" placeholder="โปรดระบุระดับการศึกษา...">
+                            </div>
                         </div>
                     </div>
 
                     <!-- SECTION 2: ข้อมูลการศึกษาและอาชีพ -->
-                    <div class="bg-white p-5 md:p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
+                    <div id="reg-section-org" class="bg-white p-5 md:p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
                         <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                             <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600"><i class="fa-solid fa-building-user"></i></div>
@@ -893,28 +932,6 @@
                                     </div>
                                 </div>
                                 <input type="text" id="reg-org-other" class="hidden mt-3 input-premium w-full px-4 py-3.5 rounded-xl" placeholder="โปรดระบุรายละเอียดหน่วยงาน...">
-                            </div>
-
-                            <div id="reg-org-name-wrap" class="hidden">
-                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">ชื่อสังกัด/หน่วยงาน <span class="text-red-500">*</span></label>
-                                <input type="text" id="reg-org-name" class="input-premium w-full px-4 py-3.5 rounded-xl font-medium" placeholder="ระบุชื่อสังกัดหรือหน่วยงาน">
-                            </div>
-
-                            <div id="reg-org-type-wrap" class="hidden">
-                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">ประเภทหน่วยงาน <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <select id="reg-org-type" class="input-premium w-full px-4 py-3.5 rounded-xl appearance-none font-medium">
-                                        <option value="" disabled selected>เลือกประเภทหน่วยงาน...</option>
-                                        <option value="ห้องปฏิบัติการภาครัฐ">ห้องปฏิบัติการภาครัฐ</option>
-                                        <option value="ห้องปฏิบัติการภาคเอกชน">ห้องปฏิบัติการภาคเอกชน</option>
-                                        <option value="ห้องปฏิบัติการมหาวิทยาลัย">ห้องปฏิบัติการมหาวิทยาลัย</option>
-                                        <option value="อื่นๆ">อื่นๆ (โปรดระบุ)</option>
-                                    </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-blue-600">
-                                        <i class="fa-solid fa-chevron-down text-xs"></i>
-                                    </div>
-                                </div>
-                                <input type="text" id="reg-org-type-other" class="hidden mt-3 input-premium w-full px-4 py-3.5 rounded-xl" placeholder="โปรดระบุประเภทหน่วยงาน...">
                             </div>
 
                             <div>
@@ -950,24 +967,6 @@
                                         <i class="fa-solid fa-chevron-down text-xs"></i>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div id="reg-education-seminar-wrap" class="hidden md:col-span-2">
-                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">ระดับการศึกษา <span class="text-red-500">*</span></label>
-                                <div class="relative max-w-md">
-                                    <select id="reg-education-seminar" class="input-premium w-full px-4 py-3.5 rounded-xl appearance-none font-medium">
-                                        <option value="" disabled selected>เลือกระดับการศึกษาสูงสุด...</option>
-                                        <option value="ต่ำกว่าปริญญาตรี">ต่ำกว่าปริญญาตรี</option>
-                                        <option value="ปริญญาตรี">ปริญญาตรี</option>
-                                        <option value="ปริญญาโท">ปริญญาโท</option>
-                                        <option value="ปริญญาเอก">ปริญญาเอก</option>
-                                        <option value="อื่นๆ">อื่นๆ (โปรดระบุ)</option>
-                                    </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-blue-600">
-                                        <i class="fa-solid fa-chevron-down text-xs"></i>
-                                    </div>
-                                </div>
-                                <input type="text" id="reg-education-seminar-other" class="hidden mt-3 max-w-md input-premium w-full px-4 py-3.5 rounded-xl" placeholder="โปรดระบุระดับการศึกษา...">
                             </div>
                         </div>
                     </div>
@@ -1090,7 +1089,7 @@
                         <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                             <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600"><i class="fa-solid fa-utensils"></i></div>
-                            <h3 class="font-bold text-xl text-slate-800 tracking-tight">ส่วนที่ 3: ข้อมูลอาหาร</h3>
+                            <h3 class="font-bold text-xl text-slate-800 tracking-tight">ส่วนที่ 2: ข้อมูลอาหาร</h3>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-2">
@@ -1153,7 +1152,7 @@
                         <div class="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                             <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600"><i class="fa-solid fa-comments"></i></div>
-                            <h3 class="font-bold text-xl text-slate-800 tracking-tight">ส่วนที่ 4: คำถามถึงวิทยากร</h3>
+                            <h3 class="font-bold text-xl text-slate-800 tracking-tight">ส่วนที่ 3: คำถามถึงวิทยากร</h3>
                         </div>
                         <p class="text-sm text-slate-500 font-medium leading-relaxed mb-4">คำถามหรือประเด็นที่ท่านสนใจ/อยากทราบเพิ่มเติมจากวิทยากร เช่น ประเด็นปัญหาที่ท่านกำลังพบเจอและต้องการแนวทางแก้ไข หรือสิ่งที่ท่านคาดหวังในกิจกรรมนี้</p>
                         <textarea id="reg-speaker-question" rows="4" class="input-premium w-full px-4 py-3.5 rounded-xl font-medium leading-relaxed" placeholder="พิมพ์คำถามของท่าน (ไม่บังคับ)"></textarea>
@@ -2207,7 +2206,7 @@
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">ตำแหน่ง</label>
                                 <div class="font-medium text-slate-700 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-position-display"></div>
                             </div>
-                            <div>
+                            <div id="view-reg-career-wrap">
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">อาชีพ</label>
                                 <div class="font-medium text-slate-700 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-career-display"></div>
                             </div>
@@ -3882,7 +3881,7 @@
                         }
                     }
                     
-                    if (userRegData.career) {
+                    if (!isSeminarForm && userRegData.career) {
                         const careerSelect = document.getElementById('reg-career');
                         const careerOther = document.getElementById('reg-career-other');
                         const careerOptions = Array.from(careerSelect.options).map(o => o.value);
@@ -4239,12 +4238,14 @@
             const setShown = (id, shown) => document.getElementById(id).classList.toggle('hidden', !shown);
             const setRequired = (id, required) => { document.getElementById(id).required = required; };
 
-            // ส่วนของฟอร์มมาตรฐาน
+            // ส่วนของฟอร์มมาตรฐาน (ฟอร์มสัมมนาซ่อนทั้งการ์ดส่วนที่ 2 รวมช่องอาชีพ)
+            setShown('reg-section-org', !isSeminar);
             setShown('reg-org-wrap', !isSeminar);
             setShown('reg-education-wrap', !isSeminar);
             setShown('reg-section-survey', !isSeminar);
             setRequired('reg-org', !isSeminar);
             setRequired('reg-education', !isSeminar);
+            setRequired('reg-career', !isSeminar);
 
             // ส่วนของฟอร์มสัมมนา
             ['reg-position-wrap', 'reg-org-name-wrap', 'reg-org-type-wrap', 'reg-education-seminar-wrap', 'reg-section-food', 'reg-section-question']
@@ -4253,7 +4254,7 @@
             document.querySelectorAll('input[name="reg-allergy"], input[name="reg-diet"]').forEach(r => { r.required = isSeminar; });
 
             // ช่อง "อื่นๆ" และช่องระบุสิ่งที่แพ้ เริ่มจากซ่อนและไม่บังคับเสมอ
-            ['reg-org-other', 'reg-org-type-other', 'reg-education-seminar-other'].forEach(id => {
+            ['reg-org-other', 'reg-career-other', 'reg-org-type-other', 'reg-education-seminar-other'].forEach(id => {
                 setShown(id, false);
                 setRequired(id, false);
             });
@@ -4373,10 +4374,11 @@
                         pdpa: pdpaConsent
                     };
 
-                    // ฟอร์มสัมมนา: ไม่บันทึก sources/factors และใช้ฟิลด์สัมมนาแทน organization/education
+                    // ฟอร์มสัมมนา: ไม่บันทึก sources/factors/career และใช้ฟิลด์สัมมนาแทน organization/education
                     if (seminarFields) {
                         delete regData.sources;
                         delete regData.factors;
+                        delete regData.career;
                         Object.assign(regData, seminarFields);
                     }
 
@@ -5273,7 +5275,7 @@
                     const badgeText = isOver ? `หน่วยงานนี้ ${orgCount} คน (เกิน ${orgLimit})` : `หน่วยงานนี้ ${orgCount} คน`;
                     orgCellHtml = `
                         <div class="font-bold text-slate-700">${escapeHtml(d.orgName || '-')} <span class="ml-1 text-[10px] font-bold border px-1.5 py-0.5 rounded ${badgeClass}">${escapeHtml(badgeText)}</span></div>
-                        <div class="text-[11px] uppercase tracking-wide">${escapeHtml(d.organization || '-')} · ${escapeHtml(d.career || '-')}</div>`;
+                        <div class="text-[11px] uppercase tracking-wide">${escapeHtml(d.organization || '-')}</div>`;
                 }
 
                 tr.innerHTML = `
@@ -5375,6 +5377,7 @@
             document.getElementById('view-reg-org-label').textContent = isSeminar ? 'ประเภทหน่วยงาน' : 'หน่วยงาน';
             document.getElementById('view-reg-orgname-wrap').classList.toggle('hidden', !isSeminar);
             document.getElementById('view-reg-position-wrap').classList.toggle('hidden', !isSeminar);
+            document.getElementById('view-reg-career-wrap').classList.toggle('hidden', isSeminar);
             document.getElementById('view-reg-survey-card').classList.toggle('hidden', isSeminar);
             document.getElementById('view-reg-seminar-card').classList.toggle('hidden', !isSeminar);
             if (isSeminar) {
@@ -5561,7 +5564,7 @@
 
             // เพิ่ม Header สำหรับ PDPA และ คะแนนแบบทดสอบ
             const headers = isSeminar
-                ? ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'เบอร์โทร', 'ตำแหน่ง', 'อาชีพ', 'ระดับการศึกษา', 'เลขที่ใบประกอบวิชาชีพ', 'ชื่อหน่วยงาน', 'ประเภทหน่วยงาน', 'จำนวนผู้สมัครจากหน่วยงานเดียวกัน', 'การแพ้อาหาร', 'ประเภทอาหาร', 'คำถามถึงวิทยากร', 'คะแนนแบบทดสอบ', 'ยอมรับนโยบายความเป็นส่วนตัว', 'ยินยอมประชาสัมพันธ์', 'ยินยอมเปิดเผยต่อ Sponsor', 'ลงทะเบียนหน้างาน']
+                ? ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'เบอร์โทร', 'ตำแหน่ง', 'ระดับการศึกษา', 'เลขที่ใบประกอบวิชาชีพ', 'ชื่อหน่วยงาน', 'ประเภทหน่วยงาน', 'จำนวนผู้สมัครจากหน่วยงานเดียวกัน', 'การแพ้อาหาร', 'ประเภทอาหาร', 'คำถามถึงวิทยากร', 'คะแนนแบบทดสอบ', 'ยอมรับนโยบายความเป็นส่วนตัว', 'ยินยอมประชาสัมพันธ์', 'ยินยอมเปิดเผยต่อ Sponsor', 'ลงทะเบียนหน้างาน']
                 : ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'เบอร์โทร', 'เลขที่ใบประกอบวิชาชีพ', 'หน่วยงาน', 'อาชีพ', 'ระดับการศึกษา', 'ช่องทางรับข่าวสาร', 'ปัจจัยความสนใจ', 'คะแนนแบบทดสอบ', 'ยอมรับนโยบายความเป็นส่วนตัว', 'ยินยอมประชาสัมพันธ์', 'ยินยอมเปิดเผยต่อ Sponsor', 'ลงทะเบียนหน้างาน'];
             let csvContent = "\uFEFF";
             csvContent += headers.join(",") + "\n";
@@ -5597,7 +5600,6 @@
                     cleanStr(row.email || '-'),
                     cleanStr(row.phone || '-'),
                     cleanStr(row.position || '-'),
-                    cleanStr(row.career),
                     cleanStr(row.education),
                     cleanStr(row.license || '-'),
                     cleanStr(row.orgName || '-'),
@@ -5664,7 +5666,8 @@
             const isSeminar = isSeminarEvent(adminSelectedEvent);
             if (isSeminar) {
                 headers[6] = 'ประเภทหน่วยงาน';
-                headers.splice(9, 0, 'ตำแหน่ง', 'ชื่อหน่วยงาน', 'การแพ้อาหาร', 'ประเภทอาหาร');
+                headers.splice(7, 1); // ไม่มีคอลัมน์ "อาชีพ" → "ระดับการศึกษา" เลื่อนมาอยู่ index 7
+                headers.splice(8, 0, 'ตำแหน่ง', 'ชื่อหน่วยงาน', 'การแพ้อาหาร', 'ประเภทอาหาร');
             }
             days.forEach(day => slots.forEach(slot => headers.push(`${formatDayKeyTH(day)} ${slotHeaderLabel[slot]}`)));
             headers.push('จำนวนรอบที่มา');
@@ -5687,7 +5690,8 @@
                     cleanStr(row.walkIn === true ? 'ใช่' : 'ไม่ใช่')
                 ];
                 if (isSeminar) {
-                    rowData.splice(9, 0,
+                    rowData.splice(7, 1); // ตัดค่า "อาชีพ" ให้ตรงกับหัวคอลัมน์
+                    rowData.splice(8, 0,
                         cleanStr(row.position || '-'),
                         cleanStr(row.orgName || '-'),
                         cleanStr(foodAllergyText(row, 'ไม่แพ้')),
