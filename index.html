@@ -446,22 +446,6 @@
         </div>
     </div>
 
-    <div id="modal-take-survey" class="fixed inset-0 z-[100] hidden bg-slate-900/80 flex justify-center items-center p-4 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-3xl w-full max-w-3xl overflow-hidden relative flex flex-col max-h-[90vh] animate-fade-in-up">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-pink-50 shrink-0">
-                <h3 class="text-xl font-bold text-pink-900 flex items-center"><i class="fa-solid fa-star mr-3"></i> แบบประเมิน</h3>
-                <button onclick="document.getElementById('modal-take-survey').classList.add('hidden')" class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-slate-600 shadow-sm transition border border-slate-200"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar bg-slate-50" id="survey-questions-container">
-                </div>
-            <div class="p-6 border-t border-slate-100 bg-white shrink-0 flex justify-end">
-                <button id="btn-submit-survey" onclick="window.submitSurvey()" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-3.5 px-8 rounded-xl transition shadow-md flex items-center gap-2">
-                    <i class="fa-solid fa-paper-plane"></i> ส่งแบบประเมิน
-                </button>
-            </div>
-        </div>
-    </div>
-
     <div id="modal-expand-textarea" class="fixed inset-0 z-[99] hidden bg-slate-900/60 flex justify-center items-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden shadow-2xl animate-fade-in-up">
             <div class="p-4 border-b flex justify-between items-center bg-slate-50">
@@ -874,6 +858,10 @@
                                 <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">5. เบอร์โทรศัพท์ (ถ้ามี)</label>
                                 <input type="tel" id="reg-phone" class="input-premium w-full px-4 py-3.5 rounded-xl font-medium" placeholder="เช่น 0812345678" autocomplete="tel">
                             </div>
+                            <div id="reg-position-wrap" class="hidden md:col-span-6">
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">ตำแหน่ง <span class="text-red-500">*</span></label>
+                                <input type="text" id="reg-position" class="input-premium w-full px-4 py-3.5 rounded-xl font-medium" placeholder="ระบุตำแหน่งงาน">
+                            </div>
                         </div>
                     </div>
 
@@ -886,7 +874,7 @@
                         </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
+                            <div id="reg-org-wrap">
                                 <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">5. หน่วยงาน / Organization <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <select id="reg-org" required class="input-premium w-full px-4 py-3.5 rounded-xl appearance-none font-medium">
@@ -905,6 +893,28 @@
                                     </div>
                                 </div>
                                 <input type="text" id="reg-org-other" class="hidden mt-3 input-premium w-full px-4 py-3.5 rounded-xl" placeholder="โปรดระบุรายละเอียดหน่วยงาน...">
+                            </div>
+
+                            <div id="reg-org-name-wrap" class="hidden">
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">ชื่อสังกัด/หน่วยงาน <span class="text-red-500">*</span></label>
+                                <input type="text" id="reg-org-name" class="input-premium w-full px-4 py-3.5 rounded-xl font-medium" placeholder="ระบุชื่อสังกัดหรือหน่วยงาน">
+                            </div>
+
+                            <div id="reg-org-type-wrap" class="hidden">
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">ประเภทหน่วยงาน <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <select id="reg-org-type" class="input-premium w-full px-4 py-3.5 rounded-xl appearance-none font-medium">
+                                        <option value="" disabled selected>เลือกประเภทหน่วยงาน...</option>
+                                        <option value="ห้องปฏิบัติการภาครัฐ">ห้องปฏิบัติการภาครัฐ</option>
+                                        <option value="ห้องปฏิบัติการภาคเอกชน">ห้องปฏิบัติการภาคเอกชน</option>
+                                        <option value="ห้องปฏิบัติการมหาวิทยาลัย">ห้องปฏิบัติการมหาวิทยาลัย</option>
+                                        <option value="อื่นๆ">อื่นๆ (โปรดระบุ)</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-blue-600">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                                <input type="text" id="reg-org-type-other" class="hidden mt-3 input-premium w-full px-4 py-3.5 rounded-xl" placeholder="โปรดระบุประเภทหน่วยงาน...">
                             </div>
 
                             <div>
@@ -926,7 +936,7 @@
                                 <input type="text" id="reg-career-other" class="hidden mt-3 input-premium w-full px-4 py-3.5 rounded-xl" placeholder="โปรดระบุรายละเอียดอาชีพ...">
                             </div>
 
-                            <div class="md:col-span-2">
+                            <div id="reg-education-wrap" class="md:col-span-2">
                                 <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">7. ระดับการศึกษา / Education <span class="text-red-500">*</span></label>
                                 <div class="relative max-w-md">
                                     <select id="reg-education" required class="input-premium w-full px-4 py-3.5 rounded-xl appearance-none font-medium">
@@ -941,11 +951,29 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div id="reg-education-seminar-wrap" class="hidden md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">ระดับการศึกษา <span class="text-red-500">*</span></label>
+                                <div class="relative max-w-md">
+                                    <select id="reg-education-seminar" class="input-premium w-full px-4 py-3.5 rounded-xl appearance-none font-medium">
+                                        <option value="" disabled selected>เลือกระดับการศึกษาสูงสุด...</option>
+                                        <option value="ต่ำกว่าปริญญาตรี">ต่ำกว่าปริญญาตรี</option>
+                                        <option value="ปริญญาตรี">ปริญญาตรี</option>
+                                        <option value="ปริญญาโท">ปริญญาโท</option>
+                                        <option value="ปริญญาเอก">ปริญญาเอก</option>
+                                        <option value="อื่นๆ">อื่นๆ (โปรดระบุ)</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-blue-600">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                                <input type="text" id="reg-education-seminar-other" class="hidden mt-3 max-w-md input-premium w-full px-4 py-3.5 rounded-xl" placeholder="โปรดระบุระดับการศึกษา...">
+                            </div>
                         </div>
                     </div>
 
                     <!-- SECTION 3: ข้อมูลทางการตลาด/การติดตามผล -->
-                    <div class="bg-white p-5 md:p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
+                    <div id="reg-section-survey" class="bg-white p-5 md:p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
                         <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
                         <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                             <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600"><i class="fa-solid fa-chart-pie"></i></div>
@@ -1057,6 +1085,80 @@
                         </div>
                     </div>
 
+                    <!-- SECTION อาหาร (ฟอร์มสัมมนา) -->
+                    <div id="reg-section-food" class="hidden bg-white p-5 md:p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                        <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600"><i class="fa-solid fa-utensils"></i></div>
+                            <h3 class="font-bold text-xl text-slate-800 tracking-tight">ส่วนที่ 3: ข้อมูลอาหาร</h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-2">
+                            <div class="bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+                                <label class="block font-bold text-slate-800 mb-4 text-sm">การแพ้อาหาร/เครื่องดื่ม <span class="text-red-500">*</span></label>
+                                <div class="space-y-3 text-sm text-slate-700">
+                                    <label class="flex items-start gap-4 cursor-pointer p-3 bg-white border border-slate-200 hover:border-emerald-300 rounded-xl transition-all hover:shadow-sm group">
+                                        <div class="relative flex items-center justify-center mt-0.5">
+                                            <input type="radio" name="reg-allergy" value="no" class="peer shrink-0 w-5 h-5 appearance-none border-2 border-slate-300 rounded-full checked:bg-emerald-500 checked:border-emerald-500 transition-colors cursor-pointer focus:ring-2 focus:ring-emerald-500/20">
+                                            <i class="fa-solid fa-check absolute text-white text-[10px] opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
+                                        </div>
+                                        <span class="leading-relaxed font-medium group-hover:text-emerald-900 transition-colors">ไม่แพ้อาหาร</span>
+                                    </label>
+                                    <div class="p-3 bg-white border border-slate-200 rounded-xl transition-all focus-within:border-emerald-400 focus-within:shadow-sm">
+                                        <label class="flex items-start gap-4 cursor-pointer group">
+                                            <div class="relative flex items-center justify-center mt-0.5">
+                                                <input type="radio" name="reg-allergy" value="yes" class="peer shrink-0 w-5 h-5 appearance-none border-2 border-slate-300 rounded-full checked:bg-emerald-500 checked:border-emerald-500 transition-colors cursor-pointer focus:ring-2 focus:ring-emerald-500/20">
+                                                <i class="fa-solid fa-check absolute text-white text-[10px] opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
+                                            </div>
+                                            <span class="leading-relaxed font-medium group-hover:text-emerald-900 transition-colors">แพ้อาหาร/เครื่องดื่ม</span>
+                                        </label>
+                                        <div id="reg-allergy-detail-wrap" class="hidden mt-3">
+                                            <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider ml-1">โปรดระบุสิ่งที่แพ้ <span class="text-red-500">*</span></label>
+                                            <input type="text" id="reg-allergy-detail" class="input-premium w-full px-3 py-2.5 rounded-lg text-sm" placeholder="เช่น อาหารทะเล, ถั่ว...">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+                                <label class="block font-bold text-slate-800 mb-4 text-sm">ประเภทอาหาร <span class="text-red-500">*</span></label>
+                                <div class="space-y-3 text-sm text-slate-700">
+                                    <label class="flex items-start gap-4 cursor-pointer p-3 bg-white border border-slate-200 hover:border-emerald-300 rounded-xl transition-all hover:shadow-sm group">
+                                        <div class="relative flex items-center justify-center mt-0.5">
+                                            <input type="radio" name="reg-diet" value="อาหารทั่วไป" class="peer shrink-0 w-5 h-5 appearance-none border-2 border-slate-300 rounded-full checked:bg-emerald-500 checked:border-emerald-500 transition-colors cursor-pointer focus:ring-2 focus:ring-emerald-500/20">
+                                            <i class="fa-solid fa-check absolute text-white text-[10px] opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
+                                        </div>
+                                        <span class="leading-relaxed font-medium group-hover:text-emerald-900 transition-colors">อาหารทั่วไป</span>
+                                    </label>
+                                    <label class="flex items-start gap-4 cursor-pointer p-3 bg-white border border-slate-200 hover:border-emerald-300 rounded-xl transition-all hover:shadow-sm group">
+                                        <div class="relative flex items-center justify-center mt-0.5">
+                                            <input type="radio" name="reg-diet" value="อาหารมังสวิรัติ" class="peer shrink-0 w-5 h-5 appearance-none border-2 border-slate-300 rounded-full checked:bg-emerald-500 checked:border-emerald-500 transition-colors cursor-pointer focus:ring-2 focus:ring-emerald-500/20">
+                                            <i class="fa-solid fa-check absolute text-white text-[10px] opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
+                                        </div>
+                                        <span class="leading-relaxed font-medium group-hover:text-emerald-900 transition-colors">อาหารมังสวิรัติ</span>
+                                    </label>
+                                    <label class="flex items-start gap-4 cursor-pointer p-3 bg-white border border-slate-200 hover:border-emerald-300 rounded-xl transition-all hover:shadow-sm group">
+                                        <div class="relative flex items-center justify-center mt-0.5">
+                                            <input type="radio" name="reg-diet" value="อาหารฮาลาล" class="peer shrink-0 w-5 h-5 appearance-none border-2 border-slate-300 rounded-full checked:bg-emerald-500 checked:border-emerald-500 transition-colors cursor-pointer focus:ring-2 focus:ring-emerald-500/20">
+                                            <i class="fa-solid fa-check absolute text-white text-[10px] opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
+                                        </div>
+                                        <span class="leading-relaxed font-medium group-hover:text-emerald-900 transition-colors">อาหารฮาลาล</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION คำถามถึงวิทยากร (ฟอร์มสัมมนา) -->
+                    <div id="reg-section-question" class="hidden bg-white p-5 md:p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
+                        <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                            <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600"><i class="fa-solid fa-comments"></i></div>
+                            <h3 class="font-bold text-xl text-slate-800 tracking-tight">ส่วนที่ 4: คำถามถึงวิทยากร</h3>
+                        </div>
+                        <p class="text-sm text-slate-500 font-medium leading-relaxed mb-4">คำถามหรือประเด็นที่ท่านสนใจ/อยากทราบเพิ่มเติมจากวิทยากร เช่น ประเด็นปัญหาที่ท่านกำลังพบเจอและต้องการแนวทางแก้ไข หรือสิ่งที่ท่านคาดหวังในกิจกรรมนี้</p>
+                        <textarea id="reg-speaker-question" rows="4" class="input-premium w-full px-4 py-3.5 rounded-xl font-medium leading-relaxed" placeholder="พิมพ์คำถามของท่าน (ไม่บังคับ)"></textarea>
+                    </div>
+
                     <div class="pt-8 flex flex-col-reverse sm:flex-row justify-between items-center gap-4 mt-6 md:mt-12 border-t border-slate-200">
                         <button type="button" onclick="window.location.hash='#/home'" class="w-full sm:w-auto text-slate-500 hover:bg-slate-100 font-bold py-3.5 px-8 rounded-xl transition cursor-pointer">
                             <i class="fa-solid fa-arrow-left mr-2"></i> ยกเลิก
@@ -1119,6 +1221,21 @@
                 <div id="checkin-status" class="p-5 bg-white/80"></div>
             </div>
             <div id="checkin-summary" class="hidden glass-modal rounded-3xl p-5 border border-white"></div>
+        </div>
+
+        <!-- ==================== VIEW: SURVEY (แบบประเมินสาธารณะ #/survey/{eventId}) ==================== -->
+        <div id="view-survey" class="glass-modal rounded-3xl w-full max-w-3xl overflow-hidden hidden flex-col">
+            <div class="p-6 border-b border-slate-100 bg-pink-50 shrink-0">
+                <h3 class="text-xl font-bold text-pink-900 flex items-center"><i class="fa-solid fa-star mr-3"></i> แบบประเมิน</h3>
+                <p id="public-survey-event-name" class="text-sm font-medium text-pink-800/80 mt-1"></p>
+            </div>
+            <div class="p-6 md:p-8 flex-1 bg-slate-50" id="public-survey-container"></div>
+            <div id="public-survey-status" class="hidden p-6 md:p-8 bg-white/80"></div>
+            <div class="p-6 border-t border-slate-100 bg-white shrink-0 flex justify-end">
+                <button id="btn-submit-public-survey" onclick="window.submitPublicSurvey()" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-3.5 px-8 rounded-xl transition shadow-md flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> ส่งแบบประเมิน
+                </button>
+            </div>
         </div>
 
         <div id="view-success" class="w-full max-w-md glass-modal rounded-3xl p-10 md:p-12 text-center hidden flex-col items-center justify-center border border-white">
@@ -1328,6 +1445,13 @@
                         </div>
 
                         <div id="registrants-summary" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 px-6 py-4 text-sm font-bold text-slate-700"></div>
+
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                            </div>
+                            <input type="text" id="registrants-search" oninput="window.handleRegistrantsSearch()" class="input-premium w-full pl-10 pr-4 py-2 rounded-xl text-sm font-medium outline-none" placeholder="ค้นหาชื่อ อีเมล หน่วยงาน หรือเบอร์โทร...">
+                        </div>
 
                         <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden relative min-h-[400px]">
                             <div class="overflow-x-auto custom-scrollbar">
@@ -1647,6 +1771,23 @@
                                 </div>
                             </div>
                             <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">รูปแบบฟอร์มลงทะเบียน</label>
+                                <div class="relative">
+                                    <select id="admin-event-form-type" class="input-premium w-full px-4 py-3.5 rounded-xl appearance-none font-medium">
+                                        <option value="standard">ฟอร์มมาตรฐาน (แบบเดิม)</option>
+                                        <option value="seminar">ฟอร์มสัมมนา (หน่วยงาน / อาหาร / คำถามถึงวิทยากร)</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="admin-event-org-limit-wrap" class="hidden">
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">จำนวนผู้สมัครสูงสุดต่อหน่วยงาน</label>
+                                <input type="number" id="admin-event-org-limit" min="1" class="input-premium w-full px-4 py-3.5 rounded-xl font-medium" placeholder="เว้นว่าง = ไม่จำกัด">
+                                <p class="text-[10px] text-slate-400 mt-1">ใช้แจ้งเตือนในหลังบ้านเท่านั้น ผู้สมัครยังลงทะเบียนได้ตามปกติ</p>
+                            </div>
+                            <div>
                                 <div class="flex justify-between items-end mb-1.5">
                                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">รายละเอียดย่อ <span class="text-red-500">*</span></label>
                                     <button type="button" onclick="window.openExpandedTextarea()" class="text-xs text-teal-600 hover:text-teal-800 font-bold flex items-center gap-1 transition"><i class="fa-solid fa-expand"></i> ขยายเต็มหน้าต่าง</button>
@@ -1675,6 +1816,13 @@
                                     <div class="relative">
                                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 w-8">สิ้นสุด:</span>
                                         <input type="date" id="admin-event-reg-end" required class="input-premium w-full pl-12 pr-4 py-2.5 rounded-lg text-sm font-medium">
+                                    </div>
+                                    <div>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 w-8">เวลา:</span>
+                                            <input type="time" id="admin-event-reg-end-time" class="input-premium w-full pl-12 pr-4 py-2.5 rounded-lg text-sm font-medium">
+                                        </div>
+                                        <p class="text-[10px] text-slate-400 mt-1">เว้นว่าง = ปิดรับสิ้นวัน (23:59 น.)</p>
                                     </div>
                                 </div>
                             </div>
@@ -1980,8 +2128,17 @@
                     <button onclick="window.adminShowCheckinQr()" class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-bold py-3 rounded-xl transition shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
                         <i class="fa-solid fa-qrcode text-slate-400 mr-1"></i> QR เช็คอิน
                     </button>
+                    <button onclick="window.adminCopySurveyLink()" class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-bold py-3 rounded-xl transition shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+                        <i class="fa-solid fa-link text-slate-400 mr-1"></i> ลิงก์แบบประเมิน
+                    </button>
+                    <button onclick="window.adminShowSurveyQr()" class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-bold py-3 rounded-xl transition shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+                        <i class="fa-solid fa-qrcode text-slate-400 mr-1"></i> QR แบบประเมิน
+                    </button>
                     <button id="btn-toggle-checkin" onclick="window.toggleCheckinOpen()" class="col-span-2 bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 font-bold py-3 rounded-xl transition">
                         <i class="fa-solid fa-user-check mr-1"></i> <span id="btn-toggle-checkin-text">เปิดเช็คอิน</span>
+                    </button>
+                    <button id="btn-toggle-survey" onclick="window.toggleSurveyOpen()" class="col-span-2 bg-pink-50 border border-pink-200 text-pink-700 hover:bg-pink-100 font-bold py-3 rounded-xl transition">
+                        <i class="fa-solid fa-star mr-1"></i> <span id="btn-toggle-survey-text">เปิดแบบประเมิน</span>
                     </button>
                     <button onclick="window.duplicateEvent()" class="bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-bold py-3 rounded-xl transition">
                         <i class="fa-solid fa-copy mr-1"></i> คัดลอกเปิดใหม่
@@ -2038,9 +2195,17 @@
                         <div class="absolute left-0 top-0 w-1 h-full bg-blue-500"></div>
                         <h4 class="font-bold text-slate-400 uppercase tracking-widest text-[10px] mb-4 border-b border-slate-100 pb-2">Organization & Profession</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                            <div id="view-reg-orgname-wrap" class="hidden">
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">ชื่อหน่วยงาน</label>
+                                <div class="font-bold text-slate-800 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-orgname-display"></div>
+                            </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">หน่วยงาน</label>
+                                <label id="view-reg-org-label" class="block text-[11px] font-bold text-slate-400 mb-1">หน่วยงาน</label>
                                 <div class="font-bold text-slate-800 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-org-display"></div>
+                            </div>
+                            <div id="view-reg-position-wrap" class="hidden">
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">ตำแหน่ง</label>
+                                <div class="font-medium text-slate-700 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-position-display"></div>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">อาชีพ</label>
@@ -2053,7 +2218,26 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
+                    <div id="view-reg-seminar-card" class="hidden bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
+                        <div class="absolute left-0 top-0 w-1 h-full bg-emerald-500"></div>
+                        <h4 class="font-bold text-slate-400 uppercase tracking-widest text-[10px] mb-4 border-b border-slate-100 pb-2">ข้อมูลอาหารและคำถาม</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">การแพ้อาหาร</label>
+                                <div class="font-medium text-slate-700 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-allergy-display"></div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">ประเภทอาหาร</label>
+                                <div class="font-medium text-slate-700 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100" id="view-reg-diet-display"></div>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">คำถามถึงวิทยากร</label>
+                                <div class="font-medium text-slate-700 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 whitespace-pre-wrap break-words" id="view-reg-question-display"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="view-reg-survey-card" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
                         <div class="absolute left-0 top-0 w-1 h-full bg-indigo-500"></div>
                         <h4 class="font-bold text-slate-400 uppercase tracking-widest text-[10px] mb-4 border-b border-slate-100 pb-2">Survey Results</h4>
                         <div class="space-y-5">
@@ -2107,7 +2291,7 @@
                 <p class="text-slate-500 text-lg max-w-2xl mx-auto font-medium relative z-10">พัฒนาศักยภาพและอัปเดตองค์ความรู้ใหม่ผ่านหลักสูตรและกิจกรรมที่คัดสรรมาอย่างดี</p>
             </div>
 
-            <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 xl:gap-10">
+            <div id="events-grid" class="flex flex-wrap justify-center items-stretch gap-8 w-full">
                 <!-- Event Cards will be injected here via JS -->
             </div>
 
@@ -2184,6 +2368,7 @@
         let adminAuxLoadPromise = null; // โหลดทีม/แบบทดสอบ/แบบประเมินเบื้องหลังหลังแสดงหน้าแอดมิน
         let adminUsersLoaded = false;
         let isWalkInMode = false; // ลงทะเบียนหน้างานผ่าน QR เช็คอิน (ตั้งค่าใน loadEventRegistration)
+        let currentRegFormType = 'standard'; // รูปแบบฟอร์มลงทะเบียนของกิจกรรมที่เปิดอยู่ (ตั้งค่าใน loadEventRegistration)
 
         window.homeCurrentEvents = [];
         window.adminQuizzes = [];
@@ -2202,7 +2387,8 @@
             home: document.getElementById('view-home'),
             admin: document.getElementById('view-admin'),
             myEvents: document.getElementById('view-my-events'),
-            checkin: document.getElementById('view-checkin')
+            checkin: document.getElementById('view-checkin'),
+            survey: document.getElementById('view-survey')
         };
         const btnLogout = document.getElementById('btn-logout');
         const btnAdmin = document.getElementById('btn-admin');
@@ -2219,7 +2405,7 @@
             if (views[viewName]) {
                 views[viewName].classList.remove('hidden');
                 
-                if (['loading', 'auth', 'home', 'myEvents', 'admin', 'checkin'].includes(viewName)) {
+                if (['loading', 'auth', 'home', 'myEvents', 'admin', 'checkin', 'survey'].includes(viewName)) {
                     views[viewName].classList.add('flex');
                 }
             }
@@ -3025,8 +3211,14 @@
             if (currentRoute.path === 'checkin') {
                 currentRoute.eventId = parts.length >= 2 ? parseInt(parts[1], 10) : null;
             }
+            if (currentRoute.path === 'survey') {
+                currentRoute.eventId = parseInt(parts[1], 10);
+            }
 
-            if (currentRoute.path === 'pdpa-setup') {
+            if (currentRoute.path === 'survey') {
+                // แบบประเมินสาธารณะ: ไม่ต้องล็อกอิน / ไม่เช็ค PDPA / ไม่ตั้ง redirectUrl
+                await loadPublicSurvey();
+            } else if (currentRoute.path === 'pdpa-setup') {
                 if (!currentUser) {
                     showView('auth');
                     return;
@@ -3343,10 +3535,8 @@
 
                         // เช็คว่าหมดเวลารับสมัครหรือยัง
                         let isRegClosed = false;
-                        if (eventData.regEnd) {
-                            const regEndDate = new Date(eventData.regEnd + 'T23:59:59');
-                            if (regEndDate < now) isRegClosed = true;
-                        }
+                        const regEndDate = getRegEndDate(eventData);
+                        if (regEndDate && regEndDate < now) isRegClosed = true;
 
                         // เช็คว่ายังไม่ถึงวันเปิดรับสมัคร
                         let isRegNotOpen = false;
@@ -3401,51 +3591,31 @@
                             visibilityBadge = `<div class="text-xs sm:text-sm font-black px-4 py-2.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 mt-2 mb-1 flex items-center justify-center shadow-sm"><i class="fa-solid fa-lock mr-2 text-rose-500"></i> เฉพาะบุคลากรภายใน</div>`;
                         }
 
+                        // แบบประเมิน: เปิดหน้า #/survey/{eventId} หลังกิจกรรมจบ (ผู้ลงทะเบียนเห็นปุ่มบนการ์ด)
                         let surveyBtnHtml = '';
-                        let isSurveyCompleted = false;
-                        let requireSurveyFirst = false;
-
-                        if (userRegData && eventData.surveyId && eventData.isSurveyOpen) {
-                            requireSurveyFirst = true;
-                            if (userRegData.isSurveyed) {
-                                isSurveyCompleted = true;
-                                surveyBtnHtml = `
-                                    <div class="bg-pink-50 text-pink-800 px-4 py-3 rounded-xl border border-pink-200 mb-3 text-sm font-bold flex items-center justify-center shadow-sm">
-                                        <span><i class="fa-solid fa-check-circle text-pink-600 mr-1.5"></i>ทำแบบประเมินแล้ว</span>
-                                    </div>
-                                `;
-                            } else {
-                                surveyBtnHtml = `
-                                    <button type="button" data-action="start-survey" data-survey-id="${escapeHtml(eventData.surveyId)}" data-doc-id="${escapeHtml(docId)}" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md mb-3 text-sm flex items-center justify-center gap-2">
-                                        <i class="fa-solid fa-star"></i> เริ่มทำแบบประเมิน
-                                    </button>
-                                `;
-                            }
+                        if (userRegData && eventData.surveyId && eventData.isSurveyOpen === true && isEnded) {
+                            surveyBtnHtml = `
+                                <a href="#/survey/${escapeHtml(eventData.id || 0)}" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md mb-3 text-sm flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-star"></i> ทำแบบประเมิน
+                                </a>
+                            `;
                         }
 
                         let quizBtnHtml = '';
                         if (userRegData && eventData.quizId && eventData.isQuizOpen) {
-                            if (requireSurveyFirst && !isSurveyCompleted) {
+                            if (userRegData.isTested) {
                                 quizBtnHtml = `
-                                    <button type="button" disabled class="w-full bg-slate-200 text-slate-500 font-bold py-3 px-4 rounded-xl transition mb-3 text-sm flex items-center justify-center gap-2 cursor-not-allowed border border-slate-300">
-                                        <i class="fa-solid fa-lock"></i> ทำแบบประเมินเพื่อปลดล็อคข้อสอบ
-                                    </button>
+                                    <div class="bg-purple-50 text-purple-800 px-4 py-3 rounded-xl border border-purple-200 mb-3 text-sm font-bold flex items-center justify-between shadow-sm">
+                                        <span><i class="fa-solid fa-check-circle text-purple-600 mr-1.5"></i>ทำข้อสอบแล้ว</span>
+                                        <span class="bg-white px-2.5 py-1 rounded-lg shadow-sm">คะแนน: ${escapeHtml(userRegData.testScore)}/${escapeHtml(userRegData.testMaxScore)}</span>
+                                    </div>
                                 `;
                             } else {
-                                if (userRegData.isTested) {
-                                    quizBtnHtml = `
-                                        <div class="bg-purple-50 text-purple-800 px-4 py-3 rounded-xl border border-purple-200 mb-3 text-sm font-bold flex items-center justify-between shadow-sm">
-                                            <span><i class="fa-solid fa-check-circle text-purple-600 mr-1.5"></i>ทำข้อสอบแล้ว</span>
-                                            <span class="bg-white px-2.5 py-1 rounded-lg shadow-sm">คะแนน: ${escapeHtml(userRegData.testScore)}/${escapeHtml(userRegData.testMaxScore)}</span>
-                                        </div>
-                                    `;
-                                } else {
-                                    quizBtnHtml = `
-                                        <button type="button" data-action="start-quiz" data-quiz-id="${escapeHtml(eventData.quizId)}" data-doc-id="${escapeHtml(docId)}" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md mb-3 text-sm flex items-center justify-center gap-2">
-                                            <i class="fa-solid fa-pen-to-square"></i> เริ่มทำแบบทดสอบ
-                                        </button>
-                                    `;
-                                }
+                                quizBtnHtml = `
+                                    <button type="button" data-action="start-quiz" data-quiz-id="${escapeHtml(eventData.quizId)}" data-doc-id="${escapeHtml(docId)}" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md mb-3 text-sm flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-pen-to-square"></i> เริ่มทำแบบทดสอบ
+                                    </button>
+                                `;
                             }
                         }
 
@@ -3520,7 +3690,6 @@
                                 const action = el.dataset.action;
                                 if (action === 'open-schedule') window.openBase64Schedule(ev, el.dataset.docId);
                                 else if (action === 'show-desc') window.showPublicEventDesc(el.dataset.docId);
-                                else if (action === 'start-survey') window.startSurvey(el.dataset.surveyId, el.dataset.docId);
                                 else if (action === 'start-quiz') window.startQuiz(el.dataset.quizId, el.dataset.docId);
                             });
                         });
@@ -3529,7 +3698,28 @@
                     });
 
                     // กิจกรรมที่ยังไม่จบขึ้นก่อน กิจกรรมที่จบแล้วอยู่ท้าย
-                    activeCards.concat(endedCards).forEach(card => grid.appendChild(card));
+                    const allCards = activeCards.concat(endedCards);
+                    const total = allCards.length;
+
+                    // จัดความกว้างการ์ดตามจำนวน (ล้าง class รอบก่อนออกก่อน กันซ้อนเมื่อโหลดซ้ำ)
+                    grid.classList.remove('max-w-5xl', 'mx-auto');
+                    if (total === 2) grid.classList.add('max-w-5xl', 'mx-auto');
+
+                    let widthClasses;
+                    if (total === 1) widthClasses = ['w-full', 'max-w-xl'];
+                    else if (total === 2) widthClasses = ['w-full', 'md:w-[calc(50%-1rem)]'];
+                    else widthClasses = ['w-full', 'md:w-[calc(50%-1rem)]', 'lg:w-[calc(33.333%-1.334rem)]'];
+
+                    allCards.forEach(card => {
+                        card.classList.add(...widthClasses);
+                        // การ์ดเดียว: ขยายภาพปกให้สูงขึ้น
+                        if (total === 1) {
+                            const cover = card.firstElementChild;
+                            cover.classList.remove('h-40');
+                            cover.classList.add('h-56');
+                        }
+                        grid.appendChild(card);
+                    });
                 }
                 showView('home');
             } catch (error) {
@@ -3573,15 +3763,16 @@
                 document.getElementById('event-desc').textContent = `วันที่: ${eventData.eventPeriod || '-'} | สถานที่: ${eventData.location || '-'}`;
                 
                 document.getElementById('reg-form').reset();
+                currentRegFormType = eventData.formType === 'seminar' ? 'seminar' : 'standard';
+                applyRegFormType(currentRegFormType);
+                const isSeminarForm = currentRegFormType === 'seminar';
                 document.getElementById('already-registered-alert').classList.add('hidden');
                 document.getElementById('user-quiz-section').classList.add('hidden');
-                
+
                 const now = new Date();
                 let isRegClosed = false;
-                if (eventData.regEnd) {
-                    const regEndDate = new Date(eventData.regEnd + 'T23:59:59');
-                    if (regEndDate < now) isRegClosed = true;
-                }
+                const regEndDate = getRegEndDate(eventData);
+                if (regEndDate && regEndDate < now) isRegClosed = true;
                 let isRegNotOpen = false;
                 if (eventData.regStart) {
                     const regStartDate = new Date(eventData.regStart + 'T00:00:00');
@@ -3675,9 +3866,9 @@
                     if (userRegData.fullname && document.getElementById('reg-fullname')) document.getElementById('reg-fullname').value = userRegData.fullname;
                     if (userRegData.license) document.getElementById('reg-license').value = userRegData.license;
                     if (userRegData.phone !== undefined) document.getElementById('reg-phone').value = userRegData.phone || '';
-                    if (userRegData.education && document.getElementById('reg-education')) document.getElementById('reg-education').value = userRegData.education;
+                    if (!isSeminarForm && userRegData.education && document.getElementById('reg-education')) document.getElementById('reg-education').value = userRegData.education;
 
-                    if (userRegData.organization) {
+                    if (!isSeminarForm && userRegData.organization) {
                         const orgSelect = document.getElementById('reg-org');
                         const orgOther = document.getElementById('reg-org-other');
                         const orgOptions = Array.from(orgSelect.options).map(o => o.value);
@@ -3705,7 +3896,7 @@
                         }
                     }
 
-                    if (userRegData.sources) {
+                    if (!isSeminarForm && userRegData.sources) {
                         const sourceChecks = Array.from(document.querySelectorAll('input[name="source"]'));
                         userRegData.sources.forEach(s => {
                             const cb = sourceChecks.find(c => c.value === s);
@@ -3721,7 +3912,7 @@
                         });
                     }
 
-                    if (userRegData.factors) {
+                    if (!isSeminarForm && userRegData.factors) {
                         const factorChecks = Array.from(document.querySelectorAll('input[name="factor"]'));
                         userRegData.factors.forEach(f => {
                             const cb = factorChecks.find(c => c.value === f);
@@ -3735,6 +3926,45 @@
                                 document.getElementById('reg-factor-other').required = true;
                             }
                         });
+                    }
+
+                    if (isSeminarForm) {
+                        if (userRegData.position) document.getElementById('reg-position').value = userRegData.position;
+                        if (userRegData.orgName) document.getElementById('reg-org-name').value = userRegData.orgName;
+                        // ค่าที่ไม่ตรงตัวเลือก ให้เลือก "อื่นๆ" แล้วใส่ค่าในช่องระบุ
+                        const fillSelectWithOther = (selectId, otherId, value) => {
+                            if (!value) return;
+                            const select = document.getElementById(selectId);
+                            const other = document.getElementById(otherId);
+                            const options = Array.from(select.options).map(o => o.value).filter(v => v && v !== 'อื่นๆ');
+                            if (options.includes(value)) {
+                                select.value = value;
+                            } else {
+                                select.value = 'อื่นๆ';
+                                other.value = value;
+                                other.classList.remove('hidden');
+                                other.required = true;
+                            }
+                        };
+                        fillSelectWithOther('reg-org-type', 'reg-org-type-other', userRegData.organization);
+                        fillSelectWithOther('reg-education-seminar', 'reg-education-seminar-other', userRegData.education);
+
+                        if (userRegData.hasFoodAllergy !== undefined) {
+                            const allergyVal = userRegData.hasFoodAllergy ? 'yes' : 'no';
+                            const allergyRadio = document.querySelector(`input[name="reg-allergy"][value="${allergyVal}"]`);
+                            if (allergyRadio) allergyRadio.checked = true;
+                            if (userRegData.hasFoodAllergy) {
+                                const detail = document.getElementById('reg-allergy-detail');
+                                detail.value = userRegData.foodAllergyDetail || '';
+                                document.getElementById('reg-allergy-detail-wrap').classList.remove('hidden');
+                                detail.required = true;
+                            }
+                        }
+                        if (userRegData.dietType) {
+                            const dietRadio = Array.from(document.querySelectorAll('input[name="reg-diet"]')).find(r => r.value === userRegData.dietType);
+                            if (dietRadio) dietRadio.checked = true;
+                        }
+                        if (userRegData.speakerQuestion) document.getElementById('reg-speaker-question').value = userRegData.speakerQuestion;
                     }
 
                 } else {
@@ -3989,6 +4219,47 @@
         toggleOtherInput('reg-career', 'reg-career-other');
         toggleOtherInput('reg-prefix', 'reg-prefix-other');
         toggleOtherInput('reguser-prefix', 'reguser-prefix-other');
+        toggleOtherInput('reg-org-type', 'reg-org-type-other');
+        toggleOtherInput('reg-education-seminar', 'reg-education-seminar-other');
+
+        // แพ้อาหาร: เลือก "แพ้" ให้แสดงช่องระบุ (บังคับ) / เลือก "ไม่แพ้" ให้ซ่อนและล้างค่า
+        document.querySelectorAll('input[name="reg-allergy"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const isYes = radio.checked && radio.value === 'yes';
+                const detail = document.getElementById('reg-allergy-detail');
+                document.getElementById('reg-allergy-detail-wrap').classList.toggle('hidden', !isYes);
+                detail.required = isYes;
+                if (!isYes) detail.value = '';
+            });
+        });
+
+        // สลับฟอร์มมาตรฐาน/สัมมนา: ช่องที่ซ่อนต้องไม่มี required ไม่งั้น browser จะบล็อก submit
+        function applyRegFormType(formType) {
+            const isSeminar = formType === 'seminar';
+            const setShown = (id, shown) => document.getElementById(id).classList.toggle('hidden', !shown);
+            const setRequired = (id, required) => { document.getElementById(id).required = required; };
+
+            // ส่วนของฟอร์มมาตรฐาน
+            setShown('reg-org-wrap', !isSeminar);
+            setShown('reg-education-wrap', !isSeminar);
+            setShown('reg-section-survey', !isSeminar);
+            setRequired('reg-org', !isSeminar);
+            setRequired('reg-education', !isSeminar);
+
+            // ส่วนของฟอร์มสัมมนา
+            ['reg-position-wrap', 'reg-org-name-wrap', 'reg-org-type-wrap', 'reg-education-seminar-wrap', 'reg-section-food', 'reg-section-question']
+                .forEach(id => setShown(id, isSeminar));
+            ['reg-position', 'reg-org-name', 'reg-org-type', 'reg-education-seminar'].forEach(id => setRequired(id, isSeminar));
+            document.querySelectorAll('input[name="reg-allergy"], input[name="reg-diet"]').forEach(r => { r.required = isSeminar; });
+
+            // ช่อง "อื่นๆ" และช่องระบุสิ่งที่แพ้ เริ่มจากซ่อนและไม่บังคับเสมอ
+            ['reg-org-other', 'reg-org-type-other', 'reg-education-seminar-other'].forEach(id => {
+                setShown(id, false);
+                setRequired(id, false);
+            });
+            setShown('reg-allergy-detail-wrap', false);
+            setRequired('reg-allergy-detail', false);
+        }
 
         const toggleCheckboxOther = (checkboxId, otherId) => {
             const checkbox = document.getElementById(checkboxId);
@@ -4037,9 +4308,32 @@
                     return cb.value === 'อื่นๆ' ? document.getElementById('reg-factor-other').value.trim() : cb.value;
                 });
 
-                if (sources.length === 0 || factors.length === 0) {
+                const isSeminarForm = currentRegFormType === 'seminar';
+
+                if (!isSeminarForm && (sources.length === 0 || factors.length === 0)) {
                     showToast('กรุณาเลือกข้อมูลแบบสำรวจอย่างน้อย 1 ข้อ', 'error');
                     return;
+                }
+
+                // ฟิลด์ของฟอร์มสัมมนา (ใช้แทนฟิลด์ของฟอร์มเดิม)
+                let seminarFields = null;
+                if (isSeminarForm) {
+                    let orgType = document.getElementById('reg-org-type').value;
+                    if (orgType === 'อื่นๆ') orgType = document.getElementById('reg-org-type-other').value.trim();
+                    let eduSeminar = document.getElementById('reg-education-seminar').value;
+                    if (eduSeminar === 'อื่นๆ') eduSeminar = document.getElementById('reg-education-seminar-other').value.trim();
+                    const hasFoodAllergy = document.querySelector('input[name="reg-allergy"]:checked')?.value === 'yes';
+                    seminarFields = {
+                        formType: 'seminar',
+                        position: document.getElementById('reg-position').value.trim(),
+                        orgName: document.getElementById('reg-org-name').value.trim(),
+                        organization: orgType || '',
+                        education: eduSeminar || '',
+                        hasFoodAllergy: hasFoodAllergy,
+                        foodAllergyDetail: hasFoodAllergy ? document.getElementById('reg-allergy-detail').value.trim() : '',
+                        dietType: document.querySelector('input[name="reg-diet"]:checked')?.value || '',
+                        speakerQuestion: document.getElementById('reg-speaker-question').value.trim()
+                    };
                 }
 
                 let isEditing = !document.getElementById('already-registered-alert').classList.contains('hidden');
@@ -4078,6 +4372,13 @@
                         factors: factors || [],
                         pdpa: pdpaConsent
                     };
+
+                    // ฟอร์มสัมมนา: ไม่บันทึก sources/factors และใช้ฟิลด์สัมมนาแทน organization/education
+                    if (seminarFields) {
+                        delete regData.sources;
+                        delete regData.factors;
+                        Object.assign(regData, seminarFields);
+                    }
 
                     const participantRef = doc(db, "events", currentRoute.eventDocId, "participants", currentUser.uid);
 
@@ -4337,6 +4638,13 @@
             return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()+543}`;
         }
 
+        // เวลาปิดรับสมัคร: ใช้ regEndTime ("HH:mm") ถ้ามี ไม่มีให้ปิดสิ้นวัน regEnd
+        function getRegEndDate(ev) {
+            if (!ev.regEnd) return null;
+            if (ev.regEndTime) return new Date(`${ev.regEnd}T${ev.regEndTime}:00`);
+            return new Date(`${ev.regEnd}T23:59:59`);
+        }
+
         // ===== ระบบเช็คอิน: ฟังก์ชันกลาง =====
         function toDayKey(d) {
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -4441,6 +4749,14 @@
             });
         }
 
+        // แสดงช่องโควต้าต่อหน่วยงานเฉพาะฟอร์มสัมมนา
+        function toggleOrgLimitWrap() {
+            const isSeminar = document.getElementById('admin-event-form-type').value === 'seminar';
+            document.getElementById('admin-event-org-limit-wrap').classList.toggle('hidden', !isSeminar);
+        }
+        const formTypeSelect = document.getElementById('admin-event-form-type');
+        if (formTypeSelect) formTypeSelect.addEventListener('change', toggleOrgLimitWrap);
+
         window.openEventFormModal = async function() {
             // รอ option ของแบบทดสอบ/แบบประเมินโหลดเสร็จก่อนตั้งค่า select
             if (adminAuxLoadPromise) await adminAuxLoadPromise;
@@ -4460,6 +4776,10 @@
 
             document.getElementById('admin-event-quiz').value = '';
             document.getElementById('admin-event-quiz-open').checked = false;
+
+            document.getElementById('admin-event-form-type').value = 'standard';
+            document.getElementById('admin-event-org-limit').value = '';
+            toggleOrgLimitWrap();
 
             setCheckinFormValues('single', null, false);
 
@@ -4482,6 +4802,7 @@
             let limitTxt = event.limit ? ` / ${event.limit}` : '';
             document.getElementById('detail-event-enrolled').textContent = `${event.enrolledCount || 0}${limitTxt}`;
             renderEventCheckinStatus(event);
+            renderEventSurveyToggle(event);
 
             document.getElementById('modal-event-details').classList.remove('hidden');
         };
@@ -4530,6 +4851,60 @@
             }
         };
 
+        // ===== แบบประเมินสาธารณะ: ลิงก์ / QR / เปิด-ปิด =====
+        function renderEventSurveyToggle(event) {
+            document.getElementById('btn-toggle-survey-text').textContent = event.isSurveyOpen === true ? 'ปิดแบบประเมิน' : 'เปิดแบบประเมิน';
+        }
+
+        function getSurveyUrl(ev) {
+            return `${window.location.origin}${window.location.pathname}#/survey/${ev.id}`;
+        }
+
+        window.adminCopySurveyLink = function() {
+            if(!adminSelectedEvent) return;
+            if (!adminSelectedEvent.surveyId) {
+                showToast('กิจกรรมนี้ยังไม่ได้เลือกแบบประเมิน', 'error');
+                return;
+            }
+            window.copyToClipboard(getSurveyUrl(adminSelectedEvent));
+        };
+
+        window.adminShowSurveyQr = function() {
+            if(!adminSelectedEvent) return;
+            if (!adminSelectedEvent.surveyId) {
+                showToast('กิจกรรมนี้ยังไม่ได้เลือกแบบประเมิน', 'error');
+                return;
+            }
+            document.getElementById('modal-event-details').classList.add('hidden');
+            window.showQrCode(getSurveyUrl(adminSelectedEvent), adminSelectedEvent.name, 'QR Code สำหรับแบบประเมิน');
+        };
+
+        window.toggleSurveyOpen = async function() {
+            if(!adminSelectedEvent) return;
+            const ev = adminSelectedEvent;
+            if (!ev.surveyId) {
+                showToast('กิจกรรมนี้ยังไม่ได้เลือกแบบประเมิน', 'error');
+                return;
+            }
+            const newValue = ev.isSurveyOpen !== true;
+            const btn = document.getElementById('btn-toggle-survey');
+            btn.disabled = true;
+            try {
+                await updateDoc(doc(db, "events", ev.docId), { isSurveyOpen: newValue });
+                ev.isSurveyOpen = newValue;
+                const listEvent = adminCurrentEvents.find(e => e.docId === ev.docId);
+                if (listEvent) listEvent.isSurveyOpen = newValue;
+                renderEventSurveyToggle(ev);
+                await logActivity(newValue ? "เปิดแบบประเมิน" : "ปิดแบบประเมิน", ev.name);
+                showToast(newValue ? 'เปิดแบบประเมินแล้ว' : 'ปิดแบบประเมินแล้ว', 'success');
+            } catch (error) {
+                console.error("Toggle Survey Error:", error);
+                showToast('ไม่สามารถเปลี่ยนสถานะแบบประเมินได้', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
         window.adminCopyLink = function() {
             if(!adminSelectedEvent) return;
             const url = `${window.location.origin}${window.location.pathname}#/register/${adminSelectedEvent.id}/0`;
@@ -4567,8 +4942,12 @@
             document.getElementById('admin-event-title').value = ev.name + ' (Copy)';
             document.getElementById('admin-event-desc').value = ev.desc;
             document.getElementById('admin-event-visibility').value = ev.visibility || 'public';
-            document.getElementById('admin-event-reg-start').value = ''; 
+            document.getElementById('admin-event-form-type').value = ev.formType || 'standard';
+            document.getElementById('admin-event-org-limit').value = ev.orgLimit || '';
+            toggleOrgLimitWrap();
+            document.getElementById('admin-event-reg-start').value = '';
             document.getElementById('admin-event-reg-end').value = '';
+            document.getElementById('admin-event-reg-end-time').value = '';
             document.getElementById('admin-event-start').value = '';
             document.getElementById('admin-event-end').value = '';
             document.getElementById('admin-event-location').value = ev.location;
@@ -4630,8 +5009,12 @@
             document.getElementById('admin-event-title').value = ev.name;
             document.getElementById('admin-event-desc').value = ev.desc;
             document.getElementById('admin-event-visibility').value = ev.visibility || 'public';
+            document.getElementById('admin-event-form-type').value = ev.formType || 'standard';
+            document.getElementById('admin-event-org-limit').value = ev.orgLimit || '';
+            toggleOrgLimitWrap();
             document.getElementById('admin-event-reg-start').value = ev.regStart || '';
             document.getElementById('admin-event-reg-end').value = ev.regEnd || '';
+            document.getElementById('admin-event-reg-end-time').value = ev.regEndTime || '';
             document.getElementById('admin-event-start').value = ev.eventStart || '';
             document.getElementById('admin-event-end').value = ev.eventEnd || '';
             document.getElementById('admin-event-location').value = ev.location;
@@ -4706,6 +5089,10 @@
                         await deleteDoc(fDoc.ref);
                     }
 
+                    // ลบคำตอบแบบประเมินใน Subcollection 'surveyResponses'
+                    const surveyResponsesSnap = await getDocs(collection(db, "events", adminSelectedEvent.docId, "surveyResponses"));
+                    await Promise.all(surveyResponsesSnap.docs.map(rDoc => deleteDoc(rDoc.ref)));
+
                     // จากนั้นจึงลบ Document หลัก
                     await deleteDoc(eventDocRef);
                     
@@ -4723,6 +5110,7 @@
 
         window.viewRegistrants = async function(targetEventId, fromSelect) {
             // เลือก "-- กรุณาเลือกกิจกรรม --" จาก dropdown: ล้างการเลือกและแสดงข้อความเริ่มต้น
+            document.getElementById('registrants-search').value = '';
             if (fromSelect && targetEventId === '') {
                 adminSelectedEvent = null;
                 currentRegistrantsData = [];
@@ -4782,15 +5170,56 @@
             }
         };
 
+        // ===== ฟอร์มสัมมนา: นับผู้สมัครต่อหน่วยงาน =====
+        function isSeminarEvent(ev) {
+            return !!ev && ev.formType === 'seminar';
+        }
+
+        function normalizeOrgName(s) {
+            return String(s || '').trim().replace(/\s+/g, ' ').toLowerCase();
+        }
+
+        // คืน Map: ชื่อหน่วยงาน (normalize แล้ว) -> จำนวนผู้สมัคร นับจากข้อมูลทั้งหมด
+        function getOrgCounts() {
+            const counts = new Map();
+            currentRegistrantsData.forEach(d => {
+                const key = normalizeOrgName(d.orgName);
+                if (!key) return;
+                counts.set(key, (counts.get(key) || 0) + 1);
+            });
+            return counts;
+        }
+
+        function foodAllergyText(d, noText) {
+            if (d.hasFoodAllergy === true) return `แพ้: ${d.foodAllergyDetail || '-'}`;
+            if (d.hasFoodAllergy === false) return noText;
+            return '-';
+        }
+
+        window.handleRegistrantsSearch = function() {
+            renderRegistrantsTable();
+        };
+
         function renderRegistrantsTable() {
             const tbody = document.getElementById('registrants-table-body');
             const summaryEl = document.getElementById('registrants-summary');
             tbody.innerHTML = '';
 
+            const isSeminar = isSeminarEvent(adminSelectedEvent);
+            const orgLimit = isSeminar ? (adminSelectedEvent.orgLimit || null) : null;
+            const orgCounts = isSeminar ? getOrgCounts() : null;
+
             const total = currentRegistrantsData.length;
             const checkedIn = currentRegistrantsData.filter(d => countCheckins(d) >= 1).length;
             const walkIns = currentRegistrantsData.filter(d => d.walkIn === true).length;
             summaryEl.textContent = `ลงทะเบียน ${total} คน · เช็คอินแล้ว ${checkedIn} คน (มาอย่างน้อย 1 ครั้ง) · ลงทะเบียนหน้างาน ${walkIns} คน`;
+            if (orgLimit) {
+                const overCount = Array.from(orgCounts.values()).filter(c => c > orgLimit).length;
+                const quotaSpan = document.createElement('span');
+                if (overCount > 0) quotaSpan.className = 'text-red-600';
+                quotaSpan.textContent = ` · หน่วยงานที่เกินโควต้า ${overCount} แห่ง (สูงสุด ${orgLimit} คน/หน่วยงาน)`;
+                summaryEl.appendChild(quotaSpan);
+            }
             summaryEl.classList.remove('hidden');
 
             if (total === 0) {
@@ -4798,8 +5227,20 @@
                 return;
             }
 
+            // กรองตามช่องค้นหา โดยเก็บ index เดิมของ currentRegistrantsData ไว้เปิดรายละเอียดให้ถูกคน
+            const keyword = document.getElementById('registrants-search').value.trim().toLowerCase();
+            const visibleRows = currentRegistrantsData
+                .map((d, index) => ({ d, index }))
+                .filter(({ d }) => !keyword || [d.fullname, d.email, d.orgName, d.organization, d.phone]
+                    .some(v => String(v || '').toLowerCase().includes(keyword)));
+
+            if (visibleRows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-20 text-center"><div class="flex flex-col items-center justify-center"><i class="fa-solid fa-magnifying-glass text-4xl text-slate-200 mb-3"></i><p class="text-slate-500 font-bold">ไม่พบรายชื่อที่ค้นหา</p></div></td></tr>`;
+                return;
+            }
+
             const slotsTotal = totalSlots(adminSelectedEvent);
-            currentRegistrantsData.forEach((d, index) => {
+            visibleRows.forEach(({ d, index }) => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition cursor-pointer group";
                 tr.onclick = () => window.viewRegistrantDetail(index);
@@ -4822,15 +5263,26 @@
                 const walkInBadge = d.walkIn === true ? ' <span class="ml-1 text-[10px] font-bold bg-sky-100 text-sky-700 border border-sky-200 px-1.5 py-0.5 rounded">หน้างาน</span>' : '';
                 const phoneHtml = d.phone ? `<div class="text-[11px] text-slate-400 mt-0.5"><i class="fa-solid fa-phone mr-1"></i>${escapeHtml(d.phone)}</div>` : '';
 
+                let orgCellHtml = `
+                        <div class="font-bold text-slate-700">${escapeHtml(d.organization || '-')}</div>
+                        <div class="text-[11px] uppercase tracking-wide">${escapeHtml(d.career || '-')}</div>`;
+                if (isSeminar) {
+                    const orgCount = orgCounts.get(normalizeOrgName(d.orgName)) || 0;
+                    const isOver = !!orgLimit && orgCount > orgLimit;
+                    const badgeClass = isOver ? 'bg-red-100 text-red-700 border-red-200' : 'bg-slate-100 text-slate-600 border-slate-200';
+                    const badgeText = isOver ? `หน่วยงานนี้ ${orgCount} คน (เกิน ${orgLimit})` : `หน่วยงานนี้ ${orgCount} คน`;
+                    orgCellHtml = `
+                        <div class="font-bold text-slate-700">${escapeHtml(d.orgName || '-')} <span class="ml-1 text-[10px] font-bold border px-1.5 py-0.5 rounded ${badgeClass}">${escapeHtml(badgeText)}</span></div>
+                        <div class="text-[11px] uppercase tracking-wide">${escapeHtml(d.organization || '-')} · ${escapeHtml(d.career || '-')}</div>`;
+                }
+
                 tr.innerHTML = `
                     <td class="px-6 py-4 align-top text-[11px] text-slate-400 font-medium">${dateStr}</td>
                     <td class="px-6 py-4 align-top break-words">
                         <div class="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">${escapeHtml(d.prefix || '')}${escapeHtml(d.fullname || '-')}${walkInBadge}</div>
                     </td>
                     <td class="px-6 py-4 align-top break-all text-sm text-slate-500 font-medium">${escapeHtml(d.email || d.uid || '-')}${phoneHtml}</td>
-                    <td class="px-6 py-4 align-top break-words text-sm text-slate-500">
-                        <div class="font-bold text-slate-700">${escapeHtml(d.organization || '-')}</div>
-                        <div class="text-[11px] uppercase tracking-wide">${escapeHtml(d.career || '-')}</div>
+                    <td class="px-6 py-4 align-top break-words text-sm text-slate-500">${orgCellHtml}
                     </td>
                     <td class="px-6 py-4 align-top text-center">
                         ${scoreHtml}
@@ -4917,7 +5369,22 @@
             document.getElementById('view-reg-org-display').textContent = d.organization || '-';
             document.getElementById('view-reg-career-display').textContent = d.career || '-';
             document.getElementById('view-reg-education-display').textContent = d.education || '-';
-            
+
+            // ฟอร์มสัมมนา: แสดงชื่อหน่วยงาน/ตำแหน่ง/ข้อมูลอาหาร แทนผลแบบสำรวจ
+            const isSeminar = isSeminarEvent(adminSelectedEvent);
+            document.getElementById('view-reg-org-label').textContent = isSeminar ? 'ประเภทหน่วยงาน' : 'หน่วยงาน';
+            document.getElementById('view-reg-orgname-wrap').classList.toggle('hidden', !isSeminar);
+            document.getElementById('view-reg-position-wrap').classList.toggle('hidden', !isSeminar);
+            document.getElementById('view-reg-survey-card').classList.toggle('hidden', isSeminar);
+            document.getElementById('view-reg-seminar-card').classList.toggle('hidden', !isSeminar);
+            if (isSeminar) {
+                document.getElementById('view-reg-orgname-display').textContent = d.orgName || '-';
+                document.getElementById('view-reg-position-display').textContent = d.position || '-';
+                document.getElementById('view-reg-allergy-display').textContent = foodAllergyText(d, 'ไม่แพ้อาหาร');
+                document.getElementById('view-reg-diet-display').textContent = d.dietType || '-';
+                document.getElementById('view-reg-question-display').textContent = d.speakerQuestion || '-';
+            }
+
             document.getElementById('view-reg-sources').innerHTML = (d.sources || []).map(s => `<span class="inline-block bg-white text-slate-600 px-3 py-1 border border-slate-200 rounded-lg text-xs font-bold shadow-sm">${escapeHtml(s)}</span>`).join('');
             document.getElementById('view-reg-factors').innerHTML = (d.factors || []).map(f => `<span class="inline-block bg-white text-slate-600 px-3 py-1 border border-slate-200 rounded-lg text-xs font-bold shadow-sm">${escapeHtml(f)}</span>`).join('');
             
@@ -4943,10 +5410,6 @@
         };
 
         window.exportSurveyToCsv = async function() {
-            if(!currentRegistrantsData || currentRegistrantsData.length === 0) {
-                showToast('ไม่มีข้อมูลสำหรับ Export', 'error');
-                return;
-            }
             if(!adminSelectedEvent || !adminSelectedEvent.surveyId) {
                 showToast('กิจกรรมนี้ไม่มีแบบประเมิน', 'error');
                 return;
@@ -4966,7 +5429,11 @@
                 const headers = ['ข้อที่', 'คำถาม', 'หัวข้อย่อย', 'คำตอบ / ตัวเลือก', 'จำนวน (คน)', 'ร้อยละ (%)'];
                 csvContent += headers.map(h => `"${h}"`).join(",") + "\n";
                 
-                const surveyedUsers = currentRegistrantsData.filter(row => row.isSurveyed && row.surveyAnswers);
+                // คำตอบจาก events/{docId}/surveyResponses (เฉพาะของแบบประเมินที่กิจกรรมเลือกอยู่)
+                const responsesSnap = await getDocs(collection(db, "events", adminSelectedEvent.docId, "surveyResponses"));
+                const surveyedUsers = responsesSnap.docs
+                    .map(rDoc => rDoc.data())
+                    .filter(r => r.surveyId === adminSelectedEvent.surveyId && r.answers);
                 const totalRespondents = surveyedUsers.length;
 
                 if (totalRespondents === 0) {
@@ -4982,7 +5449,7 @@
                     if (q.type === 'text') {
                         let textAnswers = [];
                         surveyedUsers.forEach(user => {
-                            const ans = user.surveyAnswers[qIndex];
+                            const ans = user.answers[qIndex];
                             if (ans && String(ans).trim() !== '') {
                                 textAnswers.push(String(ans).trim());
                             }
@@ -5006,7 +5473,7 @@
                             let answeredCount = 0;
 
                             surveyedUsers.forEach(user => {
-                                const ansObj = user.surveyAnswers[qIndex];
+                                const ansObj = user.answers[qIndex];
                                 if (ansObj && ansObj[rIndex] !== undefined) {
                                     const optIdx = parseInt(ansObj[rIndex]);
                                     if (optIdx >= 0 && optIdx < options.length) {
@@ -5027,7 +5494,7 @@
                         let scaleCounts = {1:0, 2:0, 3:0, 4:0, 5:0};
                         let answeredCount = 0;
                         surveyedUsers.forEach(user => {
-                            const ans = parseInt(user.surveyAnswers[qIndex]);
+                            const ans = parseInt(user.answers[qIndex]);
                             if (ans >= 1 && ans <= 5) {
                                 scaleCounts[ans]++;
                                 answeredCount++;
@@ -5049,7 +5516,7 @@
                         let answeredCount = 0;
 
                         surveyedUsers.forEach(user => {
-                            const ans = parseInt(user.surveyAnswers[qIndex]);
+                            const ans = parseInt(user.answers[qIndex]);
                             if (!isNaN(ans) && ans >= 0 && ans < options.length) {
                                 optionCounts[ans]++;
                                 answeredCount++;
@@ -5088,8 +5555,14 @@
                 return;
             }
             
+            const isSeminar = isSeminarEvent(adminSelectedEvent);
+            const orgLimit = isSeminar ? (adminSelectedEvent.orgLimit || null) : null;
+            const orgCounts = isSeminar ? getOrgCounts() : null;
+
             // เพิ่ม Header สำหรับ PDPA และ คะแนนแบบทดสอบ
-            const headers = ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'เบอร์โทร', 'เลขที่ใบประกอบวิชาชีพ', 'หน่วยงาน', 'อาชีพ', 'ระดับการศึกษา', 'ช่องทางรับข่าวสาร', 'ปัจจัยความสนใจ', 'คะแนนแบบทดสอบ', 'ทำแบบประเมิน', 'ยอมรับนโยบายความเป็นส่วนตัว', 'ยินยอมประชาสัมพันธ์', 'ยินยอมเปิดเผยต่อ Sponsor', 'ลงทะเบียนหน้างาน'];
+            const headers = isSeminar
+                ? ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'เบอร์โทร', 'ตำแหน่ง', 'อาชีพ', 'ระดับการศึกษา', 'เลขที่ใบประกอบวิชาชีพ', 'ชื่อหน่วยงาน', 'ประเภทหน่วยงาน', 'จำนวนผู้สมัครจากหน่วยงานเดียวกัน', 'การแพ้อาหาร', 'ประเภทอาหาร', 'คำถามถึงวิทยากร', 'คะแนนแบบทดสอบ', 'ยอมรับนโยบายความเป็นส่วนตัว', 'ยินยอมประชาสัมพันธ์', 'ยินยอมเปิดเผยต่อ Sponsor', 'ลงทะเบียนหน้างาน']
+                : ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'เบอร์โทร', 'เลขที่ใบประกอบวิชาชีพ', 'หน่วยงาน', 'อาชีพ', 'ระดับการศึกษา', 'ช่องทางรับข่าวสาร', 'ปัจจัยความสนใจ', 'คะแนนแบบทดสอบ', 'ยอมรับนโยบายความเป็นส่วนตัว', 'ยินยอมประชาสัมพันธ์', 'ยินยอมเปิดเผยต่อ Sponsor', 'ลงทะเบียนหน้างาน'];
             let csvContent = "\uFEFF";
             csvContent += headers.join(",") + "\n";
             
@@ -5104,16 +5577,41 @@
                     scoreText = row.isTested ? `${row.testScore} คะแนน` : 'ยังไม่ทำแบบทดสอบ';
                 }
 
-                const isSurveyedTxt = row.isSurveyed ? 'ทำแล้ว' : 'ยังไม่ทำ';
-
                 // จัดการข้อมูล PDPA (ถ้าไม่มีให้เป็น 'N/A')
                 const pdpa1 = row.pdpa ? (row.pdpa.agree_privacy ? 'ยอมรับ' : 'ไม่ยอมรับ') : 'N/A';
                 const pdpa2 = row.pdpa ? (row.pdpa.agree_marketing ? 'ยินยอม' : 'ไม่ยินยอม') : 'N/A';
                 const pdpa3 = row.pdpa ? (row.pdpa.agree_sponsor ? 'ยินยอม' : 'ไม่ยินยอม') : 'N/A';
                 
                 const cleanStr = (str) => `"${sanitizeCsvValue(str||'').replace(/"/g, '""')}"`;
-                
-                const rowData = [
+
+                let orgCountText = '';
+                if (isSeminar) {
+                    const orgCount = orgCounts.get(normalizeOrgName(row.orgName)) || 0;
+                    orgCountText = `${orgCount}${orgLimit && orgCount > orgLimit ? ' (เกินโควต้า)' : ''}`;
+                }
+
+                const rowData = isSeminar ? [
+                    cleanStr(dateStr),
+                    cleanStr(row.prefix),
+                    cleanStr(row.fullname),
+                    cleanStr(row.email || '-'),
+                    cleanStr(row.phone || '-'),
+                    cleanStr(row.position || '-'),
+                    cleanStr(row.career),
+                    cleanStr(row.education),
+                    cleanStr(row.license || '-'),
+                    cleanStr(row.orgName || '-'),
+                    cleanStr(row.organization),
+                    cleanStr(orgCountText),
+                    cleanStr(foodAllergyText(row, 'ไม่แพ้')),
+                    cleanStr(row.dietType || '-'),
+                    cleanStr(row.speakerQuestion || '-'),
+                    cleanStr(scoreText),
+                    cleanStr(pdpa1),
+                    cleanStr(pdpa2),
+                    cleanStr(pdpa3),
+                    cleanStr(row.walkIn === true ? 'ใช่' : 'ไม่ใช่')
+                ] : [
                     cleanStr(dateStr),
                     cleanStr(row.prefix),
                     cleanStr(row.fullname),
@@ -5126,7 +5624,6 @@
                     cleanStr(sources),
                     cleanStr(factors),
                     cleanStr(scoreText),
-                    cleanStr(isSurveyedTxt),
                     cleanStr(pdpa1),
                     cleanStr(pdpa2),
                     cleanStr(pdpa3),
@@ -5163,6 +5660,12 @@
             const cleanStr = (str) => `"${sanitizeCsvValue(str||'').replace(/"/g, '""')}"`;
 
             const headers = ['วันเวลาลงทะเบียน', 'คำนำหน้า', 'ชื่อ-นามสกุล', 'อีเมล', 'เบอร์โทร', 'เลขที่ใบประกอบวิชาชีพ', 'หน่วยงาน', 'อาชีพ', 'ระดับการศึกษา', 'ลงทะเบียนหน้างาน'];
+            // ฟอร์มสัมมนา: "หน่วยงาน" คือประเภทหน่วยงาน และเพิ่มคอลัมน์ต่อจาก "ระดับการศึกษา"
+            const isSeminar = isSeminarEvent(adminSelectedEvent);
+            if (isSeminar) {
+                headers[6] = 'ประเภทหน่วยงาน';
+                headers.splice(9, 0, 'ตำแหน่ง', 'ชื่อหน่วยงาน', 'การแพ้อาหาร', 'ประเภทอาหาร');
+            }
             days.forEach(day => slots.forEach(slot => headers.push(`${formatDayKeyTH(day)} ${slotHeaderLabel[slot]}`)));
             headers.push('จำนวนรอบที่มา');
 
@@ -5183,6 +5686,13 @@
                     cleanStr(row.education),
                     cleanStr(row.walkIn === true ? 'ใช่' : 'ไม่ใช่')
                 ];
+                if (isSeminar) {
+                    rowData.splice(9, 0,
+                        cleanStr(row.position || '-'),
+                        cleanStr(row.orgName || '-'),
+                        cleanStr(foodAllergyText(row, 'ไม่แพ้')),
+                        cleanStr(row.dietType || '-'));
+                }
                 days.forEach(day => slots.forEach(slot => {
                     const t = formatTimeHM(getCheckinValue(row, day, slot));
                     rowData.push(cleanStr(t ? `${t} น.` : ''));
@@ -5211,8 +5721,11 @@
                 const title = document.getElementById('admin-event-title').value.trim();
                 const desc = document.getElementById('admin-event-desc').value.trim();
                 const visibility = document.getElementById('admin-event-visibility').value;
+                const formType = document.getElementById('admin-event-form-type').value === 'seminar' ? 'seminar' : 'standard';
+                const orgLimitRaw = document.getElementById('admin-event-org-limit').value.trim();
                 const regStart = document.getElementById('admin-event-reg-start').value;
                 const regEnd = document.getElementById('admin-event-reg-end').value;
+                const regEndTime = document.getElementById('admin-event-reg-end-time').value;
                 const evStart = document.getElementById('admin-event-start').value;
                 const evEnd = document.getElementById('admin-event-end').value;
                 const location = document.getElementById('admin-event-location').value.trim();
@@ -5266,7 +5779,9 @@
                 setButtonLoading(btnId, true, 'บันทึกข้อมูล');
 
                 try {
-                    const regPeriodStr = `${formatDateTH(regStart)} ถึง ${formatDateTH(regEnd)}`;
+                    const regPeriodStr = regEndTime
+                        ? `${formatDateTH(regStart)} ถึง ${formatDateTH(regEnd)} เวลา ${regEndTime} น.`
+                        : `${formatDateTH(regStart)} ถึง ${formatDateTH(regEnd)}`;
                     const eventPeriodStr = `${formatDateTimeTH(evStart)} ถึง ${formatDateTimeTH(evEnd)}`;
 
                     const eventData = {
@@ -5274,6 +5789,7 @@
                         desc: desc,
                         regStart: regStart,
                         regEnd: regEnd,
+                        regEndTime: regEndTime || null,
                         eventStart: evStart,
                         eventEnd: evEnd,
                         regPeriod: regPeriodStr, 
@@ -5281,6 +5797,8 @@
                         location: location,
                         fee: fee,
                         visibility: visibility,
+                        formType: formType,
+                        orgLimit: (formType === 'seminar' && orgLimitRaw) ? parseInt(orgLimitRaw, 10) : null,
                         coverImage: coverImage || null,
                         limit: limit ? parseInt(limit, 10) : null,
                         scheduleLink: scheduleLink || null,
@@ -6213,24 +6731,108 @@
             }
         };
 
-        window.startSurvey = async function(surveyId, eventDocId) {
+        // ===== แบบประเมินสาธารณะ (#/survey/{eventId}) ไม่ต้องล็อกอิน ไม่ระบุตัวตน =====
+        // แสดงกล่องสถานะแทนคำถาม (ซ่อนคำถามและปุ่มส่ง) พร้อมปุ่ม action ถ้ามี
+        function renderPublicSurveyStatus(message, action) {
+            document.getElementById('public-survey-container').classList.add('hidden');
+            document.getElementById('btn-submit-public-survey').parentElement.classList.add('hidden');
+            const statusEl = document.getElementById('public-survey-status');
+            statusEl.innerHTML = `<div class="bg-pink-50 border border-pink-200 text-pink-900 rounded-2xl p-5 text-center"><p class="text-lg font-black leading-snug"></p></div>`;
+            statusEl.querySelector('p').textContent = message;
+            if (action) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'w-full min-h-[48px] mt-4 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold py-3 px-4 rounded-xl transition flex justify-center items-center gap-2 shadow-sm';
+                btn.innerHTML = `<i class="fa-solid ${action.icon}"></i> <span></span>`;
+                btn.querySelector('span').textContent = action.label;
+                btn.addEventListener('click', action.onClick);
+                statusEl.appendChild(btn);
+            }
+            statusEl.classList.remove('hidden');
+        }
+
+        async function loadPublicSurvey() {
             showView('loading');
+            const retryAction = { label: 'ลองอีกครั้ง', icon: 'fa-rotate-right', onClick: () => loadPublicSurvey() };
+            document.getElementById('public-survey-event-name').textContent = '';
+            window.currentUserSurveySession = null;
             try {
-                const docSnap = await getDoc(doc(db, "surveys", surveyId));
-                if(docSnap.exists()) {
-                    window.currentUserSurveySession = { eventDocId: eventDocId, surveyId: surveyId, data: docSnap.data(), answers: [] };
-                    window.renderUserSurvey();
-                    document.getElementById('modal-take-survey').classList.remove('hidden');
-                    showView('home'); 
+                const eventSnap = await getDocs(query(collection(db, "events"), where("id", "==", currentRoute.eventId)));
+                if (eventSnap.empty) {
+                    renderPublicSurveyStatus('ไม่พบกิจกรรมนี้');
                 } else {
-                    showToast('ไม่พบข้อมูลแบบประเมิน', 'error');
-                    showView('home');
+                    const eventDocId = eventSnap.docs[0].id;
+                    const ev = eventSnap.docs[0].data();
+                    document.getElementById('public-survey-event-name').textContent = ev.name || '';
+                    if (!ev.surveyId) {
+                        renderPublicSurveyStatus('กิจกรรมนี้ไม่มีแบบประเมิน');
+                    } else if (ev.isSurveyOpen !== true) {
+                        renderPublicSurveyStatus('ขณะนี้ยังไม่เปิดให้ทำแบบประเมิน', retryAction);
+                    } else {
+                        const surveySnap = await getDoc(doc(db, "surveys", ev.surveyId));
+                        if (!surveySnap.exists()) {
+                            renderPublicSurveyStatus('กิจกรรมนี้ไม่มีแบบประเมิน');
+                        } else {
+                            window.currentUserSurveySession = { eventDocId: eventDocId, eventId: currentRoute.eventId, surveyId: ev.surveyId, data: surveySnap.data(), answers: [] };
+                            window.renderUserSurvey();
+                            document.getElementById('public-survey-status').classList.add('hidden');
+                            document.getElementById('public-survey-container').classList.remove('hidden');
+                            document.getElementById('btn-submit-public-survey').parentElement.classList.remove('hidden');
+                        }
+                    }
                 }
-            } catch(e) { showToast('ดึงข้อมูลแบบประเมินไม่สำเร็จ', 'error'); showView('home'); }
+            } catch (error) {
+                console.error("loadPublicSurvey Error:", error);
+                renderPublicSurveyStatus('ไม่สามารถโหลดแบบประเมินได้ กรุณาลองใหม่', retryAction);
+            }
+            showView('survey');
+        }
+
+        window.submitPublicSurvey = async function() {
+            const session = window.currentUserSurveySession;
+            if(!session) return;
+            for(let i=0; i<session.data.questions.length; i++) {
+                const q = session.data.questions[i];
+                const ans = session.answers[i];
+
+                if (q.type === 'grid') {
+                    if (!ans || Object.keys(ans).length < (q.rows || ['']).length) {
+                         return showToast(`กรุณาตอบแบบประเมินข้อที่ ${i+1} ให้ครบทุกแถว`, 'error');
+                    }
+                } else {
+                    if(ans === undefined || (typeof ans === 'string' && ans.trim() === '')) {
+                        return showToast(`กรุณาตอบแบบประเมินข้อที่ ${i+1}`, 'error');
+                    }
+                }
+            }
+
+            const btnId = 'btn-submit-public-survey';
+            const defaultBtnHtml = '<i class="fa-solid fa-paper-plane"></i> ส่งแบบประเมิน';
+            setButtonLoading(btnId, true, defaultBtnHtml);
+
+            try {
+                // ไม่บันทึก uid หรือข้อมูลระบุตัวตน
+                await addDoc(collection(db, "events", session.eventDocId, "surveyResponses"), {
+                    eventId: session.eventId,
+                    surveyId: session.surveyId,
+                    answers: session.answers,
+                    submittedAt: serverTimestamp()
+                });
+                setButtonLoading(btnId, false, defaultBtnHtml);
+                window.currentUserSurveySession = null;
+                renderPublicSurveyStatus('ส่งแบบประเมินเรียบร้อยแล้ว ขอบคุณสำหรับความคิดเห็น', {
+                    label: 'กลับหน้าหลัก', icon: 'fa-house', onClick: () => { window.location.hash = '#/home'; }
+                });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (e) {
+                console.error("Submit Public Survey Error:", e);
+                window.showErrorModal('ส่งแบบประเมินไม่สำเร็จ', 'แบบประเมินอาจปิดรับแล้ว หรือเกิดข้อผิดพลาด กรุณาลองใหม่');
+                setButtonLoading(btnId, false, defaultBtnHtml);
+            }
         };
 
         window.renderUserSurvey = function() {
-            const container = document.getElementById('survey-questions-container');
+            const container = document.getElementById('public-survey-container');
             const survey = window.currentUserSurveySession.data;
             container.innerHTML = `<h2 class="text-2xl font-black text-slate-800 mb-6 text-center">${escapeHtml(survey.title)}</h2>`;
             
@@ -6282,47 +6884,6 @@
                 }
                 container.innerHTML += `<div class="mb-8"><p class="font-bold text-slate-800 mb-3 text-lg leading-relaxed"><span class="text-pink-600 mr-2">${qIndex + 1}.</span> ${escapeHtml(q.question)}</p><div class="space-y-3 pl-1 sm:pl-4">${optionsHtml}</div></div>`;
             });
-        };
-
-        window.submitSurvey = async function() {
-            const session = window.currentUserSurveySession;
-            if(!session) return;
-            for(let i=0; i<session.data.questions.length; i++) {
-                const q = session.data.questions[i];
-                const ans = session.answers[i];
-                
-                if (q.type === 'grid') {
-                    if (!ans || Object.keys(ans).length < (q.rows || ['']).length) {
-                         return showToast(`กรุณาตอบแบบประเมินข้อที่ ${i+1} ให้ครบทุกแถว`, 'error');
-                    }
-                } else {
-                    if(ans === undefined || (typeof ans === 'string' && ans.trim() === '')) {
-                        return showToast(`กรุณาตอบแบบประเมินข้อที่ ${i+1}`, 'error');
-                    }
-                }
-            }
-
-            setButtonLoading('btn-submit-survey', true, '<i class="fa-solid fa-paper-plane"></i> กำลังส่ง...');
-
-            try {
-                await updateDoc(doc(db, "events", session.eventDocId, "participants", currentUser.uid), {
-                    isSurveyed: true, 
-                    surveyAnswers: session.answers, 
-                    surveySubmittedAt: serverTimestamp()
-                });
-                showToast(`ส่งแบบประเมินสำเร็จ! ขอบคุณสำหรับความคิดเห็น`, 'success');
-                document.getElementById('modal-take-survey').classList.add('hidden');
-                
-                if (currentRoute.path === 'register' || currentRoute.path === 'reg-form') {
-                    await loadEventRegistration();
-                } else {
-                    await loadHomeEvents();
-                }
-            } catch(e) {
-                showToast('บันทึกแบบประเมินไม่สำเร็จ', 'error');
-            } finally {
-                setButtonLoading('btn-submit-survey', false, '<i class="fa-solid fa-paper-plane"></i> ส่งแบบประเมิน');
-            }
         };
 
         window.addEventListener('DOMContentLoaded', () => {
